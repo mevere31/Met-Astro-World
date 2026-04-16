@@ -1,226 +1,240 @@
-# Scrolltelling Data Story Blueprint
+# Scrolltelling Data Story Blueprint (Data-Specific Update)
 
 ## Theme
-**“From Earthly Objects to Celestial Time: How The Met’s Highlight Works Sit Between Human History and Planetary Cycles.”**
+**"From Earthly Objects to Celestial Time: How The Met's highlight objects sit between human history and planetary cycles."**
 
-This blueprint is designed for your scrolltelling project and follows your required 6-part structure.  
-Because the attached CSV is not available in this runtime, each section includes **fill-in metric slots** you can replace with exact values from your file.
-
----
-
-## Quick metric pull (so your story uses exact CSV values)
-
-Use this once on your CSV to populate the `[ ... ]` values below:
-
-```python
-import pandas as pd
-
-df = pd.read_csv("YOUR_FILE.csv")
-
-# Typical Met fields (rename if needed)
-date_col = "objectBeginDate"
-country_col = "country"
-classification_col = "classification"
-
-# Basic ranges
-min_year = int(df[date_col].dropna().min())
-max_year = int(df[date_col].dropna().max())
-span_years = max_year - min_year
-
-# Creation geography
-geo = (df[country_col].fillna("Unknown")
-         .value_counts()
-         .rename_axis("country")
-         .reset_index(name="count"))
-top5_share = geo.head(5)["count"].sum() / len(df) * 100
-
-# Category patterns
-top_class = df[classification_col].fillna("Unknown").value_counts().head(5)
-
-print(min_year, max_year, span_years, top5_share)
-print(geo.head(10))
-print(top_class)
-```
+This version is now based on the CSV in the repo: `ObjectsvsHistory.csv`.
 
 ---
 
-## 1) Introduction (Hook + Scope)
+## Dataset snapshot (from `ObjectsvsHistory.csv`)
+
+- **Rows:** 213  
+- **Unique object IDs:** 212 (one duplicate ID appears twice)  
+- **Object creation span (`Object.Begin.Date`):** 1701 to 2022 (**321 years**)  
+- **Historical incident years (`Year`):** 198 rows with usable years (15 missing)  
+- **Country coverage:** 31 countries, with strong concentration in Europe  
+- **Top 5 countries share:** **71.36%** of all rows  
+
+Top countries by count:
+1. France (95)
+2. Germany (22)
+3. Italy (16)
+4. Japan (11)
+5. India (8)
+
+---
+
+## 1) Introduction (hook + scope)
 
 ### Narrative copy
-“This story follows **[N] highlight objects** from The Met, made between **[MIN_YEAR] and [MAX_YEAR]** — a span of **[SPAN_YEARS] years**.  
-That is roughly **[SPAN_YEARS / 80] human lifetimes** of making, believing, celebrating, and surviving.”
+"This story follows **213 objects** connected to historical incidents, made between **1701 and 2022**.  
+That is **321 years** of cultural production - roughly **4 human lifetimes** if we use ~80 years per lifetime."
 
 ### Data insight to show
-- Total objects in your selected set: `[N]`
-- Time span: `[MIN_YEAR]` to `[MAX_YEAR]`
-- Coverage in years: `[SPAN_YEARS]`
+- Total rows: **213**
+- Time span: **1701-2022**
+- Coverage: **321 years**
 
 ### Visual element
-- **Full-screen timeline ribbon** (left = oldest, right = newest)
-- Intro collage of 6-10 highlight object images
-- Subtle star field background that increases in visibility as user scrolls
+- **Full-screen horizontal timeline** (oldest to newest)
+- Opening collage of 8-12 representative object images
+- Ambient celestial texture that slowly appears as the user scrolls
 
 ### Transition
-- Objects “drop” onto the timeline as dots, leading into distribution patterns.
+- Dots settle on the timeline, then expand into distribution peaks.
 
 ---
 
-## 2) Patterns in the dataset (What appears most often)
+## 2) Patterns in the dataset (what appears most)
 
 ### Narrative copy
-“Not all highlight objects are evenly distributed.  
-Creation clusters appear around **[TOP_ERA_1]**, **[TOP_ERA_2]**, and **[TOP_ERA_3]**, with **[TOP_CATEGORY]** as the largest object type.”
+"The collection is not evenly spread in time.  
+It is heavily concentrated in the **18th century (90 objects)**, with additional dense clusters in the **20th century (60)** and **19th century (54)**."
 
 ### Data insight to show
-- Top 3 century/era bins by count
-- Top 5 classifications (paintings, textiles, sculpture, etc.)
-- Optional: rolling 50-year average to smooth noisy periods
+- Century clusters:
+  - **18th century:** 90 (42.25%)
+  - **19th century:** 54 (25.35%)
+  - **20th century:** 60 (28.17%)
+  - **21st century:** 9 (4.23%)
+- Peak decades:
+  - **1800s (decade): 28**
+  - **1920s: 18**
+  - **1780s: 17**
+
+### Relatable framing
+"About **7 in 10 objects** were created between 1700 and 1899."
 
 ### Visual element
-- **Ridgeline or density plot** of object creation year
-- **Horizontal bar chart** for top classifications
-- Annotated peaks with plain-language notes:
-  - “This peak equals about **[X objects per generation]**.”
+- **Density/ridgeline chart** for creation years
+- **Annotated decade spikes** (1800s, 1780s, 1920s)
+- Optional side bars for event-type frequency
 
 ### Transition
-- The highest bars morph into map markers, moving from “when” to “where.”
+- Timeline peaks morph into country bubbles.
 
 ---
 
-## 3) Where objects were created (Geography)
+## 3) Where objects were created (geographic concentration)
 
 ### Narrative copy
-“These highlights were made across many geographies, but creation is concentrated: the top five places account for **[TOP5_SHARE]%** of all objects.”
+"The objects are globally distributed, but strongly concentrated in a few places:  
+the top five countries account for **71.36%** of all records."
 
 ### Data insight to show
-- Top 10 countries/regions by object count
-- Share of total represented by top 5
-- Count of objects with unknown/uncertain geography (important for transparency)
+- Top 10 countries by count (starting with France, Germany, Italy, Japan, India)
+- Top-5 country share: **71.36%**
+- City concentration:
+  - **Paris alone: 88 objects (41.31%)**
+  - **Unknown city: 42 objects (19.72%)** -> include as metadata caveat
+
+### Relatable framing
+"Roughly **2 out of every 5 objects** in this file were created in Paris."
 
 ### Visual element
-- **Choropleth + proportional symbol map**
-- Toggle between country and region views
-- Hover card: object thumbnail, title, date, country
+- **Choropleth map** by country + **bubble map** by city
+- Toggle: "Country view" / "City view"
+- Hover cards: title, object name, year, location, linked incident
 
 ### Transition
-- Map points animate into a horizontal timeline where markers align with major world events.
+- Country bubbles collapse into event bands on a timeline.
 
 ---
 
-## 4) Object dates vs. historical incidents (Context in human history)
+## 4) Where object dates sit relative to historical incidents
 
 ### Narrative copy
-“When we place object dates next to major historical incidents, we see culture being made **during** upheaval—not just before or after it.”
+"Most object dates in this file are tightly linked to incident dates, because the dataset is curated as object-incident pairs.  
+The strongest insight: objects were often made **during the same period** as major social and political change."
 
 ### Data insight to show
-- % of objects whose creation dates fall within ±25 years of selected incidents
-- Example incidents:
-  - Black Death period
-  - Mongol expansions
-  - European colonial expansions
-  - Industrial Revolution
-  - World Wars
+Using rows with both object year and incident year (n=198):
+- Within +/-1 year: **77.78%** (154/198)
+- Within +/-5 years: **86.36%** (171/198)
+- Within +/-25 years: **94.95%** (188/198)
+- Median gap: **0 years**
+
+Global anchor overlays (object year vs world-history reference bands):
+- Within +/-25 years of **French Revolution (1789): 31.46%**
+- Within +/-25 years of **Industrial Revolution midpoint (1800): 29.58%**
+- Within +/-25 years of **WWII (1939): 23.00%**
+
+### Relatable framing
+"In this dataset, nearly **19 out of 20** object-incident pairs fall within 25 years."
 
 ### Visual element
-- **Layered timeline**:
-  - Lane A: object creation dots
-  - Lane B: incident bands
-- Brushing interaction: selecting one incident highlights overlapping objects
+- **Two-lane timeline**
+  - Lane A: object-year dots
+  - Lane B: incident-year markers/bands
+- Add highlighted global anchors (1789, 1800, 1914, 1939, 1960)
+- Brush interaction for event type (war, treaty, revolution, social reform)
 
 ### Transition
-- Historical bands fade into celestial arcs to introduce transit overlays.
+- Historical bands fade into transit arcs above the same x-axis.
 
 ---
 
-## 5) Object dates vs. astrological transits (Symbolic sky layer)
+## 5) Object dates vs astrological transits (symbolic layer)
 
 ### Narrative copy
-“A second reading layers symbolic time: planetary transits.  
-We are not claiming causation; this layer asks whether culturally important works cluster around periods people historically framed as collective change.”
+"This is a symbolic lens, not a causal claim.  
+It asks whether object creation clusters overlap with broad collective-cycle transit windows."
 
 ### Data insight to show
-- Count and % of object dates within windows around selected transits (e.g., ±1 to ±3 years)
-- Focus on slower, collective-cycle transits:
-  - Jupiter-Saturn conjunctions
-  - Saturn sign ingresses
-  - Uranus/Neptune/Pluto sign ingresses
+Approximate year-window overlaps from selected transit milestone years:
+
+- Around **Jupiter-Saturn conjunction years**:
+  - +/-1 year: **17.37%**
+  - +/-3 years: **50.70%**
+  - +/-5 years: **64.79%**
+
+- Around **Saturn in Aries ingress years**:
+  - +/-1 year: **6.10%**
+  - +/-3 years: **31.92%**
+  - +/-5 years: **42.25%**
+
+- Around **Uranus in Aries ingress years**:
+  - +/-3 years: **8.92%**
+
+### Important methodological note
+These are **year-level proximity checks**, useful for narrative exploration only.  
+For production-grade transit accuracy, compute exact ingress/conjunction timestamps with JPL Horizons API.
 
 ### Visual element
-- **Dual-axis timeline**:
-  - Bottom: object points
-  - Top: transit markers and arcs
-- Optional “constellation mode”: connect object clusters to nearby transit windows
+- **Shared-axis dual timeline**
+  - Bottom: object dots (with opacity by density)
+  - Top: transit markers/arcs (color-coded by planet cycle)
+- Toggle: "History only" vs "History + transits"
 
 ### Transition
-- Collapse both layers into 3 key takeaways cards.
+- Collapse into three quantitative takeaways.
 
 ---
 
 ## 6) Final thoughts + next steps
 
 ### Narrative copy
-“This dataset shows three kinds of time at once:  
-1) artistic time (objects),  
-2) historical time (incidents), and  
-3) symbolic time (transits).  
-Together, they create a richer way to read cultural memory.”
+"This dataset combines three clocks:
+1) object creation time,
+2) historical event time,
+3) symbolic transit time.
+Seen together, they make cultural memory easier to feel and compare."
 
-### Data insight to end on
-- 3 strongest quantified takeaways from your CSV
-  - Example: “**[X%]** of objects cluster in **[period]**.”
-  - Example: “Top geography contributes **[Y%]** of records.”
-  - Example: “**[Z%]** lie near selected incident/transit windows.”
+### End on three hard takeaways
+1. **Temporal concentration:** 18th century is the single strongest cluster (90 objects).  
+2. **Spatial concentration:** top 5 countries account for **71.36%** of rows.  
+3. **History alignment:** **94.95%** of object-incident pairs are within +/-25 years.
 
 ### Visual element
-- **Summary cards + mini-sparklines**
-- CTA buttons:
-  - “Explore by place”
-  - “Explore by event”
-  - “Explore by transit”
+- **Three metric cards** + mini sparklines
+- CTA:
+  - "Explore by geography"
+  - "Explore by event type"
+  - "Explore symbolic sky layer"
 
-### Next-step interactions
-- Add filters: medium, department, culture, confidence score of date
-- Add a “skeptic mode” toggle that hides transit layer for historical-only reading
+### Practical next steps
+- Add confidence badges for missing or uncertain fields (e.g., missing incident year, unknown city)
+- Normalize place names (e.g., Munchen/Munich variants)
+- Add data-quality panel (duplicate object IDs, typos, missing dates)
 
 ---
 
 ## Source set (data + latest relevant reading)
 
-### Core data/documentation
-1. The Met Open Access Hub (CC0 data, >492,000 open-access images):  
-   https://www.metmuseum.org/en/hubs/open-access
-2. The Met Collection API docs (>470,000 artworks, field definitions incl. `isHighlight`, `objectBeginDate`, geography fields):  
-   https://metmuseum.github.io/
-3. The Met Open Access / API impact article (context on usage, metadata expansion):  
+### Core collection data
+1. Repo dataset used for this blueprint: `ObjectsvsHistory.csv`  
+2. The Met Open Access Hub (CC0 data, >492,000 public-domain images):  
+   https://www.metmuseum.org/en/hubs/open-access  
+3. The Met Collection API docs (field definitions for date/geography/highlight metadata):  
+   https://metmuseum.github.io/  
+4. The Met Open Access impact article (context and API usage):  
    https://www.metmuseum.org/perspectives/met-api-third-anniversary
 
-### Historical incidents data options
-4. Wikidata SPARQL Query Service (queryable event dates and entities):  
-   https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service
-5. Histolines open historical events archive (CSV/JSON snapshots):  
+### Historical incidents datasets/services
+5. Wikidata SPARQL Query Service:  
+   https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service  
+6. Histolines events archive:  
    https://github.com/histolines/Histolines_events_archive
 
-### Planetary/Transit data sources
-6. NASA JPL Horizons (authoritative planetary ephemerides):  
-   https://ssd.jpl.nasa.gov/horizons/
-7. NASA JPL Horizons API documentation:  
-   https://ssd-api.jpl.nasa.gov/doc/horizons.html
-8. Cafe Astrology 2025 Ephemeris (human-readable sign ingress/station tables):  
+### Planetary/transit references
+7. NASA JPL Horizons (authoritative ephemerides):  
+   https://ssd.jpl.nasa.gov/horizons/  
+8. NASA JPL Horizons API docs:  
+   https://ssd-api.jpl.nasa.gov/doc/horizons.html  
+9. Cafe Astrology ephemeris (human-readable transit calendar):  
    https://cafeastrology.com/2025-ephemeris.html
 
-### Latest and relevant storytelling inspiration
-9. The Met press release (Feb 2026): >100 high-fidelity 3D models released under Open Access  
-   https://www.metmuseum.org/en/press-releases/3-d-models-announcement-2026
-10. The Met “Our First Virtual Worlds” (Nov 2025): virtual experience design, photogrammetry details  
-   https://www.metmuseum.org/en/perspectives/our-first-virtual-worlds-atopia
-11. Baldoni, Yon, Loiselle (2026), *Metadata for Storytelling* (ITAL):  
-   https://ital.corejournals.org/index.php/ital/article/view/17495
+### Latest relevant inspiration and methodology
+10. The Met press release (Feb 2026): >100 high-fidelity 3D models under Open Access  
+    https://www.metmuseum.org/en/press-releases/3-d-models-announcement-2026  
+11. The Met "Our First Virtual Worlds" (Nov 2025):  
+    https://www.metmuseum.org/en/perspectives/our-first-virtual-worlds-atopia  
+12. Baldoni, Yon, Loiselle (2026), *Metadata for Storytelling* (ITAL):  
+    https://ital.corejournals.org/index.php/ital/article/view/17495
 
----
-
-## Visual style notes inspired by your references
-
-- **From Stefan Pullen’s Van Gogh projects**: use immersive full-screen object-first transitions and generous whitespace.  
-- **From Information is Beautiful (Horoscoped)**: use symbolic iconography sparingly, but keep labels explicit and quantified.
-- Keep every “poetic” moment paired with one hard metric so lay viewers never lose the data thread.
+### Design inspiration references you shared
+13. https://van-gogh-collection.stefanpullen.com/  
+14. https://vangogh.stefanpullen.com/  
+15. https://informationisbeautiful.net/visualizations/horoscoped/
 
