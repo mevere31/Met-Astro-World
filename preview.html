@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Met Astro World Scrolltelling Preview</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Special+Elite&display=swap");
+
+    :root {
+      --bg: #0b0f14;
+      --panel: #111723;
+      --text: #e8e6df;
+      --muted: #9ea7b3;
+      --accent: #e1b45f;
+      --line: #2b3444;
+      --dot: #8cc8ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 10% 10%, #1a2234 0%, var(--bg) 45%, #080b10 100%);
+      color: var(--text);
+      font-family: "Special Elite", ui-monospace, Menlo, Monaco, Consolas, monospace;
+      line-height: 1.45;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: rgba(11, 15, 20, 0.92);
+      backdrop-filter: blur(4px);
+      border-bottom: 1px solid var(--line);
+      padding: 0.8rem 1rem;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: 0.03em;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.8rem;
+    }
+
+    .kpi {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0.8rem;
+    }
+
+    .kpi .value {
+      font-size: 1.2rem;
+      color: var(--accent);
+    }
+
+    .kpi .label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .section h2 {
+      margin: 0 0 0.6rem 0;
+      font-size: 0.95rem;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    .meta {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+    }
+
+    canvas {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #0b1119;
+      display: block;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1rem;
+    }
+
+    footer {
+      max-width: 1100px;
+      margin: 1rem auto 2rem;
+      padding: 0 1rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .legend {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 0.3rem;
+      transform: translateY(1px);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Met Astro World | Scrolltelling Preview (Typewriter Edition)</h1>
+  </header>
+
+  <main>
+    <section class="kpi-grid" id="kpis"></section>
+
+    <section class="section">
+      <h2>1 + 2. Time Span & Pattern Density</h2>
+      <div class="meta">Creation years across 1701-2022 with visible century clustering.</div>
+      <canvas id="timelineChart" height="180"></canvas>
+    </section>
+
+    <section class="row">
+      <article class="section">
+        <h2>3. Top Countries (creation geography)</h2>
+        <div class="meta">Top five countries should represent ~71.36% of this file.</div>
+        <canvas id="countryChart" height="220"></canvas>
+      </article>
+
+      <article class="section">
+        <h2>4. Incident Alignment Gap</h2>
+        <div class="meta">Absolute year gap between object creation and incident year.</div>
+        <canvas id="gapChart" height="220"></canvas>
+      </article>
+    </section>
+
+    <section class="section">
+      <h2>5. Symbolic Transit Overlay (Year-level proximity)</h2>
+      <div class="meta">Object years with sample transit windows (illustrative, non-causal).</div>
+      <canvas id="transitChart" height="220"></canvas>
+      <div class="legend">
+        <span><i class="dot" style="background:#8cc8ff"></i>Object years</span>
+        <span><i class="dot" style="background:#e1b45f"></i>Jupiter-Saturn conjunction years</span>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Data source: <code>ObjectsvsHistory.csv</code>. Typography: typewriter style using <code>Special Elite</code>.
+  </footer>
+
+  <script>
+    function parseCSV(text) {
+      const rows = [];
+      let cur = "";
+      let row = [];
+      let inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        const next = text[i + 1];
+        if (ch === '"' && inQuotes && next === '"') {
+          cur += '"';
+          i++;
+          continue;
+        }
+        if (ch === '"') {
+          inQuotes = !inQuotes;
+          continue;
+        }
+        if (ch === "," && !inQuotes) {
+          row.push(cur);
+          cur = "";
+          continue;
+        }
+        if ((ch === "\n" || ch === "\r") && !inQuotes) {
+          if (ch === "\r" && next === "\n") i++;
+          if (cur.length > 0 || row.length > 0) {
+            row.push(cur);
+            rows.push(row);
+            row = [];
+            cur = "";
+          }
+          continue;
+        }
+        cur += ch;
+      }
+      if (cur.length > 0 || row.length > 0) {
+        row.push(cur);
+        rows.push(row);
+      }
+      const headers = rows[0];
+      return rows.slice(1).map((r) => {
+        const obj = {};
+        headers.forEach((h, idx) => obj[h] = (r[idx] ?? "").trim());
+        return obj;
+      });
+    }
+
+    const num = (v) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    };
+
+    function drawBars(canvas, labels, values, color = "#8cc8ff") {
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width = canvas.clientWidth * devicePixelRatio;
+      const h = canvas.height = canvas.clientHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+      const cw = canvas.clientWidth, ch = canvas.clientHeight;
+      ctx.clearRect(0, 0, cw, ch);
+      const max = Math.max(...values, 1);
+      const left = 110, right = 20, top = 18, bottom = 26;
+      const plotW = cw - left - right;
+      const rowH = (ch - top - bottom) / values.length;
+
+      ctx.font = "12px Special Elite";
+      ctx.fillStyle = "#9ea7b3";
+      labels.forEach((l, i) => {
+        const y = top + i * rowH + rowH * 0.65;
+        ctx.fillText(l, 8, y);
+        const bw = (values[i] / max) * plotW;
+        ctx.fillStyle = color;
+        ctx.fillRect(left, y - 10, bw, 12);
+        ctx.fillStyle = "#e8e6df";
+        ctx.fillText(String(values[i]), left + bw + 6, y);
+        ctx.fillStyle = "#9ea7b3";
+      });
+    }
+
+    function drawHistogram(canvas, values, minX, maxX, bins = 20) {
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width = canvas.clientWidth * devicePixelRatio;
+      const h = canvas.height = canvas.clientHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+      const cw = canvas.clientWidth, ch = canvas.clientHeight;
+      ctx.clearRect(0, 0, cw, ch);
+
+      const left = 36, right = 14, top = 14, bottom = 24;
+      const plotW = cw - left - right;
+      const plotH = ch - top - bottom;
+
+      const arr = Array(bins).fill(0);
+      values.forEach((v) => {
+        const t = (v - minX) / (maxX - minX);
+        const idx = Math.max(0, Math.min(bins - 1, Math.floor(t * bins)));
+        arr[idx]++;
+      });
+      const max = Math.max(...arr, 1);
+
+      ctx.strokeStyle = "#2b3444";
+      ctx.beginPath();
+      ctx.moveTo(left, top);
+      ctx.lineTo(left, top + plotH);
+      ctx.lineTo(left + plotW, top + plotH);
+      ctx.stroke();
+
+      const bw = plotW / bins;
+      arr.forEach((v, i) => {
+        const bh = (v / max) * (plotH - 2);
+        const x = left + i * bw;
+        const y = top + plotH - bh;
+        ctx.fillStyle = "#8cc8ff";
+        ctx.fillRect(x + 1, y, bw - 2, bh);
+      });
+
+      ctx.fillStyle = "#9ea7b3";
+      ctx.font = "11px Special Elite";
+      ctx.fillText(String(minX), left, ch - 6);
+      ctx.fillText(String(maxX), left + plotW - 30, ch - 6);
+    }
+
+    function drawTimelineOverlay(canvas, years, transitYears) {
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width = canvas.clientWidth * devicePixelRatio;
+      const h = canvas.height = canvas.clientHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+      const cw = canvas.clientWidth, ch = canvas.clientHeight;
+      ctx.clearRect(0, 0, cw, ch);
+
+      const minY = 1701, maxY = 2022;
+      const left = 24, right = 16, top = 20, bottom = 24;
+      const plotW = cw - left - right;
+      const mid = ch * 0.58;
+
+      const xFor = (y) => left + ((y - minY) / (maxY - minY)) * plotW;
+
+      ctx.strokeStyle = "#2b3444";
+      ctx.beginPath();
+      ctx.moveTo(left, mid);
+      ctx.lineTo(left + plotW, mid);
+      ctx.stroke();
+
+      transitYears.forEach((y) => {
+        const x = xFor(y);
+        ctx.strokeStyle = "#e1b45f";
+        ctx.beginPath();
+        ctx.moveTo(x, top);
+        ctx.lineTo(x, mid - 8);
+        ctx.stroke();
+      });
+
+      ctx.fillStyle = "#8cc8ff";
+      years.forEach((y) => {
+        const x = xFor(y);
+        const jitter = (Math.random() - 0.5) * 18;
+        ctx.beginPath();
+        ctx.arc(x, mid + 10 + jitter, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.fillStyle = "#9ea7b3";
+      ctx.font = "11px Special Elite";
+      ctx.fillText(String(minY), left, ch - 6);
+      ctx.fillText(String(maxY), left + plotW - 30, ch - 6);
+    }
+
+    function compute(rows) {
+      const years = rows.map(r => num(r["Object.Begin.Date"])).filter(v => v !== null);
+      const incidentYears = rows.map(r => num(r["Year"]));
+      const countries = rows.map(r => (r["Country"] || "Unknown").trim() || "Unknown");
+
+      const countryCount = {};
+      countries.forEach((c) => countryCount[c] = (countryCount[c] || 0) + 1);
+      const topCountries = Object.entries(countryCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8);
+
+      const gaps = [];
+      rows.forEach((r) => {
+        const a = num(r["Object.Begin.Date"]);
+        const b = num(r["Year"]);
+        if (a !== null && b !== null) gaps.push(Math.abs(a - b));
+      });
+
+      return {
+        rowCount: rows.length,
+        uniqueObjects: new Set(rows.map(r => r["Object.ID"]).filter(Boolean)).size,
+        minYear: Math.min(...years),
+        maxYear: Math.max(...years),
+        topCountries,
+        years,
+        gaps
+      };
+    }
+
+    function renderKPIs(stats) {
+      const target = document.getElementById("kpis");
+      const span = stats.maxYear - stats.minYear;
+      const items = [
+        ["Rows", stats.rowCount],
+        ["Unique Object IDs", stats.uniqueObjects],
+        ["Creation Span", `${stats.minYear}-${stats.maxYear}`],
+        ["Years Covered", span],
+      ];
+      target.innerHTML = items.map(([label, value]) => `
+        <article class="kpi">
+          <div class="value">${value}</div>
+          <div class="label">${label}</div>
+        </article>
+      `).join("");
+    }
+
+    async function main() {
+      const text = await fetch("./ObjectsvsHistory.csv").then(r => r.text());
+      const rows = parseCSV(text);
+      const stats = compute(rows);
+      renderKPIs(stats);
+
+      drawHistogram(document.getElementById("timelineChart"), stats.years, stats.minYear, stats.maxYear, 26);
+
+      drawBars(
+        document.getElementById("countryChart"),
+        stats.topCountries.map(d => d[0]),
+        stats.topCountries.map(d => d[1]),
+        "#8cc8ff"
+      );
+
+      const gapBins = [1, 5, 10, 25, 50, 100];
+      const gapCounts = gapBins.map((b) => stats.gaps.filter((g) => g <= b).length);
+      drawBars(
+        document.getElementById("gapChart"),
+        gapBins.map((b) => `<= ${b} yrs`),
+        gapCounts,
+        "#e1b45f"
+      );
+
+      drawTimelineOverlay(
+        document.getElementById("transitChart"),
+        stats.years,
+        [1702,1723,1742,1762,1782,1802,1821,1842,1861,1881,1901,1921,1940,1961,1980,2000,2020]
+      );
+    }
+
+    main();
+  </script>
+</body>
+</html>
