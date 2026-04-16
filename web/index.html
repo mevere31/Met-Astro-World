@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Met Astro World | Scrollytelling</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Met Astro World</p>
+      <h1>From Earthly Objects to Celestial Time</h1>
+    </div>
+    <p class="subhead">A scrolltelling production prototype with section-driven visualization states.</p>
+  </header>
+
+  <main class="scrolly-layout">
+    <aside class="sticky-stage" aria-live="polite">
+      <section class="kpi-grid" id="kpis"></section>
+      <div class="step-progress" id="stepProgress" aria-label="Scroll progress"></div>
+
+      <section class="viz-card">
+        <h2 id="vizTitle">Section 1: Time Span</h2>
+        <p id="vizDesc" class="viz-desc">Creation-year timeline across 1701-2022.</p>
+        <canvas id="mainViz" height="320"></canvas>
+      </section>
+
+      <section class="viz-card secondary-viz">
+        <h3 id="subVizTitle">Supporting View</h3>
+        <canvas id="subViz" height="220"></canvas>
+      </section>
+
+      <section class="legend-card" id="legend"></section>
+    </aside>
+
+    <section class="story-rail" id="storyRail">
+      <article class="step is-active" data-step="1">
+        <h2>1) Introduction</h2>
+        <p>This narrative follows 213 highlight-linked objects from 1701 to 2022, spanning 321 years of cultural production.</p>
+        <p class="dynamic"></p>
+      </article>
+
+      <article class="step" data-step="2">
+        <h2>2) Patterns in Time</h2>
+        <p>The strongest concentration appears in the 18th century (90 objects), followed by the 20th (60) and 19th (54).</p>
+        <p class="dynamic"></p>
+      </article>
+
+      <article class="step" data-step="3">
+        <h2>3) Where Objects Were Created</h2>
+        <p>Geography is global, but concentrated: top 5 countries account for 71.36% of records. Paris is the leading city.</p>
+        <p class="dynamic"></p>
+      </article>
+
+      <article class="step" data-step="4">
+        <h2>4) Historical Incident Alignment</h2>
+        <p>For rows with both dates, object and incident years align tightly: 94.95% are within &plusmn;25 years.</p>
+        <p class="dynamic"></p>
+      </article>
+
+      <article class="step" data-step="5">
+        <h2>5) Symbolic Transit Overlay</h2>
+        <p>Transit proximity is shown as a symbolic layer (non-causal), adding an interpretive celestial frame.</p>
+        <p class="dynamic"></p>
+      </article>
+
+      <article class="step" data-step="6">
+        <h2>6) Final Synthesis</h2>
+        <p>Three clocks—object time, historical time, symbolic time—converge into final takeaways and next actions.</p>
+        <p class="dynamic"></p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>Data source: <code>../ObjectsvsHistory.csv</code> | Typography: digital typewriter style (<code>Special Elite</code>)</p>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>

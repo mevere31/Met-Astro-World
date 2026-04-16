@@ -1,0 +1,262 @@
+@import url("https://fonts.googleapis.com/css2?family=Special+Elite&display=swap");
+
+:root {
+  --bg: #090d12;
+  --bg-alt: #111823;
+  --panel: #141c28;
+  --line: #273447;
+  --line-strong: #3b4e68;
+  --text: #e8e2d2;
+  --muted: #a8acaa;
+  --accent: #e0af5f;
+  --accent-history: #e88f66;
+  --accent-geo: #65b69c;
+  --accent-transit: #7ea8ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  color: var(--text);
+  background: radial-gradient(circle at 15% 15%, #192335 0%, var(--bg) 45%, #06080d 100%);
+  font-family: "Special Elite", "Courier Prime", "IBM Plex Mono", "Courier New", monospace;
+  letter-spacing: 0.015em;
+  line-height: 1.5;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(9, 13, 18, 0.92);
+  backdrop-filter: blur(4px);
+  border-bottom: 1px solid var(--line);
+  padding: 0.8rem 1rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.app-header h1 {
+  margin: 0.2rem 0 0 0;
+  font-size: 0.95rem;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.subhead {
+  margin: 0.35rem 0 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.scrolly-layout {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(340px, 420px);
+  gap: 1rem;
+  align-items: start;
+}
+
+.sticky-stage {
+  position: sticky;
+  top: 84px;
+  align-self: start;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.6rem;
+}
+
+.kpi {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.kpi .value {
+  color: var(--accent);
+  font-size: 1.15rem;
+}
+
+.kpi .label {
+  margin-top: 0.15rem;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.viz-card,
+.legend-card {
+  background: var(--bg-alt);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.8rem;
+}
+
+.viz-card h2,
+.viz-card h3 {
+  margin: 0;
+  color: var(--accent);
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.viz-desc {
+  margin: 0.35rem 0 0.6rem 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+canvas {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #0a1119;
+  display: block;
+}
+
+.legend-card {
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.step-progress {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.progress-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: #0a1017;
+  transition: all 0.22s ease;
+}
+
+.progress-dot.active {
+  background: var(--accent);
+  box-shadow: 0 0 6px rgba(224, 175, 95, 0.6);
+}
+
+.legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-right: 0.7rem;
+}
+
+.dot-legend {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.35rem;
+  transform: translateY(1px);
+}
+
+.chip-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.story-rail {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.step {
+  background: rgba(20, 28, 40, 0.92);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.95rem;
+  min-height: 68vh;
+  display: grid;
+  align-content: center;
+  transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+}
+
+.step.is-active {
+  border-color: var(--accent);
+  background: rgba(24, 35, 50, 0.98);
+  transform: translateX(-2px);
+}
+
+.step h2 {
+  margin: 0;
+  color: #f6e8c8;
+  font-size: 0.98rem;
+}
+
+.step p {
+  margin: 0.45rem 0 0 0;
+  color: #dbd5c5;
+  font-size: 0.82rem;
+}
+
+.app-footer {
+  max-width: 1280px;
+  margin: 0 auto 2rem;
+  padding: 0 1rem;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.cursor-blink {
+  display: inline-block;
+  width: 8px;
+  margin-left: 4px;
+  color: var(--accent);
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 980px) {
+  .scrolly-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sticky-stage {
+    position: relative;
+    top: 0;
+  }
+
+  .step {
+    min-height: auto;
+  }
+}
+
