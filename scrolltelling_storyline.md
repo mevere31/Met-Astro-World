@@ -1,9 +1,9 @@
 # Scrolltelling Data Story Blueprint (Data-Specific Update)
 
 ## Theme
-**"From Earthly Objects to Celestial Time: How The Met's highlight objects sit between human history and planetary cycles."**
+**"From Earthly Objects to Celestial Time: How The Met Collection's Highlights Objects Sit Between Human History and Planetary Cycles."**
 
-This version is now based on the CSV in the repo: `ObjectsvsHistory.csv`.
+This version is based on the CSV in the repo: `ObjectsvsHistory.csv`.
 
 ---
 
@@ -28,8 +28,9 @@ Top countries by count:
 ## 1) Introduction (hook + scope)
 
 ### Narrative copy
-"This story follows **213 objects** connected to historical incidents, made between **1701 and 2022**.  
-That is **321 years** of cultural production - roughly **4 human lifetimes** if we use ~80 years per lifetime."
+"This narrative follows a sample of **213 objects** in The Met Collection designated as *Highlights*, connected to historical incidents, made between **1701 and 2022**.
+
+That is **321 years** of cultural production. The Met Museum was founded in **1870** and as of **2026** is **156 years old**. A few of the objects in this collection were acquired as early as **1889**."
 
 ### Data insight to show
 - Total rows: **213**
@@ -49,8 +50,8 @@ That is **321 years** of cultural production - roughly **4 human lifetimes** if 
 ## 2) Patterns in the dataset (what appears most)
 
 ### Narrative copy
-"The collection is not evenly spread in time.  
-It is heavily concentrated in the **18th century (90 objects)**, with additional dense clusters in the **20th century (60)** and **19th century (54)**."
+"These objects are not evenly spread in time.  
+They are heavily concentrated in the **18th century (90 objects)**, with additional dense clusters in the **20th century (60)** and **19th century (54)**."
 
 ### Data insight to show
 - Century clusters:
@@ -80,7 +81,7 @@ It is heavily concentrated in the **18th century (90 objects)**, with additional
 
 ### Narrative copy
 "The objects are globally distributed, but strongly concentrated in a few places:  
-the top five countries account for **71.36%** of all records."
+the top five countries account for **71.36%** of all records in the sample."
 
 ### Data insight to show
 - Top 10 countries by count (starting with France, Germany, Italy, Japan, India)
@@ -95,7 +96,7 @@ the top five countries account for **71.36%** of all records."
 ### Visual element
 - **Choropleth map** by country + **bubble map** by city
 - Toggle: "Country view" / "City view"
-- Hover cards: title, object name, year, location, linked incident
+- Hover cards: title, object name, year, location, linked incident, object image
 
 ### Transition
 - Country bubbles collapse into event bands on a timeline.
@@ -106,7 +107,7 @@ the top five countries account for **71.36%** of all records."
 
 ### Narrative copy
 "Most object dates in this file are tightly linked to incident dates, because the dataset is curated as object-incident pairs.  
-The strongest insight: objects were often made **during the same period** as major social and political change."
+The strongest insight: objects were often made during the same period as major social and political change."
 
 ### Data insight to show
 Using rows with both object year and incident year (n=198):
@@ -139,7 +140,7 @@ Global anchor overlays (object year vs world-history reference bands):
 
 ### Narrative copy
 "This is a symbolic lens, not a causal claim.  
-It asks whether object creation clusters overlap with broad collective-cycle transit windows."
+It asks whether object creation clusters overlap with broad collective-cycle transit windows. The following transits feature movements by planets considered generation or era markers in astrology. Jupiter, Saturn, and Uranus mark generational changes and societal restructures."
 
 ### Data insight to show
 Approximate year-window overlaps from selected transit milestone years:
@@ -179,7 +180,7 @@ For production-grade transit accuracy, compute exact ingress/conjunction timesta
 1) object creation time,
 2) historical event time,
 3) symbolic transit time.
-Seen together, they make cultural memory easier to feel and compare."
+Seen together, they make cultural memories easier to feel and compare."
 
 ### End on three hard takeaways
 1. **Temporal concentration:** 18th century is the single strongest cluster (90 objects).  
@@ -197,6 +198,7 @@ Seen together, they make cultural memory easier to feel and compare."
 - Add confidence badges for missing or uncertain fields (e.g., missing incident year, unknown city)
 - Normalize place names (e.g., Munchen/Munich variants)
 - Add data-quality panel (duplicate object IDs, typos, missing dates)
+- Expand to include more objects from the Met Collection
 
 ---
 
