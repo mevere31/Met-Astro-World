@@ -73,6 +73,7 @@ fetch("ObjectsvsHistory.csv")
 function renderPage(records) {
   const analytics = computeAnalytics(records);
   const eventTypes = analytics.topEventTypes.map((entry) => entry.label);
+  const cities = analytics.topCities.map((entry) => entry.label);
   app.className = "";
   app.innerHTML = `
     <main class="page">
@@ -251,6 +252,13 @@ function renderPage(records) {
               </select>
             </label>
             <label class="control">
+              <span class="control-label">City</span>
+              <select id="city-filter" class="control-select">
+                <option value="all">All cities</option>
+                ${cities.slice(0, 12).map((city) => `<option value="${escapeHTML(city)}">${escapeHTML(city)}</option>`).join("")}
+              </select>
+            </label>
+            <label class="control">
               <span class="control-label">Event type</span>
               <select id="event-filter" class="control-select">
                 <option value="all">All event types</option>
@@ -336,6 +344,7 @@ function setupScrollytelling(records) {
   const stepIndex = document.getElementById("panel-step-index");
   const progressValue = document.getElementById("panel-progress-value");
   const countryFilter = document.getElementById("country-filter");
+  const cityFilter = document.getElementById("city-filter");
   const eventFilter = document.getElementById("event-filter");
   const resetButton = document.getElementById("filter-reset");
   const statRows = document.getElementById("stat-rows");
@@ -370,7 +379,7 @@ function setupScrollytelling(records) {
   let activeSvg = svgPrimary;
   let inactiveSvg = svgSecondary;
   let currentStep = "intro";
-  let state = buildState(records, countryFilter.value, eventFilter.value);
+  let state = buildState(records, countryFilter.value, cityFilter.value, eventFilter.value);
 
   const ui = {
     title,
@@ -440,14 +449,27 @@ function setupScrollytelling(records) {
     renderWithTransition((svg) => renders[currentStep](svg));
   }
 
+  function rebuildCityOptions() {
+    if (!cityFilter) return;
+    const cities = getCityOptions(records, countryFilter.value, eventFilter.value);
+    const current = cityFilter.value;
+    cityFilter.innerHTML = [
+      `<option value="all">All cities</option>`,
+      ...cities.map((city) => `<option value="${escapeHTML(city)}">${escapeHTML(city)}</option>`)
+    ].join("");
+    cityFilter.value = cities.includes(current) ? current : "all";
+  }
+
   function applyFilters() {
-    state = buildState(records, countryFilter.value, eventFilter.value);
+    rebuildCityOptions();
+    state = buildState(records, countryFilter.value, cityFilter.value, eventFilter.value);
     updateDetailCard(detailCard, null, state.analytics.totalRows);
     renderCurrentStep();
   }
 
   function resetFilters() {
     countryFilter.value = "all";
+    cityFilter.value = "all";
     eventFilter.value = "all";
     applyFilters();
   }
@@ -475,9 +497,11 @@ function setupScrollytelling(records) {
 
   stepNodes.forEach((step) => observer.observe(step));
   countryFilter.addEventListener("change", applyFilters);
+  cityFilter.addEventListener("change", applyFilters);
   eventFilter.addEventListener("change", applyFilters);
   resetButton.addEventListener("click", resetFilters);
   updateDetailCard(detailCard, null, state.analytics.totalRows);
+  rebuildCityOptions();
   renderCurrentStep();
 
   window.addEventListener("mousemove", (event) => {
@@ -1048,15 +1072,16 @@ function parseCSV(text) {
   });
 }
 
-function buildState(records, country, eventType) {
+function buildState(records, country, city, eventType) {
   const filtered = records.filter((row) => {
     const countryMatches = country === "all" || cleanLabel(row.country) === country;
+    const cityMatches = city === "all" || cleanLabel(row.city) === city;
     const eventMatches = eventType === "all" || cleanLabel(row.eventType) === eventType;
-    return countryMatches && eventMatches;
+    return countryMatches && cityMatches && eventMatches;
   });
   const recordsForAnalytics = filtered.length ? filtered : records;
   return {
-    filters: { country, eventType, isFallback: filtered.length === 0 },
+    filters: { country, city, eventType, isFallback: filtered.length === 0 },
     analytics: computeAnalytics(recordsForAnalytics)
   };
 }
@@ -1115,10 +1140,28 @@ function getFilterLabel(filters) {
   if (filters.country !== "all") {
     parts.push(filters.country);
   }
+  if (filters.city !== "all") {
+    parts.push(filters.city);
+  }
   if (filters.eventType !== "all") {
     parts.push(filters.eventType);
   }
   return parts.join(" / ");
+}
+
+function getCityOptions(records, country, eventType) {
+  const filtered = records.filter((row) => {
+    const countryMatches = country === "all" || cleanLabel(row.country) === country;
+    const eventMatches = eventType === "all" || cleanLabel(row.eventType) === eventType;
+    return countryMatches && eventMatches;
+  });
+  if (!filtered.length) {
+    return [];
+  }
+  const cityMap = tally(filtered.map((row) => cleanLabel(row.city) || "Unknown city"));
+  return mapToSortedArray(cityMap, filtered.length)
+    .slice(0, 30)
+    .map((entry) => entry.label);
 }
 
 function stepLabel(step) {
