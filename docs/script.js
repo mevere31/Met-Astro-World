@@ -60,7 +60,7 @@ async function fetchMetObject(objectId) {
   return request;
 }
 
-fetch("ObjectsvsHistory.csv")
+fetch(new URL("./ObjectsvsHistory.csv", import.meta.url))
   .then((response) => response.text())
   .then((csvText) => {
     const records = parseCSV(csvText);
