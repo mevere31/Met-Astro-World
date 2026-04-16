@@ -248,7 +248,8 @@ function renderPage(records) {
 
           <div class="legend" id="legend"></div>
           <div class="viz-frame">
-            <svg id="viz" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
+            <svg class="viz-layer is-active" id="viz" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
+            <svg class="viz-layer" id="viz-next" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
           </div>
 
           <div class="panel-footer">
@@ -279,7 +280,9 @@ function renderPage(records) {
 }
 
 function setupScrollytelling(records) {
-  const svg = document.getElementById("viz");
+  const vizFrame = document.querySelector(".viz-frame");
+  const svgPrimary = document.getElementById("viz");
+  const svgSecondary = document.getElementById("viz-next");
   const tooltip = document.getElementById("tooltip");
   const legend = document.getElementById("legend");
   const title = document.getElementById("viz-title");
@@ -313,6 +316,10 @@ function setupScrollytelling(records) {
     takeaways: "05"
   };
 
+  const prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const transitionMs = prefersReducedMotion ? 0 : 260;
+  let activeSvg = svgPrimary;
+  let inactiveSvg = svgSecondary;
   let currentStep = "intro";
   let state = buildState(records, countryFilter.value, eventFilter.value);
 
@@ -328,13 +335,51 @@ function setupScrollytelling(records) {
     detailCard
   };
   const renders = {
-    intro: () => renderIntro(svg, state.analytics, ui),
-    patterns: () => renderPatterns(svg, state.analytics, ui),
-    geography: () => renderGeography(svg, state.analytics, ui),
-    history: () => renderHistory(svg, state.analytics, ui),
-    transits: () => renderTransits(svg, state.analytics, ui),
-    takeaways: () => renderTakeaways(svg, state.analytics, ui)
+    intro: (svg) => renderIntro(svg, state.analytics, ui),
+    patterns: (svg) => renderPatterns(svg, state.analytics, ui),
+    geography: (svg) => renderGeography(svg, state.analytics, ui),
+    history: (svg) => renderHistory(svg, state.analytics, ui),
+    transits: (svg) => renderTransits(svg, state.analytics, ui),
+    takeaways: (svg) => renderTakeaways(svg, state.analytics, ui)
   };
+
+  function swapVizLayers() {
+    const currentActive = activeSvg;
+    activeSvg = inactiveSvg;
+    inactiveSvg = currentActive;
+  }
+
+  function renderWithTransition(renderFn) {
+    if (!vizFrame) {
+      renderFn(activeSvg);
+      return;
+    }
+
+    // Prepare inactive layer.
+    clearSVG(inactiveSvg);
+    renderFn(inactiveSvg);
+
+    if (transitionMs === 0) {
+      activeSvg.classList.remove("is-active");
+      inactiveSvg.classList.add("is-active");
+      clearSVG(activeSvg);
+      swapVizLayers();
+      return;
+    }
+
+    const oldActive = activeSvg;
+    const newActive = inactiveSvg;
+    vizFrame.classList.add("viz-frame--transitioning");
+    newActive.classList.add("is-active");
+    oldActive.classList.remove("is-active");
+
+    window.setTimeout(() => {
+      // Clear the now-inactive SVG so it doesn't capture events.
+      clearSVG(oldActive);
+      swapVizLayers();
+      vizFrame.classList.remove("viz-frame--transitioning");
+    }, transitionMs + 40);
+  }
 
   function renderCurrentStep() {
     const filteredLabel = getFilterLabel(state.filters);
@@ -343,7 +388,7 @@ function setupScrollytelling(records) {
     statCountries.textContent = String(state.analytics.countryCount);
     progressValue.textContent = `${stepLabel(currentStep)}${filteredLabel ? ` / ${filteredLabel}` : ""}`;
     ui.stepIndex.textContent = stepMeta[currentStep];
-    renders[currentStep]();
+    renderWithTransition((svg) => renders[currentStep](svg));
   }
 
   function applyFilters() {

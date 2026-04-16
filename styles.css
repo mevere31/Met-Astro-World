@@ -16,6 +16,7 @@
   --shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
   --glow: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 28px 80px rgba(0, 0, 0, 0.42);
   --max-width: 1500px;
+  --viz-transition: 260ms;
 }
 
 * {
@@ -533,16 +534,46 @@ a {
   border-radius: 22px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  min-height: 420px;
   background:
     radial-gradient(circle at top center, rgba(127, 214, 255, 0.08), transparent 42%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015));
 }
 
-#viz {
+.viz-layer {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: auto;
   min-height: 420px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--viz-transition) ease;
+}
+
+.viz-layer.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.viz-frame--transitioning .viz-layer {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .viz-layer {
+    transition: none;
+  }
+
+  .cta,
+  .control-reset {
+    transition: none;
+  }
 }
 
 .panel-footer {
