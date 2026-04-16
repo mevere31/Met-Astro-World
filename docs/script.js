@@ -1242,6 +1242,41 @@ function getCityOptions(records, country, eventType) {
     .map((entry) => entry.label);
 }
 
+function computeDataQuality(records) {
+  const objectIdMap = new Map();
+  let missingObjectId = 0;
+  let missingObjectYear = 0;
+  let missingEventYear = 0;
+  let unknownCountry = 0;
+  let unknownCity = 0;
+
+  records.forEach((row) => {
+    if (!Number.isFinite(row.objectId)) {
+      missingObjectId += 1;
+    } else {
+      objectIdMap.set(row.objectId, (objectIdMap.get(row.objectId) || 0) + 1);
+    }
+    if (!Number.isFinite(row.objectYear)) missingObjectYear += 1;
+    if (!Number.isFinite(row.eventYear)) missingEventYear += 1;
+    if (!cleanLabel(row.country)) unknownCountry += 1;
+    if (!cleanLabel(row.city)) unknownCity += 1;
+  });
+
+  const duplicateObjectIds = Array.from(objectIdMap.values()).reduce((total, count) => total + (count > 1 ? count - 1 : 0), 0);
+  const duplicateObjectIdCount = Array.from(objectIdMap.entries()).reduce((total, [, count]) => total + (count > 1 ? 1 : 0), 0);
+
+  return {
+    totalRows: records.length,
+    missingObjectId,
+    duplicateObjectIds,
+    duplicateObjectIdCount,
+    missingObjectYear,
+    missingEventYear,
+    unknownCountry,
+    unknownCity
+  };
+}
+
 function stepLabel(step) {
   const labels = {
     intro: "Overview",

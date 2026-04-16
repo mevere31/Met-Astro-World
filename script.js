@@ -1091,6 +1091,64 @@ function computeAnalytics(records) {
   };
 }
 
+function computeDataQuality(records) {
+  const objectIdCounts = new Map();
+  let missingObjectId = 0;
+  let missingIncidentYear = 0;
+  let missingObjectYear = 0;
+  let unknownCity = 0;
+  let unknownCountry = 0;
+  let unknownEventType = 0;
+
+  records.forEach((row) => {
+    if (Number.isFinite(row.objectId)) {
+      objectIdCounts.set(row.objectId, (objectIdCounts.get(row.objectId) || 0) + 1);
+    } else {
+      missingObjectId += 1;
+    }
+
+    if (!Number.isFinite(row.eventYear)) {
+      missingIncidentYear += 1;
+    }
+    if (!Number.isFinite(row.objectYear)) {
+      missingObjectYear += 1;
+    }
+
+    const city = cleanLabel(row.city);
+    if (!city || city.toLowerCase() === "unknown" || city.toLowerCase() === "unknown city") {
+      unknownCity += 1;
+    }
+
+    const country = cleanLabel(row.country);
+    if (!country || country.toLowerCase() === "unknown") {
+      unknownCountry += 1;
+    }
+
+    const eventType = cleanLabel(row.eventType);
+    if (!eventType || eventType.toLowerCase() === "unknown event") {
+      unknownEventType += 1;
+    }
+  });
+
+  let duplicateObjectIds = 0;
+  objectIdCounts.forEach((count) => {
+    if (count > 1) {
+      duplicateObjectIds += (count - 1);
+    }
+  });
+
+  return {
+    totalRows: records.length,
+    missingObjectId,
+    duplicateObjectIds,
+    missingIncidentYear,
+    missingObjectYear,
+    unknownCity,
+    unknownCountry,
+    unknownEventType
+  };
+}
+
 function parseCSV(text) {
   const rows = [];
   let current = "";
