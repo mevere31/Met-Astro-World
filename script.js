@@ -69,8 +69,16 @@ fetch(new URL("./ObjectsvsHistory.csv", import.meta.url))
   .catch((error) => {
     console.error(error);
     app.className = "loading";
-    app.textContent = "Unable to load ObjectsvsHistory.csv. Run a local server to view the prototype.";
+    const message = error instanceof Error ? error.message : String(error);
+    app.textContent = `Unable to load or process ObjectsvsHistory.csv (${message}).`;
   });
+
+window.addEventListener("error", (event) => {
+  const error = event?.error;
+  if (!error) return;
+  if (!app || !app.classList.contains("loading")) return;
+  app.textContent = `Prototype error: ${error.message || String(error)}`;
+});
 
 function renderPage(records) {
   const analytics = computeAnalytics(records);
