@@ -1,5 +1,12 @@
 const app = document.getElementById("app");
 
+const PREFERS_REDUCED_MOTION = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const MOTION = {
+  enabled: !PREFERS_REDUCED_MOTION,
+  durationMs: 520,
+  quickMs: 260
+};
+
 const HISTORY_ANCHORS = [
   { year: 1789, label: "French Revolution", color: "#ffd27f" },
   { year: 1800, label: "Industrial Revolution midpoint", color: "#7fd6ff" },
@@ -316,8 +323,7 @@ function setupScrollytelling(records) {
     takeaways: "05"
   };
 
-  const prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const transitionMs = prefersReducedMotion ? 0 : 260;
+  const transitionMs = MOTION.enabled ? 260 : 0;
   let activeSvg = svgPrimary;
   let inactiveSvg = svgSecondary;
   let currentStep = "intro";
@@ -437,6 +443,57 @@ function setupScrollytelling(records) {
   });
 }
 
+function animateFadeIn(node, delayMs = 0, durationMs = MOTION.quickMs) {
+  if (!MOTION.enabled) return;
+  node.style.opacity = "0";
+  node.style.transition = `opacity ${durationMs}ms ease ${delayMs}ms`;
+  window.requestAnimationFrame(() => {
+    node.style.opacity = "1";
+  });
+}
+
+function animateCirclePop(node, finalRadius, delayMs = 0, durationMs = MOTION.quickMs) {
+  if (!MOTION.enabled) return;
+  node.setAttribute("r", "0");
+  node.style.opacity = "0.35";
+  node.style.transition = `r ${durationMs}ms cubic-bezier(0.16, 1, 0.3, 1) ${delayMs}ms, opacity ${durationMs}ms ease ${delayMs}ms`;
+  window.requestAnimationFrame(() => {
+    node.setAttribute("r", String(finalRadius));
+    node.style.opacity = "1";
+  });
+}
+
+function animateRectGrow(node, finalY, finalHeight, delayMs = 0, durationMs = MOTION.quickMs) {
+  if (!MOTION.enabled) return;
+  const startY = finalY + finalHeight;
+  node.setAttribute("y", String(startY));
+  node.setAttribute("height", "0");
+  node.style.opacity = "0.55";
+  node.style.transition = `y ${durationMs}ms cubic-bezier(0.16, 1, 0.3, 1) ${delayMs}ms, height ${durationMs}ms cubic-bezier(0.16, 1, 0.3, 1) ${delayMs}ms, opacity ${durationMs}ms ease ${delayMs}ms`;
+  window.requestAnimationFrame(() => {
+    node.setAttribute("y", String(finalY));
+    node.setAttribute("height", String(finalHeight));
+    node.style.opacity = "1";
+  });
+}
+
+function animatePathDraw(pathNode, delayMs = 0, durationMs = MOTION.durationMs) {
+  if (!MOTION.enabled) return;
+  try {
+    const length = pathNode.getTotalLength();
+    pathNode.style.strokeDasharray = `${length}`;
+    pathNode.style.strokeDashoffset = `${length}`;
+    pathNode.style.opacity = "0.7";
+    pathNode.style.transition = `stroke-dashoffset ${durationMs}ms ease ${delayMs}ms, opacity ${durationMs}ms ease ${delayMs}ms`;
+    window.requestAnimationFrame(() => {
+      pathNode.style.strokeDashoffset = "0";
+      pathNode.style.opacity = "1";
+    });
+  } catch {
+    // Some paths may not support getTotalLength.
+  }
+}
+
 function renderIntro(svg, analytics, ui) {
   updateHeader(ui, {
     kicker: "Overview",
@@ -471,6 +528,7 @@ function renderIntro(svg, analytics, ui) {
     const amplitude = 14 + (index % 5) * 5;
     const y = axisY + Math.sin(index * 0.65) * amplitude;
     const circle = appendCircle(svg, x(year), y, 4.1, "#7fd6ff", 0.84);
+    animateCirclePop(circle, 4.1, Math.min(index, 44) * 6);
     circle.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `Object year ${year}`));
     circle.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
   });
@@ -516,7 +574,8 @@ function renderPatterns(svg, analytics, ui) {
   const path = bins.map((bin, index) => `${index === 0 ? "M" : "L"} ${x(bin.year)} ${y(bin.count)}`).join(" ");
   const fillPath = `${path} L ${x(bins[bins.length - 1].year)} ${height - margin.bottom} L ${x(bins[0].year)} ${height - margin.bottom} Z`;
   appendPath(svg, fillPath, "rgba(127, 214, 255, 0.18)", "none", 0);
-  appendPath(svg, path, "none", "#7fd6ff", 4, 0.98);
+  const densityLine = appendPath(svg, path, "none", "#7fd6ff", 4, 0.98);
+  animatePathDraw(densityLine, 60, 560);
 
   analytics.topDecades.slice(0, 3).forEach((decade) => {
     const px = x(decade.year);
@@ -561,6 +620,7 @@ function renderGeography(svg, analytics, ui) {
     const isTopFive = index < 5;
     const fill = isTopFive ? "#ffb56b" : "#79e2b0";
     const circle = appendCircle(svg, centerX + dx, centerY + dy, radius, fill, 0.78);
+    animateCirclePop(circle, radius, index * 70);
     circle.setAttribute("stroke", "rgba(255,255,255,0.16)");
     circle.setAttribute("stroke-width", "1");
     circle.addEventListener("mouseenter", () => {
@@ -620,6 +680,9 @@ function renderHistory(svg, analytics, ui) {
     const line = appendPath(svg, path, "none", stroke, 1.2, 0.42);
     const objectDot = appendCircle(svg, objectX, topLane + ((index % 7) - 3) * 6, 3.5, "#7fd6ff", 0.86);
     const eventDot = appendCircle(svg, eventX, bottomLane + ((index % 7) - 3) * 6, 3.5, "#ffd27f", 0.86);
+    animateFadeIn(line, Math.min(index, 40) * 8, 360);
+    animateCirclePop(objectDot, 3.5, Math.min(index, 60) * 5, 240);
+    animateCirclePop(eventDot, 3.5, Math.min(index, 60) * 5 + 50, 240);
 
     [line, objectDot, eventDot].forEach((node) => {
       node.addEventListener("mouseenter", () => {
@@ -671,6 +734,7 @@ function renderTransits(svg, analytics, ui) {
       const y = transitLane - 54 + groupIndex * 52;
       appendLine(svg, px, y + 10, px, objectLane, group.color, 0.9, 0.12);
       const dot = appendCircle(svg, px, y, 6.2, group.color, 0.95);
+      animateCirclePop(dot, 6.2, groupIndex * 140 + Math.min(index, 6) * 50, 240);
       dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `${group.label}<br>${year}`));
       dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
 
@@ -683,6 +747,7 @@ function renderTransits(svg, analytics, ui) {
   analytics.objectYears.forEach((year, index) => {
     const jitter = ((index % 15) - 7) * 6;
     const dot = appendCircle(svg, x(year), objectLane + jitter, 3.8, "#7fd6ff", 0.7);
+    animateCirclePop(dot, 3.8, Math.min(index, 70) * 4 + 180, 200);
     dot.addEventListener("mouseenter", () => {
       showTooltip(ui.tooltip, `Object year ${year}`);
       updateDetailCard(ui.detailCard, analytics.timelineExamples.get(year) || null, analytics.totalRows);
@@ -697,7 +762,8 @@ function renderTransits(svg, analytics, ui) {
   ];
 
   cards.forEach((card, index) => {
-    appendRect(svg, 64 + index * 240, 654, 190, 92, "rgba(255,255,255,0.045)", "rgba(255,255,255,0.08)", 18);
+    const rect = appendRect(svg, 64 + index * 240, 654, 190, 92, "rgba(255,255,255,0.045)", "rgba(255,255,255,0.08)", 18);
+    animateFadeIn(rect, 240 + index * 90, 260);
     appendText(svg, 84 + index * 240, 690, card[0], "start", "#9cadc6", 13, 600);
     appendText(svg, 84 + index * 240, 722, card[1], "start", "#edf4ff", 28, 700);
   });
@@ -764,7 +830,9 @@ function renderTakeaways(svg, analytics, ui) {
 
     spark.forEach((point, index) => {
       const barHeight = (point.count / max) * 110;
-      appendRect(svg, card.x + 24 + index * 10, card.y + card.h - 36 - barHeight, 7, barHeight, `${card.color}aa`, "none", 4);
+      const y = card.y + card.h - 36 - barHeight;
+      const rect = appendRect(svg, card.x + 24 + index * 10, y, 7, barHeight, `${card.color}aa`, "none", 4);
+      animateRectGrow(rect, y, barHeight, index * 14, 240);
     });
   });
 
