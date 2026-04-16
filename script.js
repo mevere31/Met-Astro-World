@@ -33,8 +33,7 @@ fetch("ObjectsvsHistory.csv")
   .then((response) => response.text())
   .then((csvText) => {
     const records = parseCSV(csvText);
-    const analytics = computeAnalytics(records);
-    renderPage(records, analytics);
+    renderPage(records);
   })
   .catch((error) => {
     console.error(error);
@@ -42,13 +41,15 @@ fetch("ObjectsvsHistory.csv")
     app.textContent = "Unable to load ObjectsvsHistory.csv. Run a local server to view the prototype.";
   });
 
-function renderPage(records, analytics) {
+function renderPage(records) {
+  const analytics = computeAnalytics(records);
+  const eventTypes = analytics.topEventTypes.map((entry) => entry.label);
   app.className = "";
   app.innerHTML = `
     <main class="page">
       <section class="story-shell">
         <header class="masthead">
-          <span class="eyebrow">Met Astro World / Stage 01</span>
+          <span class="eyebrow">Met Astro World / Stage 02</span>
           <h1>From Earthly Objects to Celestial Time</h1>
           <p class="lede">
             A cleaned-up scrollytelling foundation built from the repository storyline and dataset.
@@ -101,7 +102,7 @@ function renderPage(records, analytics) {
               <h2>The collection is concentrated, not evenly distributed.</h2>
               <p>
                 The strongest cluster sits in the 18th century, with additional weight in the 19th and 20th.
-                About <strong>${formatPercent(analytics.pre1900Share)}</strong> of all rows were created before 1900.
+                Use the filters in the panel to see how the timeline changes by country or event type.
               </p>
               <ul class="insight-list">
                 <li>18th century: <strong>${analytics.centuries["18th"]}</strong> objects</li>
@@ -121,7 +122,7 @@ function renderPage(records, analytics) {
               <h2>A globally distributed file with a narrow center of gravity.</h2>
               <p>
                 The sample spans <strong>${analytics.countryCount}</strong> countries, but the top five account for
-                <strong>${formatPercent(analytics.topFiveShare)}</strong> of the total. Paris is the most dominant city node.
+                <strong>${formatPercent(analytics.topFiveShare)}</strong> of the total. Use the region filter to compare the dominant countries against the full file.
               </p>
               <ul class="insight-list">
                 ${analytics.topCountries.slice(0, 5).map((country, index) => `
@@ -140,7 +141,7 @@ function renderPage(records, analytics) {
               <h2>Most object dates sit extremely close to the incident dates they are paired with.</h2>
               <p>
                 This is a curated object-incident dataset, so the strongest signal is proximity.
-                The median gap is <strong>${analytics.gapMetrics.medianGap}</strong> years.
+                The event-type filter reveals which categories stay tightly aligned and which spread across wider date gaps.
               </p>
               <div class="metric-grid">
                 <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within1)}</strong><span>Within ±1 year</span></div>
@@ -159,7 +160,7 @@ function renderPage(records, analytics) {
               <h2>This is a symbolic comparison, not a causal claim.</h2>
               <p>
                 The chart asks whether object creation clusters overlap with broad transit milestone windows.
-                In this sample, the strongest overlap is with the Jupiter-Saturn cycle.
+                Filtered views make it easier to compare whether specific object groups cluster near the same symbolic markers.
               </p>
               <ul class="insight-list">
                 <li>Jupiter-Saturn ±5 years: <strong>${formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)}</strong></li>
@@ -177,8 +178,7 @@ function renderPage(records, analytics) {
               </div>
               <h2>Three clocks now share one visual system.</h2>
               <p>
-                This stage focuses on structure and polish: a maintainable front-end shell, a more cohesive layout,
-                and stronger visual hierarchy for the next stages of interaction and media work.
+                This stage adds an interaction layer: filtered views, richer object details, and more exploratory control over the scroll panel.
               </p>
               <div class="metric-grid">
                 <div class="metric"><strong>${analytics.centuries["18th"]}</strong><span>Largest century cluster</span></div>
@@ -195,45 +195,90 @@ function renderPage(records, analytics) {
       </section>
 
       <aside class="sticky-panel">
-        <div class="viz-header">
-          <div>
-            <span class="eyebrow" id="viz-kicker">Overview</span>
-            <h3 id="viz-title">Dataset overview</h3>
+        <div class="panel-content">
+          <div class="panel-topbar">
+            <span class="panel-pill"><span class="panel-dot"></span>Interactive panel</span>
+            <span class="panel-pill">Stage 02</span>
           </div>
-          <span class="panel-step-index" id="panel-step-index">00</span>
+
+          <div class="viz-header">
+            <div>
+              <span class="eyebrow" id="viz-kicker">Overview</span>
+              <h3 id="viz-title">Dataset overview</h3>
+            </div>
+            <span class="panel-step-index" id="panel-step-index">00</span>
+          </div>
+
+          <p id="viz-description" class="viz-description">
+            The visual panel updates as each story chapter becomes active.
+          </p>
+
+          <div class="panel-controls">
+            <label class="control">
+              <span class="control-label">Country focus</span>
+              <select id="country-filter" class="control-select">
+                <option value="all">All countries</option>
+                ${analytics.topCountries.slice(0, 10).map((country) => `<option value="${escapeHTML(country.label)}">${escapeHTML(country.label)}</option>`).join("")}
+              </select>
+            </label>
+            <label class="control">
+              <span class="control-label">Event type</span>
+              <select id="event-filter" class="control-select">
+                <option value="all">All event types</option>
+                ${eventTypes.map((type) => `<option value="${escapeHTML(type)}">${escapeHTML(type)}</option>`).join("")}
+              </select>
+            </label>
+            <button type="button" class="control-reset" id="filter-reset">Reset filters</button>
+          </div>
+
+          <div class="panel-highlights">
+            <div class="panel-highlight">
+              <span class="panel-label">Rows</span>
+              <strong id="stat-rows">${analytics.totalRows}</strong>
+            </div>
+            <div class="panel-highlight">
+              <span class="panel-label">Span</span>
+              <strong id="stat-span">${analytics.objectRange.span}y</strong>
+            </div>
+            <div class="panel-highlight">
+              <span class="panel-label">Countries</span>
+              <strong id="stat-countries">${analytics.countryCount}</strong>
+            </div>
+          </div>
+
+          <div class="legend" id="legend"></div>
+          <div class="viz-frame">
+            <svg id="viz" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
+          </div>
+
+          <div class="panel-footer">
+            <div class="panel-note" id="viz-footnote"></div>
+            <div class="panel-progress">
+              <span class="panel-progress-label">Active view</span>
+              <span class="panel-progress-value" id="panel-progress-value">Overview</span>
+            </div>
+          </div>
         </div>
-
-        <p id="viz-description" class="viz-description">
-          The visual panel updates as each story chapter becomes active.
-        </p>
-
-        <div class="panel-highlights">
-          <div class="panel-highlight">
-            <span class="panel-label">Rows</span>
-            <strong>${analytics.totalRows}</strong>
-          </div>
-          <div class="panel-highlight">
-            <span class="panel-label">Span</span>
-            <strong>${analytics.objectRange.span}y</strong>
-          </div>
-          <div class="panel-highlight">
-            <span class="panel-label">Countries</span>
-            <strong>${analytics.countryCount}</strong>
-          </div>
-        </div>
-
-        <div class="legend" id="legend"></div>
-        <svg id="viz" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
-        <div class="footer-note" id="viz-footnote"></div>
       </aside>
     </main>
     <div class="tooltip" id="tooltip"></div>
+    <aside class="detail-card" id="detail-card">
+      <span class="detail-card__eyebrow">Selection</span>
+      <h3 id="detail-title">Hover a mark for details</h3>
+      <p id="detail-meta">Filters update the story metrics and visual states across the full panel.</p>
+      <dl class="detail-grid">
+        <div><dt>Object year</dt><dd id="detail-object-year">-</dd></div>
+        <div><dt>Incident year</dt><dd id="detail-event-year">-</dd></div>
+        <div><dt>Country</dt><dd id="detail-country">-</dd></div>
+        <div><dt>Event type</dt><dd id="detail-event-type">-</dd></div>
+      </dl>
+    </aside>
   `;
 
-  setupScrollytelling(records, analytics);
+  setupScrollytelling(records);
 }
 
-function setupScrollytelling(records, analytics) {
+function setupScrollytelling(records) {
   const svg = document.getElementById("viz");
   const tooltip = document.getElementById("tooltip");
   const legend = document.getElementById("legend");
@@ -242,7 +287,22 @@ function setupScrollytelling(records, analytics) {
   const description = document.getElementById("viz-description");
   const footnote = document.getElementById("viz-footnote");
   const stepIndex = document.getElementById("panel-step-index");
+  const progressValue = document.getElementById("panel-progress-value");
+  const countryFilter = document.getElementById("country-filter");
+  const eventFilter = document.getElementById("event-filter");
+  const resetButton = document.getElementById("filter-reset");
+  const statRows = document.getElementById("stat-rows");
+  const statSpan = document.getElementById("stat-span");
+  const statCountries = document.getElementById("stat-countries");
   const stepNodes = Array.from(document.querySelectorAll(".story-step"));
+  const detailCard = {
+    title: document.getElementById("detail-title"),
+    meta: document.getElementById("detail-meta"),
+    objectYear: document.getElementById("detail-object-year"),
+    eventYear: document.getElementById("detail-event-year"),
+    country: document.getElementById("detail-country"),
+    eventType: document.getElementById("detail-event-type")
+  };
 
   const stepMeta = {
     intro: "00",
@@ -253,17 +313,50 @@ function setupScrollytelling(records, analytics) {
     takeaways: "05"
   };
 
-  const ui = { title, kicker, description, footnote, legend, tooltip, stepIndex };
+  let currentStep = "intro";
+  let state = buildState(records, countryFilter.value, eventFilter.value);
+
+  const ui = {
+    title,
+    kicker,
+    description,
+    footnote,
+    legend,
+    tooltip,
+    stepIndex,
+    progressValue,
+    detailCard
+  };
   const renders = {
-    intro: () => renderIntro(svg, analytics, ui),
-    patterns: () => renderPatterns(svg, analytics, ui),
-    geography: () => renderGeography(svg, analytics, ui),
-    history: () => renderHistory(svg, analytics, ui),
-    transits: () => renderTransits(svg, analytics, ui),
-    takeaways: () => renderTakeaways(svg, analytics, ui)
+    intro: () => renderIntro(svg, state.analytics, ui),
+    patterns: () => renderPatterns(svg, state.analytics, ui),
+    geography: () => renderGeography(svg, state.analytics, ui),
+    history: () => renderHistory(svg, state.analytics, ui),
+    transits: () => renderTransits(svg, state.analytics, ui),
+    takeaways: () => renderTakeaways(svg, state.analytics, ui)
   };
 
-  let currentStep = "";
+  function renderCurrentStep() {
+    const filteredLabel = getFilterLabel(state.filters);
+    statRows.textContent = String(state.analytics.totalRows);
+    statSpan.textContent = `${state.analytics.objectRange.span}y`;
+    statCountries.textContent = String(state.analytics.countryCount);
+    progressValue.textContent = `${stepLabel(currentStep)}${filteredLabel ? ` / ${filteredLabel}` : ""}`;
+    ui.stepIndex.textContent = stepMeta[currentStep];
+    renders[currentStep]();
+  }
+
+  function applyFilters() {
+    state = buildState(records, countryFilter.value, eventFilter.value);
+    updateDetailCard(detailCard, null, state.analytics.totalRows);
+    renderCurrentStep();
+  }
+
+  function resetFilters() {
+    countryFilter.value = "all";
+    eventFilter.value = "all";
+    applyFilters();
+  }
 
   const observer = new IntersectionObserver((entries) => {
     const visible = entries
@@ -283,13 +376,15 @@ function setupScrollytelling(records, analytics) {
     stepNodes.forEach((node) => {
       node.classList.toggle("is-active", node.dataset.step === step);
     });
-    ui.stepIndex.textContent = stepMeta[step];
-    renders[step]();
+    renderCurrentStep();
   }, { threshold: [0.35, 0.55, 0.75] });
 
   stepNodes.forEach((step) => observer.observe(step));
-  ui.stepIndex.textContent = stepMeta.intro;
-  renders.intro();
+  countryFilter.addEventListener("change", applyFilters);
+  eventFilter.addEventListener("change", applyFilters);
+  resetButton.addEventListener("click", resetFilters);
+  updateDetailCard(detailCard, null, state.analytics.totalRows);
+  renderCurrentStep();
 
   window.addEventListener("mousemove", (event) => {
     tooltip.style.left = `${event.clientX + 18}px`;
@@ -301,8 +396,8 @@ function renderIntro(svg, analytics, ui) {
   updateHeader(ui, {
     kicker: "Overview",
     title: "Timeline of object creation years",
-    description: "Each dot is one record from the CSV, plotted across the full time span of the sample.",
-    footnote: "The opening state emphasizes range, rhythm, and the scale of the full sample before the story narrows."
+    description: "Each dot is one record from the filtered dataset, plotted across the full time span of the current selection.",
+    footnote: `Filtered view contains ${analytics.totalRows} rows spanning ${analytics.objectRange.span} years.`
   });
 
   setLegend(ui.legend, [
@@ -344,7 +439,7 @@ function renderPatterns(svg, analytics, ui) {
     kicker: "Temporal clustering",
     title: "Density by creation year",
     description: "A smoothed density line reveals how strongly the sample concentrates in the 18th century and then re-forms in later centuries.",
-    footnote: `Peak decade: ${analytics.topDecades[0].label} with ${analytics.topDecades[0].count} records.`
+    footnote: analytics.topDecades.length ? `Peak decade: ${analytics.topDecades[0].label} with ${analytics.topDecades[0].count} records.` : "No decade data available for this filter."
   });
 
   setLegend(ui.legend, [
@@ -392,7 +487,7 @@ function renderGeography(svg, analytics, ui) {
   updateHeader(ui, {
     kicker: "Geographic concentration",
     title: "Top countries in the sample",
-    description: "Bubble size encodes the country counts, making the file's concentration pattern visible at a glance.",
+    description: "Bubble size encodes country counts, while detail cards surface the strongest object and incident examples from the filtered selection.",
     footnote: `Paris appears in ${analytics.cityMetrics.parisCount} rows; unknown city metadata appears in ${analytics.cityMetrics.unknownCount}.`
   });
 
@@ -425,6 +520,7 @@ function renderGeography(svg, analytics, ui) {
     circle.setAttribute("stroke-width", "1");
     circle.addEventListener("mouseenter", () => {
       showTooltip(ui.tooltip, `${escapeHTML(country.label)}<br>${country.count} rows<br>${formatPercent(country.share)} of sample`);
+      updateDetailCard(ui.detailCard, analytics.countryExamples.get(country.label) || null, analytics.totalRows);
     });
     circle.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
 
@@ -483,6 +579,7 @@ function renderHistory(svg, analytics, ui) {
     [line, objectDot, eventDot].forEach((node) => {
       node.addEventListener("mouseenter", () => {
         showTooltip(ui.tooltip, `<strong>${escapeHTML(pair.title || pair.objectName || "Untitled object")}</strong><br>Object year: ${pair.objectYear}<br>Incident year: ${pair.eventYear}<br>Gap: ${pair.gap} years`);
+        updateDetailCard(ui.detailCard, pair, analytics.totalRows);
       });
       node.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
     });
@@ -541,7 +638,10 @@ function renderTransits(svg, analytics, ui) {
   analytics.objectYears.forEach((year, index) => {
     const jitter = ((index % 15) - 7) * 6;
     const dot = appendCircle(svg, x(year), objectLane + jitter, 3.8, "#7fd6ff", 0.7);
-    dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `Object year ${year}`));
+    dot.addEventListener("mouseenter", () => {
+      showTooltip(ui.tooltip, `Object year ${year}`);
+      updateDetailCard(ui.detailCard, analytics.timelineExamples.get(year) || null, analytics.totalRows);
+    });
     dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
   });
 
@@ -628,6 +728,9 @@ function renderTakeaways(svg, analytics, ui) {
 }
 
 function computeAnalytics(records) {
+  if (!records.length) {
+    return emptyAnalytics();
+  }
   const objectYears = records.map((row) => row.objectYear).filter(isFiniteNumber).sort((a, b) => a - b);
   const incidentYears = records.map((row) => row.eventYear).filter(isFiniteNumber).sort((a, b) => a - b);
 
@@ -655,6 +758,8 @@ function computeAnalytics(records) {
   const topCountries = mapToSortedArray(countryMap, records.length);
   const topFiveShare = topCountries.slice(0, 5).reduce((sum, entry) => sum + entry.count, 0) / records.length;
   const countryCount = topCountries.length;
+  const eventTypeMap = tally(records.map((row) => cleanLabel(row.eventType) || "Unknown event"));
+  const topEventTypes = mapToSortedArray(eventTypeMap, records.length).slice(0, 12);
 
   const decadeMap = tally(objectYears.map((year) => Math.floor(year / 10) * 10));
   const topDecades = mapToSortedArray(decadeMap, records.length)
@@ -672,6 +777,8 @@ function computeAnalytics(records) {
     .map((row) => ({
       title: row.title,
       objectName: row.objectName,
+      country: row.country,
+      eventType: row.eventType,
       objectYear: row.objectYear,
       eventYear: row.eventYear,
       gap: Math.abs(row.objectYear - row.eventYear)
@@ -698,6 +805,7 @@ function computeAnalytics(records) {
 
   return {
     totalRows: records.length,
+    records,
     objectYears,
     objectRange,
     incidentRange,
@@ -706,10 +814,13 @@ function computeAnalytics(records) {
     topCountries,
     topFiveShare,
     countryCount,
+    topEventTypes,
     cityMetrics: {
       parisCount: cityMap.get("Paris") || 0,
       unknownCount: cityMap.get("Unknown city") || 0
     },
+    countryExamples: buildCountryExamples(records),
+    timelineExamples: buildTimelineExamples(records),
     topDecades,
     yearBins,
     validPairs,
@@ -774,6 +885,110 @@ function parseCSV(text) {
       eventYear: parseNumber(item["Year"])
     };
   });
+}
+
+function buildState(records, country, eventType) {
+  const filtered = records.filter((row) => {
+    const countryMatches = country === "all" || cleanLabel(row.country) === country;
+    const eventMatches = eventType === "all" || cleanLabel(row.eventType) === eventType;
+    return countryMatches && eventMatches;
+  });
+  const recordsForAnalytics = filtered.length ? filtered : records;
+  return {
+    filters: { country, eventType, isFallback: filtered.length === 0 },
+    analytics: computeAnalytics(recordsForAnalytics)
+  };
+}
+
+function buildCountryExamples(records) {
+  const map = new Map();
+  records.forEach((row) => {
+    const key = cleanLabel(row.country) || "Unknown";
+    if (!map.has(key)) {
+      map.set(key, row);
+    }
+  });
+  return map;
+}
+
+function buildTimelineExamples(records) {
+  const map = new Map();
+  records.forEach((row) => {
+    if (isFiniteNumber(row.objectYear) && !map.has(row.objectYear)) {
+      map.set(row.objectYear, row);
+    }
+  });
+  return map;
+}
+
+function emptyAnalytics() {
+  return {
+    totalRows: 0,
+    records: [],
+    objectYears: [0],
+    objectRange: { min: 0, max: 0, span: 0 },
+    incidentRange: { min: 0, max: 0 },
+    centuries: { "18th": 0, "19th": 0, "20th": 0, "21st": 0 },
+    pre1900Share: 0,
+    topCountries: [],
+    topFiveShare: 0,
+    countryCount: 0,
+    topEventTypes: [],
+    cityMetrics: { parisCount: 0, unknownCount: 0 },
+    countryExamples: new Map(),
+    timelineExamples: new Map(),
+    topDecades: [],
+    yearBins: [{ year: 0, count: 0 }],
+    validPairs: [],
+    gapMetrics: { validPairs: 0, within1: 0, within5: 0, within25: 0, medianGap: 0 },
+    transitMetrics: {
+      jupiterSaturn: { plusMinus1: 0, plusMinus3: 0, plusMinus5: 0 },
+      saturnAries: { plusMinus1: 0, plusMinus3: 0, plusMinus5: 0 },
+      uranusAries: { plusMinus1: 0, plusMinus3: 0, plusMinus5: 0 }
+    }
+  };
+}
+
+function getFilterLabel(filters) {
+  const parts = [];
+  if (filters.country !== "all") {
+    parts.push(filters.country);
+  }
+  if (filters.eventType !== "all") {
+    parts.push(filters.eventType);
+  }
+  return parts.join(" / ");
+}
+
+function stepLabel(step) {
+  const labels = {
+    intro: "Overview",
+    patterns: "Temporal clustering",
+    geography: "Geography",
+    history: "History alignment",
+    transits: "Transit layer",
+    takeaways: "Takeaways"
+  };
+  return labels[step] || "Overview";
+}
+
+function updateDetailCard(card, item, totalRows) {
+  if (!item) {
+    card.title.textContent = "Hover a mark for details";
+    card.meta.textContent = `${totalRows} rows are active in the current filtered selection.`;
+    card.objectYear.textContent = "-";
+    card.eventYear.textContent = "-";
+    card.country.textContent = "-";
+    card.eventType.textContent = "-";
+    return;
+  }
+
+  card.title.textContent = item.title || item.objectName || item.eventName || "Selected record";
+  card.meta.textContent = item.eventName || item.artist || "Record details from the active view.";
+  card.objectYear.textContent = isFiniteNumber(item.objectYear) ? String(item.objectYear) : "-";
+  card.eventYear.textContent = isFiniteNumber(item.eventYear) ? String(item.eventYear) : "-";
+  card.country.textContent = cleanLabel(item.country) || "-";
+  card.eventType.textContent = cleanLabel(item.eventType) || "-";
 }
 
 function updateHeader(ui, content) {
