@@ -36,6 +36,28 @@ const TRANSIT_GROUPS = [
   }
 ];
 
+const MET_OBJECT_CACHE = new Map();
+
+function getMetObjectUrl(objectId) {
+  return `https://www.metmuseum.org/art/collection/search/${objectId}`;
+}
+
+async function fetchMetObject(objectId) {
+  if (!Number.isFinite(objectId)) {
+    return null;
+  }
+  if (MET_OBJECT_CACHE.has(objectId)) {
+    return MET_OBJECT_CACHE.get(objectId);
+  }
+
+  const request = fetch(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${objectId}`)
+    .then((response) => (response.ok ? response.json() : null))
+    .catch(() => null);
+
+  MET_OBJECT_CACHE.set(objectId, request);
+  return request;
+}
+
 fetch("ObjectsvsHistory.csv")
   .then((response) => response.text())
   .then((csvText) => {
@@ -274,6 +296,21 @@ function renderPage(records) {
       <span class="detail-card__eyebrow">Selection</span>
       <h3 id="detail-title">Hover a mark for details</h3>
       <p id="detail-meta">Filters update the story metrics and visual states across the full panel.</p>
+      <div class="object-card" id="object-card" data-status="idle">
+        <a class="object-card__link" id="object-link" href="#" target="_blank" rel="noreferrer">
+          <div class="object-card__media">
+            <img id="object-image" alt="" loading="lazy" />
+            <div class="object-card__media-fallback" id="object-fallback">
+              Image unavailable
+            </div>
+          </div>
+          <div class="object-card__body">
+            <div class="object-card__kicker">Met Open Access</div>
+            <div class="object-card__title" id="object-card-title">No object selected</div>
+            <div class="object-card__meta" id="object-card-meta"></div>
+          </div>
+        </a>
+      </div>
       <dl class="detail-grid">
         <div><dt>Object year</dt><dd id="detail-object-year">-</dd></div>
         <div><dt>Incident year</dt><dd id="detail-event-year">-</dd></div>
@@ -311,7 +348,13 @@ function setupScrollytelling(records) {
     objectYear: document.getElementById("detail-object-year"),
     eventYear: document.getElementById("detail-event-year"),
     country: document.getElementById("detail-country"),
-    eventType: document.getElementById("detail-event-type")
+    eventType: document.getElementById("detail-event-type"),
+    objectCard: document.getElementById("object-card"),
+    objectLink: document.getElementById("object-link"),
+    objectImage: document.getElementById("object-image"),
+    objectFallback: document.getElementById("object-fallback"),
+    objectCardTitle: document.getElementById("object-card-title"),
+    objectCardMeta: document.getElementById("object-card-meta")
   };
 
   const stepMeta = {
@@ -888,9 +931,13 @@ function computeAnalytics(records) {
   const validPairs = records
     .filter((row) => isFiniteNumber(row.objectYear) && isFiniteNumber(row.eventYear))
     .map((row) => ({
+      objectId: row.objectId,
       title: row.title,
       objectName: row.objectName,
+      artist: row.artist,
       country: row.country,
+      city: row.city,
+      eventName: row.eventName,
       eventType: row.eventType,
       objectYear: row.objectYear,
       eventYear: row.eventYear,
@@ -987,6 +1034,7 @@ function parseCSV(text) {
   return dataRows.map((cells) => {
     const item = Object.fromEntries(header.map((key, index) => [key, (cells[index] || "").trim()]));
     return {
+      objectId: parseNumber(item["Object.ID"]),
       title: item["Title"],
       objectName: item["Object.Name"],
       artist: item["Artist.Display.Name"],
@@ -1085,6 +1133,61 @@ function stepLabel(step) {
   return labels[step] || "Overview";
 }
 
+function setObjectCardIdle(card) {
+  if (!card.objectCard) {
+    return;
+  }
+  card.objectCard.dataset.status = "idle";
+  card.objectCard.dataset.requestKey = "";
+  card.objectLink.href = "#";
+  card.objectLink.setAttribute("aria-disabled", "true");
+  card.objectImage.removeAttribute("src");
+  card.objectImage.alt = "";
+  card.objectImage.style.display = "none";
+  card.objectFallback.style.display = "grid";
+  card.objectCardTitle.textContent = "No object selected";
+  card.objectCardMeta.textContent = "";
+}
+
+function setObjectCardLoading(card, item) {
+  card.objectCard.dataset.status = "loading";
+  card.objectLink.href = getMetObjectUrl(item.objectId);
+  card.objectLink.removeAttribute("aria-disabled");
+  card.objectImage.removeAttribute("src");
+  card.objectImage.alt = "";
+  card.objectImage.style.display = "none";
+  card.objectFallback.style.display = "grid";
+  card.objectCardTitle.textContent = item.title || item.objectName || "Loading object…";
+  card.objectCardMeta.textContent = `Object ID ${item.objectId}`;
+}
+
+function setObjectCardResult(card, item, metObject) {
+  const title = metObject?.title || item?.title || item?.objectName || `Object ${item.objectId}`;
+  const artist = metObject?.artistDisplayName || item?.artist || "";
+  const date = metObject?.objectDate || "";
+  const culture = metObject?.culture || "";
+  const metaParts = [artist, culture, date].map((value) => (value || "").trim()).filter(Boolean).slice(0, 3);
+
+  card.objectCard.dataset.status = "ready";
+  card.objectLink.href = getMetObjectUrl(item.objectId);
+  card.objectLink.removeAttribute("aria-disabled");
+  card.objectCardTitle.textContent = title;
+  card.objectCardMeta.textContent = metaParts.join(" · ");
+
+  const imageUrl = metObject?.primaryImageSmall || metObject?.primaryImage || "";
+  if (imageUrl) {
+    card.objectImage.src = imageUrl;
+    card.objectImage.alt = title;
+    card.objectImage.style.display = "block";
+    card.objectFallback.style.display = "none";
+  } else {
+    card.objectImage.removeAttribute("src");
+    card.objectImage.alt = "";
+    card.objectImage.style.display = "none";
+    card.objectFallback.style.display = "grid";
+  }
+}
+
 function updateDetailCard(card, item, totalRows) {
   if (!item) {
     card.title.textContent = "Hover a mark for details";
@@ -1093,6 +1196,7 @@ function updateDetailCard(card, item, totalRows) {
     card.eventYear.textContent = "-";
     card.country.textContent = "-";
     card.eventType.textContent = "-";
+    setObjectCardIdle(card);
     return;
   }
 
@@ -1102,6 +1206,21 @@ function updateDetailCard(card, item, totalRows) {
   card.eventYear.textContent = isFiniteNumber(item.eventYear) ? String(item.eventYear) : "-";
   card.country.textContent = cleanLabel(item.country) || "-";
   card.eventType.textContent = cleanLabel(item.eventType) || "-";
+
+  if (!Number.isFinite(item.objectId)) {
+    setObjectCardIdle(card);
+    return;
+  }
+
+  const requestKey = String(item.objectId);
+  card.objectCard.dataset.requestKey = requestKey;
+  setObjectCardLoading(card, item);
+  fetchMetObject(item.objectId).then((metObject) => {
+    if (card.objectCard.dataset.requestKey !== requestKey) {
+      return;
+    }
+    setObjectCardResult(card, item, metObject);
+  });
 }
 
 function updateHeader(ui, content) {
