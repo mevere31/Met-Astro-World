@@ -1,0 +1,941 @@
+const app = document.getElementById("app");
+
+const HISTORY_ANCHORS = [
+  { year: 1789, label: "French Revolution", color: "#ffd27f" },
+  { year: 1800, label: "Industrial Revolution midpoint", color: "#7fd6ff" },
+  { year: 1914, label: "World War I", color: "#f08ad2" },
+  { year: 1939, label: "World War II", color: "#ff8f70" },
+  { year: 1960, label: "Post-colonial independence wave", color: "#79e2b0" }
+];
+
+const TRANSIT_GROUPS = [
+  {
+    key: "jupiterSaturn",
+    label: "Jupiter-Saturn cycle",
+    color: "#b68cff",
+    years: [1723, 1743, 1763, 1782, 1802, 1821, 1842, 1861, 1881, 1901, 1921, 1940, 1961, 1980, 2000, 2020]
+  },
+  {
+    key: "saturnAries",
+    label: "Saturn in Aries",
+    color: "#7fd6ff",
+    years: [1758, 1787, 1817, 1846, 1876, 1905, 1935, 1964, 1996]
+  },
+  {
+    key: "uranusAries",
+    label: "Uranus in Aries",
+    color: "#ffd27f",
+    years: [1767, 1851, 1927, 2011]
+  }
+];
+
+fetch("ObjectsvsHistory.csv")
+  .then((response) => response.text())
+  .then((csvText) => {
+    const records = parseCSV(csvText);
+    const analytics = computeAnalytics(records);
+    renderPage(records, analytics);
+  })
+  .catch((error) => {
+    console.error(error);
+    app.className = "loading";
+    app.textContent = "Unable to load ObjectsvsHistory.csv. Run a local server to view the prototype.";
+  });
+
+function renderPage(records, analytics) {
+  app.className = "";
+  app.innerHTML = `
+    <main class="page">
+      <section class="story-shell">
+        <header class="masthead">
+          <span class="eyebrow">Met Astro World / Stage 01</span>
+          <h1>From Earthly Objects to Celestial Time</h1>
+          <p class="lede">
+            A cleaned-up scrollytelling foundation built from the repository storyline and dataset.
+            It follows ${analytics.totalRows} Met object-history pairings across ${analytics.objectRange.span} years,
+            showing how cultural objects cluster in time, place, and symbolic sky cycles.
+          </p>
+          <div class="hero-metrics">
+            <div class="metric-card">
+              <strong>${analytics.totalRows}</strong>
+              <span>rows in the working sample</span>
+            </div>
+            <div class="metric-card">
+              <strong>${analytics.objectRange.min}-${analytics.objectRange.max}</strong>
+              <span>object creation range</span>
+            </div>
+            <div class="metric-card">
+              <strong>${analytics.countryCount}</strong>
+              <span>countries represented</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="story">
+          <article class="story-step story-step--hero is-active" data-step="intro">
+            <div class="copy-card">
+              <div class="step-topline">
+                <span class="eyebrow">00 / Overview</span>
+                <span class="step-tag">Scene setter</span>
+              </div>
+              <h2>The sample stretches across three centuries of object creation.</h2>
+              <p>
+                This opening scene establishes the narrative span before narrowing into patterns, geographies,
+                incident alignments, and the symbolic transit layer.
+              </p>
+              <div class="metric-grid">
+                <div class="metric"><strong>${analytics.totalRows}</strong><span>Total dataset rows</span></div>
+                <div class="metric"><strong>${analytics.objectRange.span}</strong><span>Years of cultural production</span></div>
+                <div class="metric"><strong>${analytics.objectRange.min}</strong><span>Earliest object year</span></div>
+                <div class="metric"><strong>${analytics.objectRange.max}</strong><span>Latest object year</span></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="story-step" data-step="patterns">
+            <div class="copy-card">
+              <div class="step-topline">
+                <span class="eyebrow">01 / Temporal clustering</span>
+                <span class="step-tag">Distribution</span>
+              </div>
+              <h2>The collection is concentrated, not evenly distributed.</h2>
+              <p>
+                The strongest cluster sits in the 18th century, with additional weight in the 19th and 20th.
+                About <strong>${formatPercent(analytics.pre1900Share)}</strong> of all rows were created before 1900.
+              </p>
+              <ul class="insight-list">
+                <li>18th century: <strong>${analytics.centuries["18th"]}</strong> objects</li>
+                <li>19th century: <strong>${analytics.centuries["19th"]}</strong> objects</li>
+                <li>20th century: <strong>${analytics.centuries["20th"]}</strong> objects</li>
+                <li>21st century: <strong>${analytics.centuries["21st"]}</strong> objects</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="story-step" data-step="geography">
+            <div class="copy-card">
+              <div class="step-topline">
+                <span class="eyebrow">02 / Geographic concentration</span>
+                <span class="step-tag">Place</span>
+              </div>
+              <h2>A globally distributed file with a narrow center of gravity.</h2>
+              <p>
+                The sample spans <strong>${analytics.countryCount}</strong> countries, but the top five account for
+                <strong>${formatPercent(analytics.topFiveShare)}</strong> of the total. Paris is the most dominant city node.
+              </p>
+              <ul class="insight-list">
+                ${analytics.topCountries.slice(0, 5).map((country, index) => `
+                  <li>${index + 1}. <strong>${escapeHTML(country.label)}</strong>: ${country.count} rows</li>
+                `).join("")}
+              </ul>
+            </div>
+          </article>
+
+          <article class="story-step" data-step="history">
+            <div class="copy-card">
+              <div class="step-topline">
+                <span class="eyebrow">03 / Objects beside incidents</span>
+                <span class="step-tag">Alignment</span>
+              </div>
+              <h2>Most object dates sit extremely close to the incident dates they are paired with.</h2>
+              <p>
+                This is a curated object-incident dataset, so the strongest signal is proximity.
+                The median gap is <strong>${analytics.gapMetrics.medianGap}</strong> years.
+              </p>
+              <div class="metric-grid">
+                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within1)}</strong><span>Within ±1 year</span></div>
+                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within5)}</strong><span>Within ±5 years</span></div>
+                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within25)}</strong><span>Within ±25 years</span></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="story-step" data-step="transits">
+            <div class="copy-card">
+              <div class="step-topline">
+                <span class="eyebrow">04 / Symbolic transit layer</span>
+                <span class="step-tag">Interpretive lens</span>
+              </div>
+              <h2>This is a symbolic comparison, not a causal claim.</h2>
+              <p>
+                The chart asks whether object creation clusters overlap with broad transit milestone windows.
+                In this sample, the strongest overlap is with the Jupiter-Saturn cycle.
+              </p>
+              <ul class="insight-list">
+                <li>Jupiter-Saturn ±5 years: <strong>${formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)}</strong></li>
+                <li>Saturn in Aries ±5 years: <strong>${formatPercent(analytics.transitMetrics.saturnAries.plusMinus5)}</strong></li>
+                <li>Uranus in Aries ±3 years: <strong>${formatPercent(analytics.transitMetrics.uranusAries.plusMinus3)}</strong></li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="story-step story-step--closing" data-step="takeaways">
+            <div class="copy-card">
+              <div class="step-topline">
+                <span class="eyebrow">05 / Takeaways</span>
+                <span class="step-tag">Synthesis</span>
+              </div>
+              <h2>Three clocks now share one visual system.</h2>
+              <p>
+                This stage focuses on structure and polish: a maintainable front-end shell, a more cohesive layout,
+                and stronger visual hierarchy for the next stages of interaction and media work.
+              </p>
+              <div class="metric-grid">
+                <div class="metric"><strong>${analytics.centuries["18th"]}</strong><span>Largest century cluster</span></div>
+                <div class="metric"><strong>${formatPercent(analytics.topFiveShare)}</strong><span>Top-five country share</span></div>
+                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within25)}</strong><span>Pairs within ±25 years</span></div>
+              </div>
+              <div class="cta-row">
+                <a class="cta" href="https://www.metmuseum.org/en/hubs/open-access" target="_blank" rel="noreferrer">Met Open Access</a>
+                <a class="cta" href="https://ssd.jpl.nasa.gov/horizons/" target="_blank" rel="noreferrer">NASA JPL Horizons</a>
+              </div>
+            </div>
+          </article>
+        </section>
+      </section>
+
+      <aside class="sticky-panel">
+        <div class="viz-header">
+          <div>
+            <span class="eyebrow" id="viz-kicker">Overview</span>
+            <h3 id="viz-title">Dataset overview</h3>
+          </div>
+          <span class="panel-step-index" id="panel-step-index">00</span>
+        </div>
+
+        <p id="viz-description" class="viz-description">
+          The visual panel updates as each story chapter becomes active.
+        </p>
+
+        <div class="panel-highlights">
+          <div class="panel-highlight">
+            <span class="panel-label">Rows</span>
+            <strong>${analytics.totalRows}</strong>
+          </div>
+          <div class="panel-highlight">
+            <span class="panel-label">Span</span>
+            <strong>${analytics.objectRange.span}y</strong>
+          </div>
+          <div class="panel-highlight">
+            <span class="panel-label">Countries</span>
+            <strong>${analytics.countryCount}</strong>
+          </div>
+        </div>
+
+        <div class="legend" id="legend"></div>
+        <svg id="viz" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="footer-note" id="viz-footnote"></div>
+      </aside>
+    </main>
+    <div class="tooltip" id="tooltip"></div>
+  `;
+
+  setupScrollytelling(records, analytics);
+}
+
+function setupScrollytelling(records, analytics) {
+  const svg = document.getElementById("viz");
+  const tooltip = document.getElementById("tooltip");
+  const legend = document.getElementById("legend");
+  const title = document.getElementById("viz-title");
+  const kicker = document.getElementById("viz-kicker");
+  const description = document.getElementById("viz-description");
+  const footnote = document.getElementById("viz-footnote");
+  const stepIndex = document.getElementById("panel-step-index");
+  const stepNodes = Array.from(document.querySelectorAll(".story-step"));
+
+  const stepMeta = {
+    intro: "00",
+    patterns: "01",
+    geography: "02",
+    history: "03",
+    transits: "04",
+    takeaways: "05"
+  };
+
+  const ui = { title, kicker, description, footnote, legend, tooltip, stepIndex };
+  const renders = {
+    intro: () => renderIntro(svg, analytics, ui),
+    patterns: () => renderPatterns(svg, analytics, ui),
+    geography: () => renderGeography(svg, analytics, ui),
+    history: () => renderHistory(svg, analytics, ui),
+    transits: () => renderTransits(svg, analytics, ui),
+    takeaways: () => renderTakeaways(svg, analytics, ui)
+  };
+
+  let currentStep = "";
+
+  const observer = new IntersectionObserver((entries) => {
+    const visible = entries
+      .filter((entry) => entry.isIntersecting)
+      .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+    if (!visible) {
+      return;
+    }
+
+    const step = visible.target.dataset.step;
+    if (step === currentStep) {
+      return;
+    }
+
+    currentStep = step;
+    stepNodes.forEach((node) => {
+      node.classList.toggle("is-active", node.dataset.step === step);
+    });
+    ui.stepIndex.textContent = stepMeta[step];
+    renders[step]();
+  }, { threshold: [0.35, 0.55, 0.75] });
+
+  stepNodes.forEach((step) => observer.observe(step));
+  ui.stepIndex.textContent = stepMeta.intro;
+  renders.intro();
+
+  window.addEventListener("mousemove", (event) => {
+    tooltip.style.left = `${event.clientX + 18}px`;
+    tooltip.style.top = `${event.clientY + 18}px`;
+  });
+}
+
+function renderIntro(svg, analytics, ui) {
+  updateHeader(ui, {
+    kicker: "Overview",
+    title: "Timeline of object creation years",
+    description: "Each dot is one record from the CSV, plotted across the full time span of the sample.",
+    footnote: "The opening state emphasizes range, rhythm, and the scale of the full sample before the story narrows."
+  });
+
+  setLegend(ui.legend, [
+    { color: "#7fd6ff", label: "Object row" },
+    { color: "#b68cff", label: "Timeline axis" }
+  ]);
+
+  clearSVG(svg);
+
+  const width = 860;
+  const height = 820;
+  const margin = { top: 120, right: 60, bottom: 120, left: 60 };
+  const axisY = height / 2;
+  const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, width - margin.right);
+
+  appendAtmosphere(svg, width, height);
+  appendLine(svg, margin.left, axisY, width - margin.right, axisY, "#8e77ff", 2, 0.5);
+
+  [analytics.objectRange.min, 1800, 1900, analytics.objectRange.max].forEach((year) => {
+    const px = x(year);
+    appendLine(svg, px, axisY - 18, px, axisY + 18, "rgba(255,255,255,0.35)", 1, 1);
+    appendText(svg, px, axisY + 44, String(year), "middle", "#9cadc6", 14, 500);
+  });
+
+  analytics.objectYears.forEach((year, index) => {
+    const amplitude = 14 + (index % 5) * 5;
+    const y = axisY + Math.sin(index * 0.65) * amplitude;
+    const circle = appendCircle(svg, x(year), y, 4.1, "#7fd6ff", 0.84);
+    circle.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `Object year ${year}`));
+    circle.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
+  });
+
+  appendText(svg, width / 2, 78, `${analytics.objectRange.span} years of object creation`, "middle", "#edf4ff", 30, 750);
+  appendText(svg, width / 2, 110, `From ${analytics.objectRange.min} to ${analytics.objectRange.max}`, "middle", "#95a8c8", 16, 500);
+}
+
+function renderPatterns(svg, analytics, ui) {
+  updateHeader(ui, {
+    kicker: "Temporal clustering",
+    title: "Density by creation year",
+    description: "A smoothed density line reveals how strongly the sample concentrates in the 18th century and then re-forms in later centuries.",
+    footnote: `Peak decade: ${analytics.topDecades[0].label} with ${analytics.topDecades[0].count} records.`
+  });
+
+  setLegend(ui.legend, [
+    { color: "#7fd6ff", label: "Year density" },
+    { color: "#ffd27f", label: "Peak decade annotation" }
+  ]);
+
+  clearSVG(svg);
+
+  const width = 860;
+  const height = 820;
+  const margin = { top: 90, right: 44, bottom: 90, left: 56 };
+  const bins = analytics.yearBins;
+  const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, width - margin.right);
+  const y = scaleLinear(0, Math.max(...bins.map((bin) => bin.count)) || 1, height - margin.bottom, margin.top);
+
+  appendAtmosphere(svg, width, height);
+  appendRect(svg, margin.left, margin.top, width - margin.left - margin.right, height - margin.top - margin.bottom, "rgba(255,255,255,0.015)", "rgba(255,255,255,0.06)", 26);
+
+  for (let year = 1720; year <= 2020; year += 40) {
+    const px = x(year);
+    appendLine(svg, px, margin.top, px, height - margin.bottom, "rgba(255,255,255,0.06)", 1, 1);
+    appendText(svg, px, height - margin.bottom + 28, String(year), "middle", "#90a0b7", 13, 500);
+  }
+
+  appendLine(svg, margin.left, height - margin.bottom, width - margin.right, height - margin.bottom, "rgba(255,255,255,0.4)", 1.2, 1);
+  appendLine(svg, margin.left, margin.top, margin.left, height - margin.bottom, "rgba(255,255,255,0.22)", 1.2, 1);
+
+  const path = bins.map((bin, index) => `${index === 0 ? "M" : "L"} ${x(bin.year)} ${y(bin.count)}`).join(" ");
+  const fillPath = `${path} L ${x(bins[bins.length - 1].year)} ${height - margin.bottom} L ${x(bins[0].year)} ${height - margin.bottom} Z`;
+  appendPath(svg, fillPath, "rgba(127, 214, 255, 0.18)", "none", 0);
+  appendPath(svg, path, "none", "#7fd6ff", 4, 0.98);
+
+  analytics.topDecades.slice(0, 3).forEach((decade) => {
+    const px = x(decade.year);
+    const py = y(decade.count);
+    appendCircle(svg, px, py, 7.5, "#ffd27f", 1);
+    appendText(svg, px, py - 18, `${decade.label} / ${decade.count}`, "middle", "#ffd27f", 13, 700);
+  });
+
+  appendText(svg, margin.left, margin.top - 26, "Object count", "start", "#95a8c8", 14, 650);
+}
+
+function renderGeography(svg, analytics, ui) {
+  updateHeader(ui, {
+    kicker: "Geographic concentration",
+    title: "Top countries in the sample",
+    description: "Bubble size encodes the country counts, making the file's concentration pattern visible at a glance.",
+    footnote: `Paris appears in ${analytics.cityMetrics.parisCount} rows; unknown city metadata appears in ${analytics.cityMetrics.unknownCount}.`
+  });
+
+  setLegend(ui.legend, [
+    { color: "#ffb56b", label: "Top five countries" },
+    { color: "#79e2b0", label: "Remaining top ten" }
+  ]);
+
+  clearSVG(svg);
+
+  const width = 860;
+  const height = 820;
+  const countries = analytics.topCountries.slice(0, 10);
+  const centerX = width / 2;
+  const centerY = height / 2 + 32;
+  const layout = [
+    [0, -165], [-200, -74], [204, -68], [-238, 136], [226, 144],
+    [0, 205], [-96, 38], [94, 42], [-305, 20], [306, 12]
+  ];
+
+  appendAtmosphere(svg, width, height);
+
+  countries.forEach((country, index) => {
+    const [dx, dy] = layout[index] || [0, 0];
+    const radius = 20 + (country.count / countries[0].count) * 92;
+    const isTopFive = index < 5;
+    const fill = isTopFive ? "#ffb56b" : "#79e2b0";
+    const circle = appendCircle(svg, centerX + dx, centerY + dy, radius, fill, 0.78);
+    circle.setAttribute("stroke", "rgba(255,255,255,0.16)");
+    circle.setAttribute("stroke-width", "1");
+    circle.addEventListener("mouseenter", () => {
+      showTooltip(ui.tooltip, `${escapeHTML(country.label)}<br>${country.count} rows<br>${formatPercent(country.share)} of sample`);
+    });
+    circle.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
+
+    appendText(svg, centerX + dx, centerY + dy - 6, country.label, "middle", "#08111f", Math.max(11, Math.min(14, radius / 5)), 760);
+    appendText(svg, centerX + dx, centerY + dy + 16, `${country.count}`, "middle", "#08111f", 13, 600);
+  });
+
+  appendText(svg, width / 2, 82, `${formatPercent(analytics.topFiveShare)} of the sample comes from just five countries`, "middle", "#edf4ff", 26, 720);
+  appendText(svg, width / 2, 114, "Spatial breadth with a concentrated center", "middle", "#95a8c8", 15, 500);
+}
+
+function renderHistory(svg, analytics, ui) {
+  updateHeader(ui, {
+    kicker: "Object vs event years",
+    title: "Two-lane history alignment view",
+    description: "Connection lines link object creation years to paired incident years, showing just how tight the timeline relationships are.",
+    footnote: `${analytics.gapMetrics.validPairs} valid object-event pairs; ${formatPercent(analytics.gapMetrics.within25)} fall within ±25 years.`
+  });
+
+  setLegend(ui.legend, [
+    { color: "#7fd6ff", label: "Object year" },
+    { color: "#ffd27f", label: "Incident year" },
+    { color: "#f08ad2", label: "World-history anchors" }
+  ]);
+
+  clearSVG(svg);
+
+  const width = 860;
+  const height = 820;
+  const margin = { top: 120, right: 46, bottom: 100, left: 46 };
+  const topLane = 270;
+  const bottomLane = 560;
+  const x = scaleLinear(analytics.objectRange.min, analytics.incidentRange.max, margin.left, width - margin.right);
+
+  appendAtmosphere(svg, width, height);
+  appendLine(svg, margin.left, topLane, width - margin.right, topLane, "rgba(127,214,255,0.8)", 2, 1);
+  appendLine(svg, margin.left, bottomLane, width - margin.right, bottomLane, "rgba(255,210,127,0.8)", 2, 1);
+  appendText(svg, margin.left, topLane - 24, "Object year", "start", "#7fd6ff", 15, 700);
+  appendText(svg, margin.left, bottomLane - 24, "Incident year", "start", "#ffd27f", 15, 700);
+
+  HISTORY_ANCHORS.forEach((anchor) => {
+    const px = x(anchor.year);
+    appendLine(svg, px, margin.top, px, height - margin.bottom, anchor.color, 1.2, 0.28);
+    appendText(svg, px, margin.top - 18, anchor.label, "middle", anchor.color, 12, 600, -30);
+  });
+
+  analytics.validPairs.slice(0, 160).forEach((pair, index) => {
+    const objectX = x(pair.objectYear);
+    const eventX = x(pair.eventYear);
+    const path = `M ${objectX} ${topLane} C ${objectX} ${(topLane + bottomLane) / 2}, ${eventX} ${(topLane + bottomLane) / 2}, ${eventX} ${bottomLane}`;
+    const stroke = pair.gap <= 1 ? "#79e2b0" : "rgba(255,255,255,0.12)";
+    const line = appendPath(svg, path, "none", stroke, 1.2, 0.42);
+    const objectDot = appendCircle(svg, objectX, topLane + ((index % 7) - 3) * 6, 3.5, "#7fd6ff", 0.86);
+    const eventDot = appendCircle(svg, eventX, bottomLane + ((index % 7) - 3) * 6, 3.5, "#ffd27f", 0.86);
+
+    [line, objectDot, eventDot].forEach((node) => {
+      node.addEventListener("mouseenter", () => {
+        showTooltip(ui.tooltip, `<strong>${escapeHTML(pair.title || pair.objectName || "Untitled object")}</strong><br>Object year: ${pair.objectYear}<br>Incident year: ${pair.eventYear}<br>Gap: ${pair.gap} years`);
+      });
+      node.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
+    });
+  });
+
+  [1701, 1789, 1800, 1900, 1939, 2022].forEach((year) => {
+    appendText(svg, x(year), height - margin.bottom + 34, String(year), "middle", "#95a8c8", 13, 500);
+  });
+}
+
+function renderTransits(svg, analytics, ui) {
+  updateHeader(ui, {
+    kicker: "Symbolic sky layer",
+    title: "Objects and transit milestone windows",
+    description: "Transit markers sit above the shared x-axis while object creation years stay grounded below.",
+    footnote: "These year-window checks are exploratory and should later be upgraded with precise ephemeris timestamps."
+  });
+
+  setLegend(ui.legend, [
+    { color: "#b68cff", label: "Jupiter-Saturn" },
+    { color: "#7fd6ff", label: "Saturn in Aries" },
+    { color: "#ffd27f", label: "Uranus in Aries" },
+    { color: "#7fd6ff", label: "Object year" }
+  ]);
+
+  clearSVG(svg);
+
+  const width = 860;
+  const height = 820;
+  const margin = { top: 120, right: 40, bottom: 100, left: 50 };
+  const transitLane = 250;
+  const objectLane = 565;
+  const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, width - margin.right);
+
+  appendAtmosphere(svg, width, height);
+  appendLine(svg, margin.left, transitLane, width - margin.right, transitLane, "rgba(255,255,255,0.32)", 1.5, 1);
+  appendLine(svg, margin.left, objectLane, width - margin.right, objectLane, "rgba(127,214,255,0.7)", 2, 1);
+  appendText(svg, margin.left, transitLane - 24, "Transit milestones", "start", "#edf4ff", 15, 700);
+  appendText(svg, margin.left, objectLane - 24, "Object creation years", "start", "#7fd6ff", 15, 700);
+
+  TRANSIT_GROUPS.forEach((group, groupIndex) => {
+    group.years.forEach((year, index) => {
+      const px = x(year);
+      const y = transitLane - 54 + groupIndex * 52;
+      appendLine(svg, px, y + 10, px, objectLane, group.color, 0.9, 0.12);
+      const dot = appendCircle(svg, px, y, 6.2, group.color, 0.95);
+      dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `${group.label}<br>${year}`));
+      dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
+
+      if (index < 5 || index === group.years.length - 1) {
+        appendText(svg, px, y - 16, String(year), "middle", group.color, 11, 600);
+      }
+    });
+  });
+
+  analytics.objectYears.forEach((year, index) => {
+    const jitter = ((index % 15) - 7) * 6;
+    const dot = appendCircle(svg, x(year), objectLane + jitter, 3.8, "#7fd6ff", 0.7);
+    dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `Object year ${year}`));
+    dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
+  });
+
+  const cards = [
+    ["Jupiter-Saturn ±5", formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)],
+    ["Saturn in Aries ±5", formatPercent(analytics.transitMetrics.saturnAries.plusMinus5)],
+    ["Uranus in Aries ±3", formatPercent(analytics.transitMetrics.uranusAries.plusMinus3)]
+  ];
+
+  cards.forEach((card, index) => {
+    appendRect(svg, 64 + index * 240, 654, 190, 92, "rgba(255,255,255,0.045)", "rgba(255,255,255,0.08)", 18);
+    appendText(svg, 84 + index * 240, 690, card[0], "start", "#9cadc6", 13, 600);
+    appendText(svg, 84 + index * 240, 722, card[1], "start", "#edf4ff", 28, 700);
+  });
+}
+
+function renderTakeaways(svg, analytics, ui) {
+  updateHeader(ui, {
+    kicker: "Takeaways",
+    title: "Three strongest signals in the prototype",
+    description: "This final frame translates the storyline into reusable summary cards for future drill-down interactions.",
+    footnote: "Next stage ideas: richer media, image cards, filters, and a dedicated data-quality panel."
+  });
+
+  setLegend(ui.legend, [
+    { color: "#7fd6ff", label: "Time" },
+    { color: "#ffb56b", label: "Place" },
+    { color: "#79e2b0", label: "History alignment" }
+  ]);
+
+  clearSVG(svg);
+  appendAtmosphere(svg, 860, 820);
+
+  const cards = [
+    {
+      x: 70,
+      y: 160,
+      w: 220,
+      h: 420,
+      color: "#7fd6ff",
+      label: "Temporal concentration",
+      value: `${analytics.centuries["18th"]}`,
+      detail: "Objects in the 18th century cluster"
+    },
+    {
+      x: 320,
+      y: 130,
+      w: 220,
+      h: 450,
+      color: "#ffb56b",
+      label: "Spatial concentration",
+      value: formatPercent(analytics.topFiveShare),
+      detail: "Rows from the top five countries"
+    },
+    {
+      x: 570,
+      y: 100,
+      w: 220,
+      h: 480,
+      color: "#79e2b0",
+      label: "History alignment",
+      value: formatPercent(analytics.gapMetrics.within25),
+      detail: "Pairs within ±25 years"
+    }
+  ];
+
+  cards.forEach((card) => {
+    appendRect(svg, card.x, card.y, card.w, card.h, `${card.color}22`, `${card.color}66`, 24);
+    appendText(svg, card.x + 24, card.y + 56, card.label, "start", "#edf4ff", 18, 700);
+    appendText(svg, card.x + 24, card.y + 130, card.value, "start", card.color, 46, 800);
+    appendText(svg, card.x + 24, card.y + 168, card.detail, "start", "#9cadc6", 14, 500);
+
+    const spark = analytics.yearBins.slice(card.x < 200 ? 0 : card.x < 400 ? 12 : 24, card.x < 200 ? 18 : card.x < 400 ? 30 : 42);
+    const max = Math.max(...spark.map((point) => point.count), 1);
+
+    spark.forEach((point, index) => {
+      const barHeight = (point.count / max) * 110;
+      appendRect(svg, card.x + 24 + index * 10, card.y + card.h - 36 - barHeight, 7, barHeight, `${card.color}aa`, "none", 4);
+    });
+  });
+
+  appendText(svg, 430, 700, "Prototype next steps", "middle", "#edf4ff", 26, 700);
+  appendText(svg, 430, 736, "Add media, object-image cards, deeper filtering, and more nuanced transitions.", "middle", "#9cadc6", 16, 500);
+}
+
+function computeAnalytics(records) {
+  const objectYears = records.map((row) => row.objectYear).filter(isFiniteNumber).sort((a, b) => a - b);
+  const incidentYears = records.map((row) => row.eventYear).filter(isFiniteNumber).sort((a, b) => a - b);
+
+  const objectRange = {
+    min: Math.min(...objectYears),
+    max: Math.max(...objectYears),
+    span: Math.max(...objectYears) - Math.min(...objectYears) + 1
+  };
+
+  const incidentRange = {
+    min: Math.min(...incidentYears),
+    max: Math.max(...incidentYears)
+  };
+
+  const centuries = {
+    "18th": countWhere(objectYears, (year) => year >= 1700 && year <= 1799),
+    "19th": countWhere(objectYears, (year) => year >= 1800 && year <= 1899),
+    "20th": countWhere(objectYears, (year) => year >= 1900 && year <= 1999),
+    "21st": countWhere(objectYears, (year) => year >= 2000 && year <= 2099)
+  };
+
+  const pre1900Share = countWhere(objectYears, (year) => year < 1900) / records.length;
+  const countryMap = tally(records.map((row) => cleanLabel(row.country) || "Unknown"));
+  const cityMap = tally(records.map((row) => cleanLabel(row.city) || "Unknown city"));
+  const topCountries = mapToSortedArray(countryMap, records.length);
+  const topFiveShare = topCountries.slice(0, 5).reduce((sum, entry) => sum + entry.count, 0) / records.length;
+  const countryCount = topCountries.length;
+
+  const decadeMap = tally(objectYears.map((year) => Math.floor(year / 10) * 10));
+  const topDecades = mapToSortedArray(decadeMap, records.length)
+    .map((entry) => ({ ...entry, year: Number(entry.label), label: `${entry.label}s` }))
+    .slice(0, 6);
+
+  const yearBins = [];
+  for (let year = objectRange.min; year <= objectRange.max; year += 5) {
+    const count = countWhere(objectYears, (objectYear) => objectYear >= year && objectYear < year + 5);
+    yearBins.push({ year: year + 2, count });
+  }
+
+  const validPairs = records
+    .filter((row) => isFiniteNumber(row.objectYear) && isFiniteNumber(row.eventYear))
+    .map((row) => ({
+      title: row.title,
+      objectName: row.objectName,
+      objectYear: row.objectYear,
+      eventYear: row.eventYear,
+      gap: Math.abs(row.objectYear - row.eventYear)
+    }))
+    .sort((a, b) => a.objectYear - b.objectYear);
+
+  const gaps = validPairs.map((pair) => pair.gap).sort((a, b) => a - b);
+  const gapMetrics = {
+    validPairs: validPairs.length,
+    within1: countWhere(gaps, (gap) => gap <= 1) / validPairs.length,
+    within5: countWhere(gaps, (gap) => gap <= 5) / validPairs.length,
+    within25: countWhere(gaps, (gap) => gap <= 25) / validPairs.length,
+    medianGap: median(gaps)
+  };
+
+  const transitMetrics = {};
+  TRANSIT_GROUPS.forEach((group) => {
+    transitMetrics[group.key] = {
+      plusMinus1: shareNearYears(objectYears, group.years, 1),
+      plusMinus3: shareNearYears(objectYears, group.years, 3),
+      plusMinus5: shareNearYears(objectYears, group.years, 5)
+    };
+  });
+
+  return {
+    totalRows: records.length,
+    objectYears,
+    objectRange,
+    incidentRange,
+    centuries,
+    pre1900Share,
+    topCountries,
+    topFiveShare,
+    countryCount,
+    cityMetrics: {
+      parisCount: cityMap.get("Paris") || 0,
+      unknownCount: cityMap.get("Unknown city") || 0
+    },
+    topDecades,
+    yearBins,
+    validPairs,
+    gapMetrics,
+    transitMetrics
+  };
+}
+
+function parseCSV(text) {
+  const rows = [];
+  let current = "";
+  let row = [];
+  let insideQuotes = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    const next = text[index + 1];
+
+    if (char === "\"") {
+      if (insideQuotes && next === "\"") {
+        current += "\"";
+        index += 1;
+      } else {
+        insideQuotes = !insideQuotes;
+      }
+    } else if (char === "," && !insideQuotes) {
+      row.push(current);
+      current = "";
+    } else if ((char === "\n" || char === "\r") && !insideQuotes) {
+      if (char === "\r" && next === "\n") {
+        index += 1;
+      }
+      row.push(current);
+      if (row.some((cell) => cell.length > 0)) {
+        rows.push(row);
+      }
+      row = [];
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+
+  if (current.length || row.length) {
+    row.push(current);
+    rows.push(row);
+  }
+
+  const [header, ...dataRows] = rows;
+
+  return dataRows.map((cells) => {
+    const item = Object.fromEntries(header.map((key, index) => [key, (cells[index] || "").trim()]));
+    return {
+      title: item["Title"],
+      objectName: item["Object.Name"],
+      artist: item["Artist.Display.Name"],
+      country: item["Country"],
+      city: item["City"],
+      eventName: item["Historical Incident"],
+      eventType: item["Type of Event "],
+      objectYear: parseNumber(item["Object.Begin.Date"]),
+      eventYear: parseNumber(item["Year"])
+    };
+  });
+}
+
+function updateHeader(ui, content) {
+  ui.kicker.textContent = content.kicker;
+  ui.title.textContent = content.title;
+  ui.description.textContent = content.description;
+  ui.footnote.textContent = content.footnote;
+}
+
+function setLegend(node, items) {
+  node.innerHTML = items.map((item) => `
+    <span class="legend-pill">
+      <span class="swatch" style="background:${item.color}"></span>
+      ${escapeHTML(item.label)}
+    </span>
+  `).join("");
+}
+
+function tally(values) {
+  const map = new Map();
+  values.forEach((value) => {
+    map.set(value, (map.get(value) || 0) + 1);
+  });
+  return map;
+}
+
+function mapToSortedArray(map, total) {
+  return Array.from(map.entries())
+    .map(([label, count]) => ({ label, count, share: count / total }))
+    .sort((a, b) => b.count - a.count);
+}
+
+function shareNearYears(baseYears, referenceYears, threshold) {
+  const matches = baseYears.filter((year) => referenceYears.some((reference) => Math.abs(reference - year) <= threshold));
+  return matches.length / baseYears.length;
+}
+
+function scaleLinear(domainMin, domainMax, rangeMin, rangeMax) {
+  const domainSpan = domainMax - domainMin || 1;
+  const rangeSpan = rangeMax - rangeMin;
+  return (value) => rangeMin + ((value - domainMin) / domainSpan) * rangeSpan;
+}
+
+function median(values) {
+  if (!values.length) {
+    return 0;
+  }
+  const mid = Math.floor(values.length / 2);
+  return values.length % 2 ? values[mid] : (values[mid - 1] + values[mid]) / 2;
+}
+
+function countWhere(values, predicate) {
+  return values.reduce((total, value) => total + (predicate(value) ? 1 : 0), 0);
+}
+
+function formatPercent(value) {
+  return `${(value * 100).toFixed(2)}%`;
+}
+
+function parseNumber(value) {
+  const result = Number.parseInt(value, 10);
+  return Number.isFinite(result) ? result : null;
+}
+
+function isFiniteNumber(value) {
+  return Number.isFinite(value);
+}
+
+function cleanLabel(value) {
+  return value && value.trim() ? value.trim() : "";
+}
+
+function escapeHTML(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("\"", "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function clearSVG(svg) {
+  svg.innerHTML = "";
+}
+
+function appendAtmosphere(svg, width, height) {
+  appendCircle(svg, width * 0.12, height * 0.14, 110, "rgba(127,214,255,0.08)", 1);
+  appendCircle(svg, width * 0.82, height * 0.16, 90, "rgba(182,140,255,0.08)", 1);
+  appendCircle(svg, width * 0.56, height * 0.82, 150, "rgba(255,210,127,0.05)", 1);
+}
+
+function appendCircle(svg, cx, cy, r, fill, opacity = 1) {
+  const node = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  node.setAttribute("cx", cx);
+  node.setAttribute("cy", cy);
+  node.setAttribute("r", r);
+  node.setAttribute("fill", fill);
+  node.setAttribute("opacity", opacity);
+  svg.appendChild(node);
+  return node;
+}
+
+function appendLine(svg, x1, y1, x2, y2, stroke, width, opacity = 1) {
+  const node = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  node.setAttribute("x1", x1);
+  node.setAttribute("y1", y1);
+  node.setAttribute("x2", x2);
+  node.setAttribute("y2", y2);
+  node.setAttribute("stroke", stroke);
+  node.setAttribute("stroke-width", width);
+  node.setAttribute("opacity", opacity);
+  svg.appendChild(node);
+  return node;
+}
+
+function appendText(svg, x, y, text, anchor, fill, size, weight, rotate = 0) {
+  const node = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  node.setAttribute("x", x);
+  node.setAttribute("y", y);
+  node.setAttribute("text-anchor", anchor);
+  node.setAttribute("fill", fill);
+  node.setAttribute("font-size", size);
+  node.setAttribute("font-weight", weight);
+  if (rotate) {
+    node.setAttribute("transform", `rotate(${rotate} ${x} ${y})`);
+  }
+  node.textContent = text;
+  svg.appendChild(node);
+  return node;
+}
+
+function appendPath(svg, d, fill, stroke, width, opacity = 1) {
+  const node = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  node.setAttribute("d", d);
+  node.setAttribute("fill", fill);
+  node.setAttribute("stroke", stroke);
+  node.setAttribute("stroke-width", width);
+  node.setAttribute("opacity", opacity);
+  node.setAttribute("stroke-linecap", "round");
+  node.setAttribute("stroke-linejoin", "round");
+  svg.appendChild(node);
+  return node;
+}
+
+function appendRect(svg, x, y, width, height, fill, stroke, radius = 18) {
+  const node = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  node.setAttribute("x", x);
+  node.setAttribute("y", y);
+  node.setAttribute("width", width);
+  node.setAttribute("height", height);
+  node.setAttribute("rx", radius);
+  node.setAttribute("fill", fill);
+  node.setAttribute("stroke", stroke);
+  svg.appendChild(node);
+  return node;
+}
+
+function showTooltip(node, html) {
+  node.innerHTML = html;
+  node.classList.add("visible");
+}
+
+function hideTooltip(node) {
+  node.classList.remove("visible");
+}
