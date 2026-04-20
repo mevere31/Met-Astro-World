@@ -80,7 +80,7 @@ a {
   margin: 0 auto;
   padding: 24px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(520px, 680px);
+  grid-template-columns: minmax(0, 1fr) minmax(600px, 760px);
   gap: 24px;
   align-items: start;
 }
