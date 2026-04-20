@@ -6,9 +6,9 @@
   --text: #edf3fb;
   --muted: #9cade0;
   --muted-strong: #c5d2ea;
-  --accent: #7fd6ff;
+  --accent: #52f7ff;
   --accent-2: #b68cff;
-  --accent-3: #ffd27f;
+  --accent-3: #ff4fd8;
   --accent-4: #79e2b0;
   --danger: #ff8f70;
   --border: rgba(255, 255, 255, 0.12);
@@ -17,6 +17,8 @@
   --glow: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 28px 80px rgba(0, 0, 0, 0.42);
   --max-width: 1500px;
   --viz-transition: 260ms;
+  --font-body: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading: "Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 }
 
 * {
@@ -30,7 +32,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   color: var(--text);
   background:
     radial-gradient(circle at 12% 18%, rgba(127, 214, 255, 0.18), transparent 24%),
@@ -156,6 +158,9 @@ a {
   font-size: clamp(2.8rem, 6vw, 5.3rem);
   line-height: 0.94;
   letter-spacing: -0.04em;
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .hero-copy p {
@@ -234,6 +239,8 @@ a {
   margin: 0 0 14px;
   font-size: clamp(1.75rem, 2.4vw, 2.5rem);
   line-height: 1.08;
+  font-family: var(--font-heading);
+  letter-spacing: 0.02em;
 }
 
 .story-card p,
