@@ -490,7 +490,19 @@ function setupScrollytelling(records) {
 
     // Prepare inactive layer.
     clearSVG(inactiveSvg);
-    renderFn(inactiveSvg);
+    try {
+      renderFn(inactiveSvg);
+    } catch (error) {
+      console.error(error);
+      clearSVG(inactiveSvg);
+      appendText(inactiveSvg, 430, 410, "Visualization error", "middle", "#edf4ff", 22, 800);
+      appendText(inactiveSvg, 430, 448, String(error?.message || error), "middle", "#9cadc6", 14, 500);
+    }
+
+    if (!inactiveSvg.childNodes.length) {
+      appendText(inactiveSvg, 430, 410, "No visualization rendered for this section yet", "middle", "#edf4ff", 18, 800);
+      appendText(inactiveSvg, 430, 446, "This step needs its planned visual element implemented.", "middle", "#9cadc6", 14, 500);
+    }
 
     if (transitionMs === 0) {
       activeSvg.classList.remove("is-active");
