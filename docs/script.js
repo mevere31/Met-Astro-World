@@ -724,6 +724,8 @@ function renderIntroCollage(svg, analytics) {
   const key = `${analytics.totalRows}-${analytics.objectRange.min}-${analytics.objectRange.max}`;
   svg.dataset.introKey = key;
 
+  appendText(svg, padding, startY - 6, "Met Open Access collage", "start", "rgba(237,244,255,0.9)", 12, 700);
+
   ids.forEach((objectId, index) => {
     const col = index % cols;
     const row = Math.floor(index / cols);
@@ -742,8 +744,10 @@ function renderIntroCollage(svg, analytics) {
     clipPath.appendChild(clipRect);
     defs.appendChild(clipPath);
 
-    const frame = appendRect(svg, x, y, tileW, tileH, "rgba(255,255,255,0.03)", "rgba(255,255,255,0.08)", 16);
+    const frame = appendRect(svg, x, y, tileW, tileH, "rgba(255,255,255,0.06)", "rgba(255,255,255,0.16)", 16);
     animateFadeIn(frame, 60 + index * 35, 220);
+    const placeholder = appendRect(svg, x, y, tileW, tileH, "rgba(127,214,255,0.08)", "none", 16);
+    placeholder.setAttribute("clip-path", `url(#${clipId})`);
     const image = appendImage(svg, x, y, tileW, tileH, "", 0.85);
     image.setAttribute("clip-path", `url(#${clipId})`);
     image.style.filter = "saturate(1.05) contrast(1.02)";
@@ -755,6 +759,7 @@ function renderIntroCollage(svg, analytics) {
       if (!href) return;
       image.setAttribute("href", href);
       image.setAttributeNS("http://www.w3.org/1999/xlink", "href", href);
+      placeholder.setAttribute("fill", "rgba(255,255,255,0.02)");
     });
   });
 
