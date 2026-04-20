@@ -759,8 +759,9 @@ function renderIntroCollage(svg, analytics) {
   });
 
   // Soft gradient overlay so the collage reads as background texture.
-  const overlay = appendRect(svg, padding, startY, gridW, gridH, "rgba(7, 17, 29, 0.35)", "none", 18);
-  overlay.setAttribute("opacity", "0.92");
+  const overlay = appendRect(svg, padding, startY, gridW, gridH, "rgba(7, 17, 29, 0.18)", "none", 18);
+  overlay.setAttribute("opacity", "0.35");
+  overlay.style.pointerEvents = "none";
 }
 
 function renderIntro(svg, analytics, ui) {
