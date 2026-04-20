@@ -78,7 +78,7 @@ a {
   margin: 0 auto;
   padding: 24px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(420px, 560px);
+  grid-template-columns: minmax(0, 1fr) minmax(520px, 680px);
   gap: 24px;
   align-items: start;
 }
@@ -332,6 +332,18 @@ a {
   grid-template-rows: auto auto auto 1fr auto;
   gap: 14px;
   padding: 22px;
+}
+
+/* Make the panel scroll internally while keeping the viz visible. */
+.panel-content {
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.viz-frame {
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .panel-topbar {
