@@ -310,6 +310,7 @@ function renderPage(records) {
             <svg class="viz-layer is-active" id="viz" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
             <svg class="viz-layer" id="viz-next" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
           </div>
+          <div class="panel-debug" id="panel-debug" aria-hidden="true"></div>
 
           <details class="dq-drawer" id="dq-panel">
             <summary class="dq-summary">
@@ -415,6 +416,7 @@ function setupScrollytelling(records) {
   const statRows = document.getElementById("stat-rows");
   const statSpan = document.getElementById("stat-span");
   const statCountries = document.getElementById("stat-countries");
+  const panelDebug = document.getElementById("panel-debug");
   const stepNodes = Array.from(document.querySelectorAll(".story-step"));
   const detailCard = {
     title: document.getElementById("detail-title"),
@@ -535,6 +537,9 @@ function setupScrollytelling(records) {
     ui.stepIndex.textContent = stepMeta[currentStep];
     renderDataQualityPanel();
     renderWithTransition((svg) => renders[currentStep](svg));
+    if (panelDebug) {
+      panelDebug.textContent = `step=${currentStep} activeSvg=${activeSvg?.id}:${activeSvg?.className?.baseVal || ""}`;
+    }
   }
 
   function renderDataQualityPanel() {
