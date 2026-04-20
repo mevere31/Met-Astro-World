@@ -898,12 +898,14 @@ code {
     grid-template-columns: 1fr;
   }
 
+  /* Keep the visualization panel visible while scrolling on smaller screens. */
   .sticky-panel {
-    position: relative;
-    top: auto;
-    height: auto;
-    min-height: 620px;
+    position: sticky;
+    top: 14px;
+    height: 62vh;
+    min-height: 460px;
     order: -1;
+    margin-bottom: 18px;
   }
 
   .hero-step,
