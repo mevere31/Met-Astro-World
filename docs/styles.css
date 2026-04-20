@@ -187,15 +187,19 @@ a {
 }
 
 .story {
-  padding-bottom: 22vh;
+  padding-bottom: 35vh;
 }
 
-.hero-step,
-.step,
-.closing {
-  min-height: 88vh;
+/* Scrollytelling steps: give each section its own “scene” */
+.story-step {
+  min-height: 105vh;
   display: flex;
   align-items: center;
+  padding: 10vh 0;
+}
+
+.story-step + .story-step {
+  margin-top: 8vh;
 }
 
 .story-card {

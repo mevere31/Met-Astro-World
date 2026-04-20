@@ -89,25 +89,25 @@ function renderPage(records) {
     <main class="page">
       <section class="story-shell">
         <header class="masthead">
-          <span class="eyebrow">Met Astro World / Stage 02</span>
+          <span class="eyebrow">Met Astro World</span>
           <h1>From Earthly Objects to Celestial Time</h1>
           <p class="lede">
-            A cleaned-up scrollytelling foundation built from the repository storyline and dataset.
-            It follows ${analytics.totalRows} Met object-history pairings across ${analytics.objectRange.span} years,
-            showing how cultural objects cluster in time, place, and symbolic sky cycles.
+            This narrative follows a sample of ${analytics.totalRows} objects in the Met Collection designated as “Highlights”, connected
+            to historical incidents, made between ${analytics.objectRange.min} and ${analytics.objectRange.max}.
+            That is ${analytics.objectRange.span} years of cultural production.
           </p>
           <div class="hero-metrics">
             <div class="metric-card">
               <strong>${analytics.totalRows}</strong>
-              <span>rows in the working sample</span>
+              <span>Total rows</span>
             </div>
             <div class="metric-card">
               <strong>${analytics.objectRange.min}-${analytics.objectRange.max}</strong>
-              <span>object creation range</span>
+              <span>Object creation span</span>
             </div>
             <div class="metric-card">
               <strong>${analytics.countryCount}</strong>
-              <span>countries represented</span>
+              <span>Countries represented</span>
             </div>
           </div>
         </header>
@@ -119,10 +119,10 @@ function renderPage(records) {
                 <span class="eyebrow">00 / Overview</span>
                 <span class="step-tag">Scene setter</span>
               </div>
-              <h2>The sample stretches across three centuries of object creation.</h2>
-              <p>
-                This opening scene establishes the narrative span before narrowing into patterns, geographies,
-                incident alignments, and the symbolic transit layer.
+              <h2>321 years of cultural production—set against history and the sky.</h2>
+              <p class="lede">
+                The Met Museum was founded in 1870 and as of 2026 is 156 years old. A few of the objects in this
+                collection were acquired as early as 1889.
               </p>
               <div class="metric-grid">
                 <div class="metric"><strong>${analytics.totalRows}</strong><span>Total dataset rows</span></div>
@@ -139,16 +139,16 @@ function renderPage(records) {
                 <span class="eyebrow">01 / Temporal clustering</span>
                 <span class="step-tag">Distribution</span>
               </div>
-              <h2>The collection is concentrated, not evenly distributed.</h2>
+              <h2>These objects are not evenly spread in time.</h2>
               <p>
-                The strongest cluster sits in the 18th century, with additional weight in the 19th and 20th.
-                Use the filters in the panel to see how the timeline changes by country or event type.
+                They are heavily concentrated in the 18th century, with additional dense clusters in the 20th and 19th centuries.
+                About <strong>${formatPercent(analytics.pre1900Share)}</strong> of rows were created between 1700 and 1899.
               </p>
               <ul class="insight-list">
-                <li>18th century: <strong>${analytics.centuries["18th"]}</strong> objects</li>
-                <li>19th century: <strong>${analytics.centuries["19th"]}</strong> objects</li>
-                <li>20th century: <strong>${analytics.centuries["20th"]}</strong> objects</li>
-                <li>21st century: <strong>${analytics.centuries["21st"]}</strong> objects</li>
+                <li>18th century: <strong>${analytics.centuries["18th"]}</strong> (42.25%)</li>
+                <li>19th century: <strong>${analytics.centuries["19th"]}</strong> (25.35%)</li>
+                <li>20th century: <strong>${analytics.centuries["20th"]}</strong> (28.17%)</li>
+                <li>21st century: <strong>${analytics.centuries["21st"]}</strong> (4.23%)</li>
               </ul>
             </div>
           </article>
@@ -159,10 +159,10 @@ function renderPage(records) {
                 <span class="eyebrow">02 / Geographic concentration</span>
                 <span class="step-tag">Place</span>
               </div>
-              <h2>A globally distributed file with a narrow center of gravity.</h2>
+              <h2>The objects are globally distributed, but strongly concentrated.</h2>
               <p>
-                The sample spans <strong>${analytics.countryCount}</strong> countries, but the top five account for
-                <strong>${formatPercent(analytics.topFiveShare)}</strong> of the total. Use the region filter to compare the dominant countries against the full file.
+                The top five countries account for <strong>${formatPercent(analytics.topFiveShare)}</strong> of all records.
+                Roughly 2 out of every 5 objects in this file were created in Paris.
               </p>
               <ul class="insight-list">
                 ${analytics.topCountries.slice(0, 5).map((country, index) => `
@@ -178,10 +178,10 @@ function renderPage(records) {
                 <span class="eyebrow">03 / Objects beside incidents</span>
                 <span class="step-tag">Alignment</span>
               </div>
-              <h2>Most object dates sit extremely close to the incident dates they are paired with.</h2>
+              <h2>Object dates sit unusually close to historical event dates.</h2>
               <p>
-                This is a curated object-incident dataset, so the strongest signal is proximity.
-                The event-type filter reveals which categories stay tightly aligned and which spread across wider date gaps.
+                Most object dates in this file are tightly linked to incident dates, because the dataset is curated as object-incident pairs.
+                The median gap is <strong>${analytics.gapMetrics.medianGap}</strong> years.
               </p>
               <div class="metric-grid">
                 <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within1)}</strong><span>Within ±1 year</span></div>
@@ -197,10 +197,10 @@ function renderPage(records) {
                 <span class="eyebrow">04 / Symbolic transit layer</span>
                 <span class="step-tag">Interpretive lens</span>
               </div>
-              <h2>This is a symbolic comparison, not a causal claim.</h2>
+              <h2>This is a symbolic lens, not a causal claim.</h2>
               <p>
-                The chart asks whether object creation clusters overlap with broad transit milestone windows.
-                Filtered views make it easier to compare whether specific object groups cluster near the same symbolic markers.
+                It asks whether object creation clusters overlap with broad collective-cycle transit windows. The following transits
+                feature movements by planets considered generation or era markers in astrology.
               </p>
               <ul class="insight-list">
                 <li>Jupiter-Saturn ±5 years: <strong>${formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)}</strong></li>
@@ -216,9 +216,10 @@ function renderPage(records) {
                 <span class="eyebrow">05 / Takeaways</span>
                 <span class="step-tag">Synthesis</span>
               </div>
-              <h2>Three clocks now share one visual system.</h2>
+              <h2>Three clocks, one narrative frame.</h2>
               <p>
-                This stage adds an interaction layer: filtered views, richer object details, and more exploratory control over the scroll panel.
+                This dataset combines three clocks: object creation time, historical event time, and symbolic transit time.
+                Seen together, they make cultural memories easier to feel and compare.
               </p>
               <div class="metric-grid">
                 <div class="metric"><strong>${analytics.centuries["18th"]}</strong><span>Largest century cluster</span></div>
