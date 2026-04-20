@@ -278,6 +278,17 @@ function renderPage(records) {
             <button type="button" class="control-reset" id="filter-reset">Reset filters</button>
           </div>
 
+          <div class="panel-toggles">
+            <div class="toggle-group" role="group" aria-label="Geography view toggle">
+              <button type="button" class="toggle is-active" id="geo-view-country" data-value="country">Country view</button>
+              <button type="button" class="toggle" id="geo-view-city" data-value="city">City view</button>
+            </div>
+            <div class="toggle-group" role="group" aria-label="Transit overlay toggle">
+              <button type="button" class="toggle is-active" id="transit-overlay-off" data-value="off">History only</button>
+              <button type="button" class="toggle" id="transit-overlay-on" data-value="on">History + transits</button>
+            </div>
+          </div>
+
           <div class="panel-highlights">
             <div class="panel-highlight">
               <span class="panel-label">Rows</span>
@@ -387,6 +398,8 @@ function setupScrollytelling(records) {
   const stepIndex = document.getElementById("panel-step-index");
   const progressValue = document.getElementById("panel-progress-value");
   const countryFilter = document.getElementById("country-filter");
+  const geographyModeButtons = Array.from(document.querySelectorAll("[data-geo-mode]"));
+  const transitModeButtons = Array.from(document.querySelectorAll("[data-transit-mode]"));
   const transitWindow = document.getElementById("transit-window");
   const transitWindowValue = document.getElementById("transit-window-value");
   const dqPanel = document.getElementById("dq-panel");
@@ -430,6 +443,8 @@ function setupScrollytelling(records) {
   let activeSvg = svgPrimary;
   let inactiveSvg = svgSecondary;
   let currentStep = "intro";
+  let geographyMode = "country";
+  let transitMode = "history-plus-transits";
   let state = buildState(records, countryFilter.value, cityFilter.value, eventFilter.value, Number.parseInt(transitWindow?.value || "5", 10));
 
   const ui = {
@@ -441,7 +456,15 @@ function setupScrollytelling(records) {
     tooltip,
     stepIndex,
     progressValue,
-    detailCard
+    detailCard,
+    view: {
+      get geographyMode() {
+        return geographyMode;
+      },
+      get transitMode() {
+        return transitMode;
+      }
+    }
   };
   const renders = {
     intro: (svg) => renderIntro(svg, state.analytics, ui),
@@ -729,23 +752,11 @@ function renderPatterns(svg, analytics, ui) {
 }
 
 function renderGeography(svg, analytics, ui) {
-  updateHeader(ui, {
-    kicker: "Geographic concentration",
-    title: "Top countries in the sample",
-    description: "Bubble size encodes country counts, while detail cards surface the strongest object and incident examples from the filtered selection.",
-    footnote: `Paris appears in ${analytics.cityMetrics.parisCount} rows; unknown city metadata appears in ${analytics.cityMetrics.unknownCount}.`
-  });
-
-  setLegend(ui.legend, [
-    { color: "#ffb56b", label: "Top five countries" },
-    { color: "#79e2b0", label: "Remaining top ten" }
-  ]);
-
+  const mode = ui.geoMode === "city" ? "city" : "country";
   clearSVG(svg);
 
   const width = 860;
   const height = 820;
-  const countries = analytics.topCountries.slice(0, 10);
   const centerX = width / 2;
   const centerY = height / 2 + 32;
   const layout = [
@@ -755,6 +766,62 @@ function renderGeography(svg, analytics, ui) {
 
   appendAtmosphere(svg, width, height);
 
+  if (mode === "city") {
+    updateHeader(ui, {
+      kicker: "Geographic concentration",
+      title: "Top cities in the sample",
+      description: "City view highlights urban hotspots (including metadata caveats like Unknown city). Bubble size encodes the number of rows tagged to each city.",
+      footnote: `Paris appears in ${analytics.cityMetrics.parisCount} rows; unknown city metadata appears in ${analytics.cityMetrics.unknownCount}.`
+    });
+
+    setLegend(ui.legend, [
+      { color: "#ffd27f", label: "Known city" },
+      { color: "#9cadc6", label: "Unknown city" }
+    ]);
+
+    const cities = (analytics.topCities || []).slice(0, 10);
+    if (!cities.length) {
+      appendText(svg, width / 2, height / 2, "No city data available for this filter.", "middle", "#9cadc6", 16, 600);
+      return;
+    }
+
+    cities.forEach((city, index) => {
+      const [dx, dy] = layout[index] || [0, 0];
+      const radius = 20 + (city.count / cities[0].count) * 92;
+      const isUnknown = city.label === "Unknown city" || city.label === "Unknown";
+      const fill = isUnknown ? "#9cadc6" : "#ffd27f";
+      const circle = appendCircle(svg, centerX + dx, centerY + dy, radius, fill, 0.78);
+      animateCirclePop(circle, radius, index * 70);
+      circle.setAttribute("stroke", "rgba(255,255,255,0.16)");
+      circle.setAttribute("stroke-width", "1");
+      circle.addEventListener("mouseenter", () => {
+        showTooltip(ui.tooltip, `${escapeHTML(city.label)}<br>${city.count} rows<br>${formatPercent(city.share)} of sample`);
+        updateDetailCard(ui.detailCard, analytics.cityExamples?.get(city.label) || null, analytics.totalRows);
+      });
+      circle.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
+
+      appendText(svg, centerX + dx, centerY + dy - 6, city.label, "middle", "#08111f", Math.max(11, Math.min(14, radius / 5)), 760);
+      appendText(svg, centerX + dx, centerY + dy + 16, `${city.count}`, "middle", "#08111f", 13, 600);
+    });
+
+    appendText(svg, width / 2, 82, "City hotspots in the dataset", "middle", "#edf4ff", 26, 720);
+    appendText(svg, width / 2, 114, "Switch back to Country view to see national concentration", "middle", "#95a8c8", 15, 500);
+    return;
+  }
+
+  updateHeader(ui, {
+    kicker: "Geographic concentration",
+    title: "Top countries in the sample",
+    description: "Country view emphasizes how strongly the sample concentrates in a few places. Bubble size encodes country counts.",
+    footnote: `Paris appears in ${analytics.cityMetrics.parisCount} rows; unknown city metadata appears in ${analytics.cityMetrics.unknownCount}.`
+  });
+
+  setLegend(ui.legend, [
+    { color: "#ffb56b", label: "Top five countries" },
+    { color: "#79e2b0", label: "Remaining top ten" }
+  ]);
+
+  const countries = analytics.topCountries.slice(0, 10);
   countries.forEach((country, index) => {
     const [dx, dy] = layout[index] || [0, 0];
     const radius = 20 + (country.count / countries[0].count) * 92;
@@ -775,7 +842,7 @@ function renderGeography(svg, analytics, ui) {
   });
 
   appendText(svg, width / 2, 82, `${formatPercent(analytics.topFiveShare)} of the sample comes from just five countries`, "middle", "#edf4ff", 26, 720);
-  appendText(svg, width / 2, 114, "Spatial breadth with a concentrated center", "middle", "#95a8c8", 15, 500);
+  appendText(svg, width / 2, 114, "Toggle to City view to see hotspots like Paris", "middle", "#95a8c8", 15, 500);
 }
 
 function renderHistory(svg, analytics, ui) {
@@ -840,19 +907,29 @@ function renderHistory(svg, analytics, ui) {
 }
 
 function renderTransits(svg, analytics, ui) {
+  const transitsEnabled = ui?.toggles?.transitsEnabled ?? true;
   updateHeader(ui, {
     kicker: "Symbolic sky layer",
-    title: "Objects and transit milestone windows",
-    description: "Transit markers sit above the shared x-axis while object creation years stay grounded below.",
-    footnote: "These year-window checks are exploratory and should later be upgraded with precise ephemeris timestamps."
+    title: transitsEnabled ? "Objects and transit milestone windows" : "History-only baseline (no transits)",
+    description: transitsEnabled
+      ? "Transit markers sit above the shared x-axis while object creation years stay grounded below."
+      : "This view hides the transit layer so you can compare the same objects against world-history anchors only.",
+    footnote: transitsEnabled
+      ? "These year-window checks are exploratory and should later be upgraded with precise ephemeris timestamps."
+      : "Toggle transits back on to compare against symbolic milestone windows."
   });
 
-  setLegend(ui.legend, [
-    { color: "#b68cff", label: "Jupiter-Saturn" },
-    { color: "#7fd6ff", label: "Saturn in Aries" },
-    { color: "#ffd27f", label: "Uranus in Aries" },
-    { color: "#7fd6ff", label: "Object year" }
-  ]);
+  setLegend(ui.legend, transitsEnabled
+    ? [
+      { color: "#b68cff", label: "Jupiter-Saturn" },
+      { color: "#7fd6ff", label: "Saturn in Aries" },
+      { color: "#ffd27f", label: "Uranus in Aries" },
+      { color: "#7fd6ff", label: "Object year" }
+    ]
+    : [
+      { color: "#7fd6ff", label: "Object year" },
+      { color: "#f08ad2", label: "World-history anchors" }
+    ]);
 
   clearSVG(svg);
 
@@ -864,26 +941,38 @@ function renderTransits(svg, analytics, ui) {
   const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, width - margin.right);
 
   appendAtmosphere(svg, width, height);
-  appendLine(svg, margin.left, transitLane, width - margin.right, transitLane, "rgba(255,255,255,0.32)", 1.5, 1);
+  if (transitsEnabled) {
+    appendLine(svg, margin.left, transitLane, width - margin.right, transitLane, "rgba(255,255,255,0.32)", 1.5, 1);
+    appendText(svg, margin.left, transitLane - 24, "Transit milestones", "start", "#edf4ff", 15, 700);
+  }
   appendLine(svg, margin.left, objectLane, width - margin.right, objectLane, "rgba(127,214,255,0.7)", 2, 1);
-  appendText(svg, margin.left, transitLane - 24, "Transit milestones", "start", "#edf4ff", 15, 700);
-  appendText(svg, margin.left, objectLane - 24, "Object creation years", "start", "#7fd6ff", 15, 700);
+  appendText(svg, margin.left, objectLane - 24, transitsEnabled ? "Object creation years" : "Object creation years (history-only)", "start", "#7fd6ff", 15, 700);
 
-  TRANSIT_GROUPS.forEach((group, groupIndex) => {
-    group.years.forEach((year, index) => {
-      const px = x(year);
-      const y = transitLane - 54 + groupIndex * 52;
-      appendLine(svg, px, y + 10, px, objectLane, group.color, 0.9, 0.12);
-      const dot = appendCircle(svg, px, y, 6.2, group.color, 0.95);
-      animateCirclePop(dot, 6.2, groupIndex * 140 + Math.min(index, 6) * 50, 240);
-      dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `${group.label}<br>${year}`));
-      dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
-
-      if (index < 5 || index === group.years.length - 1) {
-        appendText(svg, px, y - 16, String(year), "middle", group.color, 11, 600);
-      }
+  if (!transitsEnabled) {
+    HISTORY_ANCHORS.forEach((anchor) => {
+      const px = x(anchor.year);
+      appendLine(svg, px, margin.top, px, height - margin.bottom, anchor.color, 1.2, 0.22);
+      appendText(svg, px, margin.top - 18, anchor.label, "middle", anchor.color, 12, 600, -30);
     });
-  });
+  }
+
+  if (transitsEnabled) {
+    TRANSIT_GROUPS.forEach((group, groupIndex) => {
+      group.years.forEach((year, index) => {
+        const px = x(year);
+        const y = transitLane - 54 + groupIndex * 52;
+        appendLine(svg, px, y + 10, px, objectLane, group.color, 0.9, 0.12);
+        const dot = appendCircle(svg, px, y, 6.2, group.color, 0.95);
+        animateCirclePop(dot, 6.2, groupIndex * 140 + Math.min(index, 6) * 50, 240);
+        dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `${group.label}<br>${year}`));
+        dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
+
+        if (index < 5 || index === group.years.length - 1) {
+          appendText(svg, px, y - 16, String(year), "middle", group.color, 11, 600);
+        }
+      });
+    });
+  }
 
   analytics.objectYears.forEach((year, index) => {
     const jitter = ((index % 15) - 7) * 6;
@@ -895,6 +984,10 @@ function renderTransits(svg, analytics, ui) {
     });
     dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
   });
+
+  if (!transitsEnabled) {
+    return;
+  }
 
   const cards = [
     ["Jupiter-Saturn ±5", formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)],
@@ -1091,6 +1184,64 @@ function computeAnalytics(records) {
   };
 }
 
+function computeDataQuality(records) {
+  const objectIdCounts = new Map();
+  let missingObjectId = 0;
+  let missingIncidentYear = 0;
+  let missingObjectYear = 0;
+  let unknownCity = 0;
+  let unknownCountry = 0;
+  let unknownEventType = 0;
+
+  records.forEach((row) => {
+    if (Number.isFinite(row.objectId)) {
+      objectIdCounts.set(row.objectId, (objectIdCounts.get(row.objectId) || 0) + 1);
+    } else {
+      missingObjectId += 1;
+    }
+
+    if (!Number.isFinite(row.eventYear)) {
+      missingIncidentYear += 1;
+    }
+    if (!Number.isFinite(row.objectYear)) {
+      missingObjectYear += 1;
+    }
+
+    const city = cleanLabel(row.city);
+    if (!city || city.toLowerCase() === "unknown" || city.toLowerCase() === "unknown city") {
+      unknownCity += 1;
+    }
+
+    const country = cleanLabel(row.country);
+    if (!country || country.toLowerCase() === "unknown") {
+      unknownCountry += 1;
+    }
+
+    const eventType = cleanLabel(row.eventType);
+    if (!eventType || eventType.toLowerCase() === "unknown event") {
+      unknownEventType += 1;
+    }
+  });
+
+  let duplicateObjectIds = 0;
+  objectIdCounts.forEach((count) => {
+    if (count > 1) {
+      duplicateObjectIds += (count - 1);
+    }
+  });
+
+  return {
+    totalRows: records.length,
+    missingObjectId,
+    duplicateObjectIds,
+    missingIncidentYear,
+    missingObjectYear,
+    unknownCity,
+    unknownCountry,
+    unknownEventType
+  };
+}
+
 function parseCSV(text) {
   const rows = [];
   let current = "";
@@ -1240,41 +1391,6 @@ function getCityOptions(records, country, eventType) {
   return mapToSortedArray(cityMap, filtered.length)
     .slice(0, 30)
     .map((entry) => entry.label);
-}
-
-function computeDataQuality(records) {
-  const objectIdMap = new Map();
-  let missingObjectId = 0;
-  let missingObjectYear = 0;
-  let missingEventYear = 0;
-  let unknownCountry = 0;
-  let unknownCity = 0;
-
-  records.forEach((row) => {
-    if (!Number.isFinite(row.objectId)) {
-      missingObjectId += 1;
-    } else {
-      objectIdMap.set(row.objectId, (objectIdMap.get(row.objectId) || 0) + 1);
-    }
-    if (!Number.isFinite(row.objectYear)) missingObjectYear += 1;
-    if (!Number.isFinite(row.eventYear)) missingEventYear += 1;
-    if (!cleanLabel(row.country)) unknownCountry += 1;
-    if (!cleanLabel(row.city)) unknownCity += 1;
-  });
-
-  const duplicateObjectIds = Array.from(objectIdMap.values()).reduce((total, count) => total + (count > 1 ? count - 1 : 0), 0);
-  const duplicateObjectIdCount = Array.from(objectIdMap.entries()).reduce((total, [, count]) => total + (count > 1 ? 1 : 0), 0);
-
-  return {
-    totalRows: records.length,
-    missingObjectId,
-    duplicateObjectIds,
-    duplicateObjectIdCount,
-    missingObjectYear,
-    missingEventYear,
-    unknownCountry,
-    unknownCity
-  };
 }
 
 function stepLabel(step) {

@@ -420,6 +420,47 @@ a {
   background: rgba(127, 214, 255, 0.09);
 }
 
+.toggle-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.toggle {
+  appearance: none;
+  border: 1px solid var(--border-soft);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted-strong);
+  padding: 9px 12px;
+  border-radius: 999px;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease;
+}
+
+.toggle:hover,
+.toggle:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(127, 214, 255, 0.45);
+  background: rgba(127, 214, 255, 0.1);
+  color: var(--text);
+}
+
+.toggle.is-active {
+  border-color: rgba(127, 214, 255, 0.65);
+  background: rgba(127, 214, 255, 0.14);
+  color: var(--text);
+}
+
+.panel-controls__row {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .detail-card {
   display: grid;
   gap: 10px;
