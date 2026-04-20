@@ -685,6 +685,14 @@ a {
   pointer-events: none;
 }
 
+.collage-tile {
+  opacity: 0.92;
+}
+
+.collage-tile-image {
+  opacity: 0.92;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

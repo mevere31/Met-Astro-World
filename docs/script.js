@@ -658,6 +658,111 @@ function animatePathDraw(pathNode, delayMs = 0, durationMs = MOTION.durationMs) 
   }
 }
 
+function appendImage(svg, x, y, width, height, href, opacity = 1) {
+  const node = document.createElementNS("http://www.w3.org/2000/svg", "image");
+  node.setAttribute("x", x);
+  node.setAttribute("y", y);
+  node.setAttribute("width", width);
+  node.setAttribute("height", height);
+  node.setAttribute("opacity", opacity);
+  node.setAttribute("preserveAspectRatio", "xMidYMid slice");
+  if (href) {
+    node.setAttribute("href", href);
+    node.setAttributeNS("http://www.w3.org/1999/xlink", "href", href);
+  }
+  svg.appendChild(node);
+  return node;
+}
+
+function pickIntroCollageObjectIds(records, count = 12) {
+  const candidates = records
+    .filter((row) => Number.isFinite(row.objectId) && Number.isFinite(row.objectYear))
+    .sort((a, b) => a.objectYear - b.objectYear);
+  if (!candidates.length) return [];
+
+  const ids = [];
+  const used = new Set();
+  const steps = Math.min(count, candidates.length);
+  for (let i = 0; i < steps; i += 1) {
+    const idx = Math.floor((i / (steps - 1 || 1)) * (candidates.length - 1));
+    const row = candidates[idx];
+    if (!used.has(row.objectId)) {
+      used.add(row.objectId);
+      ids.push(row.objectId);
+    }
+  }
+  // Fill any remaining slots with unique IDs (in order) to reach target count.
+  for (let i = 0; ids.length < Math.min(count, candidates.length) && i < candidates.length; i += 1) {
+    const id = candidates[i].objectId;
+    if (!used.has(id)) {
+      used.add(id);
+      ids.push(id);
+    }
+  }
+  return ids;
+}
+
+function renderIntroCollage(svg, analytics) {
+  const ids = pickIntroCollageObjectIds(analytics.records || [], 12);
+  if (!ids.length) return;
+
+  const width = 860;
+  const height = 820;
+  const cols = 4;
+  const rows = 3;
+  const padding = 16;
+  const gridW = width - padding * 2;
+  const gridH = 250;
+  const tileW = (gridW - (cols - 1) * 10) / cols;
+  const tileH = (gridH - (rows - 1) * 10) / rows;
+  const startX = padding;
+  const startY = 18;
+
+  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+  svg.appendChild(defs);
+
+  const key = `${analytics.totalRows}-${analytics.objectRange.min}-${analytics.objectRange.max}`;
+  svg.dataset.introKey = key;
+
+  ids.forEach((objectId, index) => {
+    const col = index % cols;
+    const row = Math.floor(index / cols);
+    const x = startX + col * (tileW + 10);
+    const y = startY + row * (tileH + 10);
+
+    const clipId = `clip-intro-${index}`;
+    const clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+    clipPath.setAttribute("id", clipId);
+    const clipRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    clipRect.setAttribute("x", x);
+    clipRect.setAttribute("y", y);
+    clipRect.setAttribute("width", tileW);
+    clipRect.setAttribute("height", tileH);
+    clipRect.setAttribute("rx", "16");
+    clipPath.appendChild(clipRect);
+    defs.appendChild(clipPath);
+
+    const frame = appendRect(svg, x, y, tileW, tileH, "rgba(255,255,255,0.03)", "rgba(255,255,255,0.08)", 16);
+    animateFadeIn(frame, 60 + index * 35, 220);
+    const image = appendImage(svg, x, y, tileW, tileH, "", 0.85);
+    image.setAttribute("clip-path", `url(#${clipId})`);
+    image.style.filter = "saturate(1.05) contrast(1.02)";
+    animateFadeIn(image, 120 + index * 35, 260);
+
+    fetchMetObject(objectId).then((metObject) => {
+      if (svg.dataset.introKey !== key) return;
+      const href = metObject?.primaryImageSmall || metObject?.primaryImage || "";
+      if (!href) return;
+      image.setAttribute("href", href);
+      image.setAttributeNS("http://www.w3.org/1999/xlink", "href", href);
+    });
+  });
+
+  // Soft gradient overlay so the collage reads as background texture.
+  const overlay = appendRect(svg, padding, startY, gridW, gridH, "rgba(7, 17, 29, 0.35)", "none", 18);
+  overlay.setAttribute("opacity", "0.92");
+}
+
 function renderIntro(svg, analytics, ui) {
   updateHeader(ui, {
     kicker: "Overview",
@@ -680,6 +785,7 @@ function renderIntro(svg, analytics, ui) {
   const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, width - margin.right);
 
   appendAtmosphere(svg, width, height);
+  renderIntroCollage(svg, analytics);
   appendLine(svg, margin.left, axisY, width - margin.right, axisY, "#8e77ff", 2, 0.5);
 
   [analytics.objectRange.min, 1800, 1900, analytics.objectRange.max].forEach((year) => {
