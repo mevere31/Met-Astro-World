@@ -823,7 +823,8 @@ function renderPatterns(svg, analytics, ui) {
 
   setLegend(ui.legend, [
     { color: "#7fd6ff", label: "Year density" },
-    { color: "#ffd27f", label: "Peak decade annotation" }
+    { color: "#ffd27f", label: "Peak decade annotation" },
+    { color: "#79e2b0", label: "Event-type frequency" }
   ]);
 
   clearSVG(svg);
@@ -861,6 +862,35 @@ function renderPatterns(svg, analytics, ui) {
   });
 
   appendText(svg, margin.left, margin.top - 26, "Object count", "start", "#95a8c8", 14, 650);
+
+  // Optional sidebar: event-type frequency.
+  if (analytics.topEventTypes?.length) {
+    const sidebarX = width - margin.right - 220;
+    const sidebarY = margin.top + 18;
+    const sidebarW = 200;
+    const rowH = 18;
+    const maxRows = 10;
+    const list = analytics.topEventTypes.slice(0, maxRows);
+    const maxCount = Math.max(...list.map((d) => d.count), 1);
+
+    appendText(svg, sidebarX, sidebarY - 12, "Event types (top)", "start", "#95a8c8", 12, 700);
+    list.forEach((entry, idx) => {
+      const y0 = sidebarY + idx * (rowH + 10);
+      const label = entry.label.length > 18 ? `${entry.label.slice(0, 18)}…` : entry.label;
+      appendText(svg, sidebarX, y0 + 12, label, "start", "#c5d2ea", 12, 600);
+
+      const barW = (entry.count / maxCount) * sidebarW;
+      const bar = appendRect(svg, sidebarX, y0 + 18, barW, 8, "rgba(121,226,176,0.7)", "none", 6);
+      animateFadeIn(bar, 180 + idx * 50, 240);
+
+      bar.addEventListener("mouseenter", () => {
+        showTooltip(ui.tooltip, `${escapeHTML(entry.label)}<br>${entry.count} rows (${formatPercent(entry.share)})`);
+        const example = analytics.eventTypeExamples?.get(entry.label) || null;
+        updateDetailCard(ui.detailCard, example, analytics.totalRows);
+      });
+      bar.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
+    });
+  }
 }
 
 function renderGeography(svg, analytics, ui) {
@@ -1285,8 +1315,10 @@ function computeAnalytics(records) {
       parisCount: cityMap.get("Paris") || 0,
       unknownCount: cityMap.get("Unknown city") || 0
     },
+    eventTypeExamples: buildEventTypeExamples(records),
     countryExamples: buildCountryExamples(records),
     timelineExamples: buildTimelineExamples(records),
+    eventTypeExamples: buildEventTypeExamples(records),
     topDecades,
     yearBins,
     validPairs,
@@ -1448,6 +1480,17 @@ function buildTimelineExamples(records) {
   return map;
 }
 
+function buildEventTypeExamples(records) {
+  const map = new Map();
+  records.forEach((row) => {
+    const key = cleanLabel(row.eventType) || "Unknown event";
+    if (!map.has(key)) {
+      map.set(key, row);
+    }
+  });
+  return map;
+}
+
 function emptyAnalytics() {
   return {
     totalRows: 0,
@@ -1462,6 +1505,7 @@ function emptyAnalytics() {
     countryCount: 0,
     topEventTypes: [],
     cityMetrics: { parisCount: 0, unknownCount: 0 },
+    eventTypeExamples: new Map(),
     countryExamples: new Map(),
     timelineExamples: new Map(),
     topDecades: [],
