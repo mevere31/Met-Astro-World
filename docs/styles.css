@@ -73,6 +73,24 @@ a {
   padding: 24px;
 }
 
+.page {
+  width: min(100%, var(--max-width));
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 560px);
+  gap: 24px;
+  align-items: start;
+}
+
+.story-shell {
+  min-width: 0;
+}
+
+.sticky-panel {
+  min-width: 0;
+}
+
 .loading {
   min-height: 100vh;
   display: grid;
