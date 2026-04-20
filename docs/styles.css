@@ -902,8 +902,9 @@ code {
   .sticky-panel {
     position: sticky;
     top: 14px;
-    height: 62vh;
-    min-height: 460px;
+    height: auto;
+    max-height: 78vh;
+    overflow: auto;
     order: -1;
     margin-bottom: 18px;
   }
