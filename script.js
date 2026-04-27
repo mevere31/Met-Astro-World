@@ -69,8 +69,16 @@ fetch(new URL("./ObjectsvsHistory.csv", import.meta.url))
   .catch((error) => {
     console.error(error);
     app.className = "loading";
-    app.textContent = "Unable to load ObjectsvsHistory.csv. Run a local server to view the prototype.";
+    const message = error instanceof Error ? error.message : String(error);
+    app.textContent = `Unable to load or process ObjectsvsHistory.csv (${message}).`;
   });
+
+window.addEventListener("error", (event) => {
+  const error = event?.error;
+  if (!error) return;
+  if (!app || !app.classList.contains("loading")) return;
+  app.textContent = `Prototype error: ${error.message || String(error)}`;
+});
 
 function renderPage(records) {
   const analytics = computeAnalytics(records);
@@ -78,32 +86,35 @@ function renderPage(records) {
   const cities = analytics.topCities.map((entry) => entry.label);
   app.className = "";
   app.innerHTML = `
-    <main class="page">
-      <section class="story-shell">
-        <header class="masthead">
-          <span class="eyebrow">Met Astro World / Stage 02</span>
-          <h1>From Earthly Objects to Celestial Time</h1>
-          <p class="lede">
-            A cleaned-up scrollytelling foundation built from the repository storyline and dataset.
-            It follows ${analytics.totalRows} Met object-history pairings across ${analytics.objectRange.span} years,
-            showing how cultural objects cluster in time, place, and symbolic sky cycles.
-          </p>
-          <div class="hero-metrics">
-            <div class="metric-card">
-              <strong>${analytics.totalRows}</strong>
-              <span>rows in the working sample</span>
-            </div>
-            <div class="metric-card">
-              <strong>${analytics.objectRange.min}-${analytics.objectRange.max}</strong>
-              <span>object creation range</span>
-            </div>
-            <div class="metric-card">
-              <strong>${analytics.countryCount}</strong>
-              <span>countries represented</span>
-            </div>
+    <header class="masthead" id="masthead">
+      <div class="masthead__inner">
+        <span class="eyebrow">Met Astro World</span>
+        <h1>From Earthly Objects to Celestial Time</h1>
+        <p class="lede">
+          This narrative follows a sample of ${analytics.totalRows} objects in the Met Collection designated as “Highlights”, connected
+          to historical incidents, made between ${analytics.objectRange.min} and ${analytics.objectRange.max}.
+          That is ${analytics.objectRange.span} years of cultural production.
+        </p>
+        <div class="hero-metrics">
+          <div class="metric-card">
+            <strong>${analytics.totalRows}</strong>
+            <span>Total rows</span>
           </div>
-        </header>
+          <div class="metric-card">
+            <strong>${analytics.objectRange.min}-${analytics.objectRange.max}</strong>
+            <span>Object creation span</span>
+          </div>
+          <div class="metric-card">
+            <strong>${analytics.countryCount}</strong>
+            <span>Countries represented</span>
+          </div>
+        </div>
+        <a class="masthead__skip" href="#section-00">Skip to Section 00</a>
+      </div>
+    </header>
 
+    <main class="page" id="section-00">
+      <section class="story-shell">
         <section class="story">
           <article class="story-step story-step--hero is-active" data-step="intro">
             <div class="copy-card">
@@ -111,10 +122,10 @@ function renderPage(records) {
                 <span class="eyebrow">00 / Overview</span>
                 <span class="step-tag">Scene setter</span>
               </div>
-              <h2>The sample stretches across three centuries of object creation.</h2>
-              <p>
-                This opening scene establishes the narrative span before narrowing into patterns, geographies,
-                incident alignments, and the symbolic transit layer.
+              <h2>321 years of cultural production—set against history and the sky.</h2>
+              <p class="lede">
+                The Met Museum was founded in 1870 and as of 2026 is 156 years old. A few of the objects in this
+                collection were acquired as early as 1889.
               </p>
               <div class="metric-grid">
                 <div class="metric"><strong>${analytics.totalRows}</strong><span>Total dataset rows</span></div>
@@ -131,16 +142,16 @@ function renderPage(records) {
                 <span class="eyebrow">01 / Temporal clustering</span>
                 <span class="step-tag">Distribution</span>
               </div>
-              <h2>The collection is concentrated, not evenly distributed.</h2>
+              <h2>These objects are not evenly spread in time.</h2>
               <p>
-                The strongest cluster sits in the 18th century, with additional weight in the 19th and 20th.
-                Use the filters in the panel to see how the timeline changes by country or event type.
+                They are heavily concentrated in the 18th century, with additional dense clusters in the 20th and 19th centuries.
+                About <strong>${formatPercent(analytics.pre1900Share)}</strong> of rows were created between 1700 and 1899.
               </p>
               <ul class="insight-list">
-                <li>18th century: <strong>${analytics.centuries["18th"]}</strong> objects</li>
-                <li>19th century: <strong>${analytics.centuries["19th"]}</strong> objects</li>
-                <li>20th century: <strong>${analytics.centuries["20th"]}</strong> objects</li>
-                <li>21st century: <strong>${analytics.centuries["21st"]}</strong> objects</li>
+                <li>18th century: <strong>${analytics.centuries["18th"]}</strong> (42.25%)</li>
+                <li>19th century: <strong>${analytics.centuries["19th"]}</strong> (25.35%)</li>
+                <li>20th century: <strong>${analytics.centuries["20th"]}</strong> (28.17%)</li>
+                <li>21st century: <strong>${analytics.centuries["21st"]}</strong> (4.23%)</li>
               </ul>
             </div>
           </article>
@@ -151,10 +162,10 @@ function renderPage(records) {
                 <span class="eyebrow">02 / Geographic concentration</span>
                 <span class="step-tag">Place</span>
               </div>
-              <h2>A globally distributed file with a narrow center of gravity.</h2>
+              <h2>The objects are globally distributed, but strongly concentrated.</h2>
               <p>
-                The sample spans <strong>${analytics.countryCount}</strong> countries, but the top five account for
-                <strong>${formatPercent(analytics.topFiveShare)}</strong> of the total. Use the region filter to compare the dominant countries against the full file.
+                The top five countries account for <strong>${formatPercent(analytics.topFiveShare)}</strong> of all records.
+                Roughly 2 out of every 5 objects in this file were created in Paris.
               </p>
               <ul class="insight-list">
                 ${analytics.topCountries.slice(0, 5).map((country, index) => `
@@ -170,10 +181,10 @@ function renderPage(records) {
                 <span class="eyebrow">03 / Objects beside incidents</span>
                 <span class="step-tag">Alignment</span>
               </div>
-              <h2>Most object dates sit extremely close to the incident dates they are paired with.</h2>
+              <h2>Object dates sit unusually close to historical event dates.</h2>
               <p>
-                This is a curated object-incident dataset, so the strongest signal is proximity.
-                The event-type filter reveals which categories stay tightly aligned and which spread across wider date gaps.
+                Most object dates in this file are tightly linked to incident dates, because the dataset is curated as object-incident pairs.
+                The median gap is <strong>${analytics.gapMetrics.medianGap}</strong> years.
               </p>
               <div class="metric-grid">
                 <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within1)}</strong><span>Within ±1 year</span></div>
@@ -189,10 +200,10 @@ function renderPage(records) {
                 <span class="eyebrow">04 / Symbolic transit layer</span>
                 <span class="step-tag">Interpretive lens</span>
               </div>
-              <h2>This is a symbolic comparison, not a causal claim.</h2>
+              <h2>This is a symbolic lens, not a causal claim.</h2>
               <p>
-                The chart asks whether object creation clusters overlap with broad transit milestone windows.
-                Filtered views make it easier to compare whether specific object groups cluster near the same symbolic markers.
+                It asks whether object creation clusters overlap with broad collective-cycle transit windows. The following transits
+                feature movements by planets considered generation or era markers in astrology.
               </p>
               <ul class="insight-list">
                 <li>Jupiter-Saturn ±5 years: <strong>${formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)}</strong></li>
@@ -208,9 +219,10 @@ function renderPage(records) {
                 <span class="eyebrow">05 / Takeaways</span>
                 <span class="step-tag">Synthesis</span>
               </div>
-              <h2>Three clocks now share one visual system.</h2>
+              <h2>Three clocks, one narrative frame.</h2>
               <p>
-                This stage adds an interaction layer: filtered views, richer object details, and more exploratory control over the scroll panel.
+                This dataset combines three clocks: object creation time, historical event time, and symbolic transit time.
+                Seen together, they make cultural memories easier to feel and compare.
               </p>
               <div class="metric-grid">
                 <div class="metric"><strong>${analytics.centuries["18th"]}</strong><span>Largest century cluster</span></div>
@@ -270,6 +282,17 @@ function renderPage(records) {
             <button type="button" class="control-reset" id="filter-reset">Reset filters</button>
           </div>
 
+          <div class="panel-toggles">
+            <div class="toggle-group" role="group" aria-label="Geography view toggle">
+              <button type="button" class="toggle is-active" id="geo-view-country" data-value="country">Country view</button>
+              <button type="button" class="toggle" id="geo-view-city" data-value="city">City view</button>
+            </div>
+            <div class="toggle-group" role="group" aria-label="Transit overlay toggle">
+              <button type="button" class="toggle is-active" id="transit-overlay-off" data-value="off">History only</button>
+              <button type="button" class="toggle" id="transit-overlay-on" data-value="on">History + transits</button>
+            </div>
+          </div>
+
           <div class="panel-highlights">
             <div class="panel-highlight">
               <span class="panel-label">Rows</span>
@@ -290,6 +313,7 @@ function renderPage(records) {
             <svg class="viz-layer is-active" id="viz" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
             <svg class="viz-layer" id="viz-next" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
           </div>
+          <div class="panel-debug" id="panel-debug" aria-hidden="true"></div>
 
           <details class="dq-drawer" id="dq-panel">
             <summary class="dq-summary">
@@ -379,6 +403,8 @@ function setupScrollytelling(records) {
   const stepIndex = document.getElementById("panel-step-index");
   const progressValue = document.getElementById("panel-progress-value");
   const countryFilter = document.getElementById("country-filter");
+  const geographyModeButtons = Array.from(document.querySelectorAll("[data-geo-mode]"));
+  const transitModeButtons = Array.from(document.querySelectorAll("[data-transit-mode]"));
   const transitWindow = document.getElementById("transit-window");
   const transitWindowValue = document.getElementById("transit-window-value");
   const dqPanel = document.getElementById("dq-panel");
@@ -393,6 +419,7 @@ function setupScrollytelling(records) {
   const statRows = document.getElementById("stat-rows");
   const statSpan = document.getElementById("stat-span");
   const statCountries = document.getElementById("stat-countries");
+  const panelDebug = document.getElementById("panel-debug");
   const stepNodes = Array.from(document.querySelectorAll(".story-step"));
   const detailCard = {
     title: document.getElementById("detail-title"),
@@ -422,6 +449,8 @@ function setupScrollytelling(records) {
   let activeSvg = svgPrimary;
   let inactiveSvg = svgSecondary;
   let currentStep = "intro";
+  let geographyMode = "country";
+  let transitMode = "history-plus-transits";
   let state = buildState(records, countryFilter.value, cityFilter.value, eventFilter.value, Number.parseInt(transitWindow?.value || "5", 10));
 
   const ui = {
@@ -433,7 +462,15 @@ function setupScrollytelling(records) {
     tooltip,
     stepIndex,
     progressValue,
-    detailCard
+    detailCard,
+    view: {
+      get geographyMode() {
+        return geographyMode;
+      },
+      get transitMode() {
+        return transitMode;
+      }
+    }
   };
   const renders = {
     intro: (svg) => renderIntro(svg, state.analytics, ui),
@@ -458,7 +495,19 @@ function setupScrollytelling(records) {
 
     // Prepare inactive layer.
     clearSVG(inactiveSvg);
-    renderFn(inactiveSvg);
+    try {
+      renderFn(inactiveSvg);
+    } catch (error) {
+      console.error(error);
+      clearSVG(inactiveSvg);
+      appendText(inactiveSvg, 430, 410, "Visualization error", "middle", "#edf4ff", 22, 800);
+      appendText(inactiveSvg, 430, 448, String(error?.message || error), "middle", "#9cadc6", 14, 500);
+    }
+
+    if (!inactiveSvg.childNodes.length) {
+      appendText(inactiveSvg, 430, 410, "No visualization rendered for this section yet", "middle", "#edf4ff", 18, 800);
+      appendText(inactiveSvg, 430, 446, "This step needs its planned visual element implemented.", "middle", "#9cadc6", 14, 500);
+    }
 
     if (transitionMs === 0) {
       activeSvg.classList.remove("is-active");
@@ -491,6 +540,9 @@ function setupScrollytelling(records) {
     ui.stepIndex.textContent = stepMeta[currentStep];
     renderDataQualityPanel();
     renderWithTransition((svg) => renders[currentStep](svg));
+    if (panelDebug) {
+      panelDebug.textContent = `step=${currentStep} activeSvg=${activeSvg?.id}:${activeSvg?.className?.baseVal || ""}`;
+    }
   }
 
   function renderDataQualityPanel() {
@@ -627,6 +679,117 @@ function animatePathDraw(pathNode, delayMs = 0, durationMs = MOTION.durationMs) 
   }
 }
 
+function appendImage(svg, x, y, width, height, href, opacity = 1) {
+  const node = document.createElementNS("http://www.w3.org/2000/svg", "image");
+  node.setAttribute("x", x);
+  node.setAttribute("y", y);
+  node.setAttribute("width", width);
+  node.setAttribute("height", height);
+  node.setAttribute("opacity", opacity);
+  node.setAttribute("preserveAspectRatio", "xMidYMid slice");
+  if (href) {
+    node.setAttribute("href", href);
+    node.setAttributeNS("http://www.w3.org/1999/xlink", "href", href);
+  }
+  svg.appendChild(node);
+  return node;
+}
+
+function pickIntroCollageObjectIds(records, count = 12) {
+  const candidates = records
+    .filter((row) => Number.isFinite(row.objectId) && Number.isFinite(row.objectYear))
+    .sort((a, b) => a.objectYear - b.objectYear);
+  if (!candidates.length) return [];
+
+  const ids = [];
+  const used = new Set();
+  const steps = Math.min(count, candidates.length);
+  for (let i = 0; i < steps; i += 1) {
+    const idx = Math.floor((i / (steps - 1 || 1)) * (candidates.length - 1));
+    const row = candidates[idx];
+    if (!used.has(row.objectId)) {
+      used.add(row.objectId);
+      ids.push(row.objectId);
+    }
+  }
+  // Fill any remaining slots with unique IDs (in order) to reach target count.
+  for (let i = 0; ids.length < Math.min(count, candidates.length) && i < candidates.length; i += 1) {
+    const id = candidates[i].objectId;
+    if (!used.has(id)) {
+      used.add(id);
+      ids.push(id);
+    }
+  }
+  return ids;
+}
+
+function renderIntroCollage(svg, analytics) {
+  const ids = pickIntroCollageObjectIds(analytics.records || [], 12);
+  if (!ids.length) return;
+
+  const width = 860;
+  const height = 820;
+  const cols = 4;
+  const rows = 3;
+  const padding = 16;
+  const gridW = width - padding * 2;
+  const gridH = 250;
+  const tileW = (gridW - (cols - 1) * 10) / cols;
+  const tileH = (gridH - (rows - 1) * 10) / rows;
+  const startX = padding;
+  const startY = 18;
+
+  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+  svg.appendChild(defs);
+
+  const key = `${analytics.totalRows}-${analytics.objectRange.min}-${analytics.objectRange.max}`;
+  svg.dataset.introKey = key;
+
+  appendText(svg, padding, startY - 6, "Met Open Access collage", "start", "rgba(237,244,255,0.9)", 12, 700);
+
+  ids.forEach((objectId, index) => {
+    const col = index % cols;
+    const row = Math.floor(index / cols);
+    const x = startX + col * (tileW + 10);
+    const y = startY + row * (tileH + 10);
+
+    const clipId = `clip-intro-${index}`;
+    const clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+    clipPath.setAttribute("id", clipId);
+    const clipRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    clipRect.setAttribute("x", x);
+    clipRect.setAttribute("y", y);
+    clipRect.setAttribute("width", tileW);
+    clipRect.setAttribute("height", tileH);
+    clipRect.setAttribute("rx", "16");
+    clipPath.appendChild(clipRect);
+    defs.appendChild(clipPath);
+
+    const frame = appendRect(svg, x, y, tileW, tileH, "rgba(255,255,255,0.06)", "rgba(255,255,255,0.16)", 16);
+    animateFadeIn(frame, 60 + index * 35, 220);
+    const placeholder = appendRect(svg, x, y, tileW, tileH, "rgba(127,214,255,0.08)", "none", 16);
+    placeholder.setAttribute("clip-path", `url(#${clipId})`);
+    const image = appendImage(svg, x, y, tileW, tileH, "", 0.85);
+    image.setAttribute("clip-path", `url(#${clipId})`);
+    image.style.filter = "saturate(1.05) contrast(1.02)";
+    animateFadeIn(image, 120 + index * 35, 260);
+
+    fetchMetObject(objectId).then((metObject) => {
+      if (svg.dataset.introKey !== key) return;
+      const href = metObject?.primaryImageSmall || metObject?.primaryImage || "";
+      if (!href) return;
+      image.setAttribute("href", href);
+      image.setAttributeNS("http://www.w3.org/1999/xlink", "href", href);
+      placeholder.setAttribute("fill", "rgba(255,255,255,0.02)");
+    });
+  });
+
+  // Soft gradient overlay so the collage reads as background texture.
+  const overlay = appendRect(svg, padding, startY, gridW, gridH, "rgba(7, 17, 29, 0.18)", "none", 18);
+  overlay.setAttribute("opacity", "0.35");
+  overlay.style.pointerEvents = "none";
+}
+
 function renderIntro(svg, analytics, ui) {
   updateHeader(ui, {
     kicker: "Overview",
@@ -649,6 +812,7 @@ function renderIntro(svg, analytics, ui) {
   const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, width - margin.right);
 
   appendAtmosphere(svg, width, height);
+  renderIntroCollage(svg, analytics);
   appendLine(svg, margin.left, axisY, width - margin.right, axisY, "#8e77ff", 2, 0.5);
 
   [analytics.objectRange.min, 1800, 1900, analytics.objectRange.max].forEach((year) => {
@@ -680,7 +844,8 @@ function renderPatterns(svg, analytics, ui) {
 
   setLegend(ui.legend, [
     { color: "#7fd6ff", label: "Year density" },
-    { color: "#ffd27f", label: "Peak decade annotation" }
+    { color: "#ffd27f", label: "Peak decade annotation" },
+    { color: "#79e2b0", label: "Event-type frequency" }
   ]);
 
   clearSVG(svg);
@@ -718,26 +883,43 @@ function renderPatterns(svg, analytics, ui) {
   });
 
   appendText(svg, margin.left, margin.top - 26, "Object count", "start", "#95a8c8", 14, 650);
+
+  // Optional sidebar: event-type frequency.
+  if (analytics.topEventTypes?.length) {
+    const sidebarX = width - margin.right - 220;
+    const sidebarY = margin.top + 18;
+    const sidebarW = 200;
+    const rowH = 18;
+    const maxRows = 10;
+    const list = analytics.topEventTypes.slice(0, maxRows);
+    const maxCount = Math.max(...list.map((d) => d.count), 1);
+
+    appendText(svg, sidebarX, sidebarY - 12, "Event types (top)", "start", "#95a8c8", 12, 700);
+    list.forEach((entry, idx) => {
+      const y0 = sidebarY + idx * (rowH + 10);
+      const label = entry.label.length > 18 ? `${entry.label.slice(0, 18)}…` : entry.label;
+      appendText(svg, sidebarX, y0 + 12, label, "start", "#c5d2ea", 12, 600);
+
+      const barW = (entry.count / maxCount) * sidebarW;
+      const bar = appendRect(svg, sidebarX, y0 + 18, barW, 8, "rgba(121,226,176,0.7)", "none", 6);
+      animateFadeIn(bar, 180 + idx * 50, 240);
+
+      bar.addEventListener("mouseenter", () => {
+        showTooltip(ui.tooltip, `${escapeHTML(entry.label)}<br>${entry.count} rows (${formatPercent(entry.share)})`);
+        const example = analytics.eventTypeExamples?.get(entry.label) || null;
+        updateDetailCard(ui.detailCard, example, analytics.totalRows);
+      });
+      bar.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
+    });
+  }
 }
 
 function renderGeography(svg, analytics, ui) {
-  updateHeader(ui, {
-    kicker: "Geographic concentration",
-    title: "Top countries in the sample",
-    description: "Bubble size encodes country counts, while detail cards surface the strongest object and incident examples from the filtered selection.",
-    footnote: `Paris appears in ${analytics.cityMetrics.parisCount} rows; unknown city metadata appears in ${analytics.cityMetrics.unknownCount}.`
-  });
-
-  setLegend(ui.legend, [
-    { color: "#ffb56b", label: "Top five countries" },
-    { color: "#79e2b0", label: "Remaining top ten" }
-  ]);
-
+  const mode = ui.geoMode === "city" ? "city" : "country";
   clearSVG(svg);
 
   const width = 860;
   const height = 820;
-  const countries = analytics.topCountries.slice(0, 10);
   const centerX = width / 2;
   const centerY = height / 2 + 32;
   const layout = [
@@ -747,6 +929,62 @@ function renderGeography(svg, analytics, ui) {
 
   appendAtmosphere(svg, width, height);
 
+  if (mode === "city") {
+    updateHeader(ui, {
+      kicker: "Geographic concentration",
+      title: "Top cities in the sample",
+      description: "City view highlights urban hotspots (including metadata caveats like Unknown city). Bubble size encodes the number of rows tagged to each city.",
+      footnote: `Paris appears in ${analytics.cityMetrics.parisCount} rows; unknown city metadata appears in ${analytics.cityMetrics.unknownCount}.`
+    });
+
+    setLegend(ui.legend, [
+      { color: "#ffd27f", label: "Known city" },
+      { color: "#9cadc6", label: "Unknown city" }
+    ]);
+
+    const cities = (analytics.topCities || []).slice(0, 10);
+    if (!cities.length) {
+      appendText(svg, width / 2, height / 2, "No city data available for this filter.", "middle", "#9cadc6", 16, 600);
+      return;
+    }
+
+    cities.forEach((city, index) => {
+      const [dx, dy] = layout[index] || [0, 0];
+      const radius = 20 + (city.count / cities[0].count) * 92;
+      const isUnknown = city.label === "Unknown city" || city.label === "Unknown";
+      const fill = isUnknown ? "#9cadc6" : "#ffd27f";
+      const circle = appendCircle(svg, centerX + dx, centerY + dy, radius, fill, 0.78);
+      animateCirclePop(circle, radius, index * 70);
+      circle.setAttribute("stroke", "rgba(255,255,255,0.16)");
+      circle.setAttribute("stroke-width", "1");
+      circle.addEventListener("mouseenter", () => {
+        showTooltip(ui.tooltip, `${escapeHTML(city.label)}<br>${city.count} rows<br>${formatPercent(city.share)} of sample`);
+        updateDetailCard(ui.detailCard, analytics.cityExamples?.get(city.label) || null, analytics.totalRows);
+      });
+      circle.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
+
+      appendText(svg, centerX + dx, centerY + dy - 6, city.label, "middle", "#08111f", Math.max(11, Math.min(14, radius / 5)), 760);
+      appendText(svg, centerX + dx, centerY + dy + 16, `${city.count}`, "middle", "#08111f", 13, 600);
+    });
+
+    appendText(svg, width / 2, 82, "City hotspots in the dataset", "middle", "#edf4ff", 26, 720);
+    appendText(svg, width / 2, 114, "Switch back to Country view to see national concentration", "middle", "#95a8c8", 15, 500);
+    return;
+  }
+
+  updateHeader(ui, {
+    kicker: "Geographic concentration",
+    title: "Top countries in the sample",
+    description: "Country view emphasizes how strongly the sample concentrates in a few places. Bubble size encodes country counts.",
+    footnote: `Paris appears in ${analytics.cityMetrics.parisCount} rows; unknown city metadata appears in ${analytics.cityMetrics.unknownCount}.`
+  });
+
+  setLegend(ui.legend, [
+    { color: "#ffb56b", label: "Top five countries" },
+    { color: "#79e2b0", label: "Remaining top ten" }
+  ]);
+
+  const countries = analytics.topCountries.slice(0, 10);
   countries.forEach((country, index) => {
     const [dx, dy] = layout[index] || [0, 0];
     const radius = 20 + (country.count / countries[0].count) * 92;
@@ -767,7 +1005,7 @@ function renderGeography(svg, analytics, ui) {
   });
 
   appendText(svg, width / 2, 82, `${formatPercent(analytics.topFiveShare)} of the sample comes from just five countries`, "middle", "#edf4ff", 26, 720);
-  appendText(svg, width / 2, 114, "Spatial breadth with a concentrated center", "middle", "#95a8c8", 15, 500);
+  appendText(svg, width / 2, 114, "Toggle to City view to see hotspots like Paris", "middle", "#95a8c8", 15, 500);
 }
 
 function renderHistory(svg, analytics, ui) {
@@ -832,19 +1070,29 @@ function renderHistory(svg, analytics, ui) {
 }
 
 function renderTransits(svg, analytics, ui) {
+  const transitsEnabled = ui?.toggles?.transitsEnabled ?? true;
   updateHeader(ui, {
     kicker: "Symbolic sky layer",
-    title: "Objects and transit milestone windows",
-    description: "Transit markers sit above the shared x-axis while object creation years stay grounded below.",
-    footnote: "These year-window checks are exploratory and should later be upgraded with precise ephemeris timestamps."
+    title: transitsEnabled ? "Objects and transit milestone windows" : "History-only baseline (no transits)",
+    description: transitsEnabled
+      ? "Transit markers sit above the shared x-axis while object creation years stay grounded below."
+      : "This view hides the transit layer so you can compare the same objects against world-history anchors only.",
+    footnote: transitsEnabled
+      ? "These year-window checks are exploratory and should later be upgraded with precise ephemeris timestamps."
+      : "Toggle transits back on to compare against symbolic milestone windows."
   });
 
-  setLegend(ui.legend, [
-    { color: "#b68cff", label: "Jupiter-Saturn" },
-    { color: "#7fd6ff", label: "Saturn in Aries" },
-    { color: "#ffd27f", label: "Uranus in Aries" },
-    { color: "#7fd6ff", label: "Object year" }
-  ]);
+  setLegend(ui.legend, transitsEnabled
+    ? [
+      { color: "#b68cff", label: "Jupiter-Saturn" },
+      { color: "#7fd6ff", label: "Saturn in Aries" },
+      { color: "#ffd27f", label: "Uranus in Aries" },
+      { color: "#7fd6ff", label: "Object year" }
+    ]
+    : [
+      { color: "#7fd6ff", label: "Object year" },
+      { color: "#f08ad2", label: "World-history anchors" }
+    ]);
 
   clearSVG(svg);
 
@@ -856,26 +1104,38 @@ function renderTransits(svg, analytics, ui) {
   const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, width - margin.right);
 
   appendAtmosphere(svg, width, height);
-  appendLine(svg, margin.left, transitLane, width - margin.right, transitLane, "rgba(255,255,255,0.32)", 1.5, 1);
+  if (transitsEnabled) {
+    appendLine(svg, margin.left, transitLane, width - margin.right, transitLane, "rgba(255,255,255,0.32)", 1.5, 1);
+    appendText(svg, margin.left, transitLane - 24, "Transit milestones", "start", "#edf4ff", 15, 700);
+  }
   appendLine(svg, margin.left, objectLane, width - margin.right, objectLane, "rgba(127,214,255,0.7)", 2, 1);
-  appendText(svg, margin.left, transitLane - 24, "Transit milestones", "start", "#edf4ff", 15, 700);
-  appendText(svg, margin.left, objectLane - 24, "Object creation years", "start", "#7fd6ff", 15, 700);
+  appendText(svg, margin.left, objectLane - 24, transitsEnabled ? "Object creation years" : "Object creation years (history-only)", "start", "#7fd6ff", 15, 700);
 
-  TRANSIT_GROUPS.forEach((group, groupIndex) => {
-    group.years.forEach((year, index) => {
-      const px = x(year);
-      const y = transitLane - 54 + groupIndex * 52;
-      appendLine(svg, px, y + 10, px, objectLane, group.color, 0.9, 0.12);
-      const dot = appendCircle(svg, px, y, 6.2, group.color, 0.95);
-      animateCirclePop(dot, 6.2, groupIndex * 140 + Math.min(index, 6) * 50, 240);
-      dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `${group.label}<br>${year}`));
-      dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
-
-      if (index < 5 || index === group.years.length - 1) {
-        appendText(svg, px, y - 16, String(year), "middle", group.color, 11, 600);
-      }
+  if (!transitsEnabled) {
+    HISTORY_ANCHORS.forEach((anchor) => {
+      const px = x(anchor.year);
+      appendLine(svg, px, margin.top, px, height - margin.bottom, anchor.color, 1.2, 0.22);
+      appendText(svg, px, margin.top - 18, anchor.label, "middle", anchor.color, 12, 600, -30);
     });
-  });
+  }
+
+  if (transitsEnabled) {
+    TRANSIT_GROUPS.forEach((group, groupIndex) => {
+      group.years.forEach((year, index) => {
+        const px = x(year);
+        const y = transitLane - 54 + groupIndex * 52;
+        appendLine(svg, px, y + 10, px, objectLane, group.color, 0.9, 0.12);
+        const dot = appendCircle(svg, px, y, 6.2, group.color, 0.95);
+        animateCirclePop(dot, 6.2, groupIndex * 140 + Math.min(index, 6) * 50, 240);
+        dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `${group.label}<br>${year}`));
+        dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
+
+        if (index < 5 || index === group.years.length - 1) {
+          appendText(svg, px, y - 16, String(year), "middle", group.color, 11, 600);
+        }
+      });
+    });
+  }
 
   analytics.objectYears.forEach((year, index) => {
     const jitter = ((index % 15) - 7) * 6;
@@ -887,6 +1147,10 @@ function renderTransits(svg, analytics, ui) {
     });
     dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
   });
+
+  if (!transitsEnabled) {
+    return;
+  }
 
   const cards = [
     ["Jupiter-Saturn ±5", formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)],
@@ -1072,14 +1336,74 @@ function computeAnalytics(records) {
       parisCount: cityMap.get("Paris") || 0,
       unknownCount: cityMap.get("Unknown city") || 0
     },
+    eventTypeExamples: buildEventTypeExamples(records),
     countryExamples: buildCountryExamples(records),
     timelineExamples: buildTimelineExamples(records),
+    eventTypeExamples: buildEventTypeExamples(records),
     topDecades,
     yearBins,
     validPairs,
     gapMetrics,
     transitMetrics,
     dataQuality
+  };
+}
+
+function computeDataQuality(records) {
+  const objectIdCounts = new Map();
+  let missingObjectId = 0;
+  let missingIncidentYear = 0;
+  let missingObjectYear = 0;
+  let unknownCity = 0;
+  let unknownCountry = 0;
+  let unknownEventType = 0;
+
+  records.forEach((row) => {
+    if (Number.isFinite(row.objectId)) {
+      objectIdCounts.set(row.objectId, (objectIdCounts.get(row.objectId) || 0) + 1);
+    } else {
+      missingObjectId += 1;
+    }
+
+    if (!Number.isFinite(row.eventYear)) {
+      missingIncidentYear += 1;
+    }
+    if (!Number.isFinite(row.objectYear)) {
+      missingObjectYear += 1;
+    }
+
+    const city = cleanLabel(row.city);
+    if (!city || city.toLowerCase() === "unknown" || city.toLowerCase() === "unknown city") {
+      unknownCity += 1;
+    }
+
+    const country = cleanLabel(row.country);
+    if (!country || country.toLowerCase() === "unknown") {
+      unknownCountry += 1;
+    }
+
+    const eventType = cleanLabel(row.eventType);
+    if (!eventType || eventType.toLowerCase() === "unknown event") {
+      unknownEventType += 1;
+    }
+  });
+
+  let duplicateObjectIds = 0;
+  objectIdCounts.forEach((count) => {
+    if (count > 1) {
+      duplicateObjectIds += (count - 1);
+    }
+  });
+
+  return {
+    totalRows: records.length,
+    missingObjectId,
+    duplicateObjectIds,
+    missingIncidentYear,
+    missingObjectYear,
+    unknownCity,
+    unknownCountry,
+    unknownEventType
   };
 }
 
@@ -1177,6 +1501,17 @@ function buildTimelineExamples(records) {
   return map;
 }
 
+function buildEventTypeExamples(records) {
+  const map = new Map();
+  records.forEach((row) => {
+    const key = cleanLabel(row.eventType) || "Unknown event";
+    if (!map.has(key)) {
+      map.set(key, row);
+    }
+  });
+  return map;
+}
+
 function emptyAnalytics() {
   return {
     totalRows: 0,
@@ -1191,6 +1526,7 @@ function emptyAnalytics() {
     countryCount: 0,
     topEventTypes: [],
     cityMetrics: { parisCount: 0, unknownCount: 0 },
+    eventTypeExamples: new Map(),
     countryExamples: new Map(),
     timelineExamples: new Map(),
     topDecades: [],
