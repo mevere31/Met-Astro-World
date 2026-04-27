@@ -75,6 +75,81 @@ a {
   padding: 24px;
 }
 
+.masthead {
+  width: 100%;
+  min-height: 100vh;
+  display: grid;
+  align-items: center;
+  padding: clamp(26px, 4vw, 56px) 24px;
+  margin: 0 auto;
+}
+
+.masthead__inner {
+  width: min(100%, var(--max-width));
+  margin: 0 auto;
+  padding: clamp(26px, 3.2vw, 44px);
+  border-radius: 30px;
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(circle at top left, rgba(127, 214, 255, 0.14), transparent 60%),
+    radial-gradient(circle at bottom right, rgba(161, 124, 255, 0.12), transparent 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+  box-shadow: var(--glow);
+  position: relative;
+  overflow: hidden;
+}
+
+.masthead__inner::after {
+  content: "";
+  position: absolute;
+  inset: auto -10% -55% auto;
+  width: 460px;
+  height: 460px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(127, 214, 255, 0.16), transparent 68%);
+  filter: blur(14px);
+  pointer-events: none;
+}
+
+.masthead h1 {
+  margin: 0 0 16px;
+  font-size: clamp(2.6rem, 5.6vw, 5.2rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+}
+
+.masthead .lede {
+  max-width: 70ch;
+  margin: 0 0 18px;
+  color: var(--muted-strong);
+  font-size: 1.04rem;
+  line-height: 1.85;
+}
+
+.masthead__skip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
+  position: relative;
+  z-index: 1;
+}
+
+.masthead__skip:hover {
+  border-color: rgba(127, 214, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(127, 214, 255, 0.12);
+}
+
 .page {
   width: min(100%, var(--max-width));
   margin: 0 auto;
@@ -949,6 +1024,15 @@ code {
     grid-template-areas:
       "story"
       "panel";
+  }
+
+  .masthead {
+    padding: 18px 14px;
+  }
+
+  .masthead__inner {
+    min-height: calc(100vh - 36px);
+    padding: 26px 18px;
   }
 
   .story-shell {

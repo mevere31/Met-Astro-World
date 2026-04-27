@@ -86,32 +86,35 @@ function renderPage(records) {
   const cities = analytics.topCities.map((entry) => entry.label);
   app.className = "";
   app.innerHTML = `
-    <main class="page">
-      <section class="story-shell">
-        <header class="masthead">
-          <span class="eyebrow">Met Astro World</span>
-          <h1>From Earthly Objects to Celestial Time</h1>
-          <p class="lede">
-            This narrative follows a sample of ${analytics.totalRows} objects in the Met Collection designated as “Highlights”, connected
-            to historical incidents, made between ${analytics.objectRange.min} and ${analytics.objectRange.max}.
-            That is ${analytics.objectRange.span} years of cultural production.
-          </p>
-          <div class="hero-metrics">
-            <div class="metric-card">
-              <strong>${analytics.totalRows}</strong>
-              <span>Total rows</span>
-            </div>
-            <div class="metric-card">
-              <strong>${analytics.objectRange.min}-${analytics.objectRange.max}</strong>
-              <span>Object creation span</span>
-            </div>
-            <div class="metric-card">
-              <strong>${analytics.countryCount}</strong>
-              <span>Countries represented</span>
-            </div>
+    <header class="masthead" id="masthead">
+      <div class="masthead__inner">
+        <span class="eyebrow">Met Astro World</span>
+        <h1>From Earthly Objects to Celestial Time</h1>
+        <p class="lede">
+          This narrative follows a sample of ${analytics.totalRows} objects in the Met Collection designated as “Highlights”, connected
+          to historical incidents, made between ${analytics.objectRange.min} and ${analytics.objectRange.max}.
+          That is ${analytics.objectRange.span} years of cultural production.
+        </p>
+        <div class="hero-metrics">
+          <div class="metric-card">
+            <strong>${analytics.totalRows}</strong>
+            <span>Total rows</span>
           </div>
-        </header>
+          <div class="metric-card">
+            <strong>${analytics.objectRange.min}-${analytics.objectRange.max}</strong>
+            <span>Object creation span</span>
+          </div>
+          <div class="metric-card">
+            <strong>${analytics.countryCount}</strong>
+            <span>Countries represented</span>
+          </div>
+        </div>
+        <a class="masthead__skip" href="#section-00">Skip to Section 00</a>
+      </div>
+    </header>
 
+    <main class="page" id="section-00">
+      <section class="story-shell">
         <section class="story">
           <article class="story-step story-step--hero is-active" data-step="intro">
             <div class="copy-card">
