@@ -80,7 +80,8 @@ a {
   margin: 0 auto;
   padding: 24px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(600px, 760px);
+  /* Left column: sticky panel, right column: story */
+  grid-template-columns: minmax(600px, 760px) minmax(0, 1fr);
   gap: 24px;
   align-items: start;
 }
