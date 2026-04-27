@@ -80,8 +80,9 @@ a {
   margin: 0 auto;
   padding: 24px;
   display: grid;
-  grid-template-columns: minmax(600px, 760px) minmax(0, 1fr);
-  grid-template-areas: "panel story";
+  /* Story (left) 1/3, Data panel (right) 2/3 */
+  grid-template-columns: minmax(320px, 1fr) minmax(640px, 2fr);
+  grid-template-areas: "story panel";
   gap: 24px;
   align-items: start;
 }
@@ -89,11 +90,22 @@ a {
 .story-shell {
   min-width: 0;
   grid-area: story;
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  height: calc(100vh - 48px);
+  overflow: hidden;
+  padding-right: 6px;
 }
 
 .sticky-panel {
   min-width: 0;
   grid-area: panel;
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  height: calc(100vh - 48px);
+  overflow: auto;
 }
 
 .loading {
@@ -933,19 +945,26 @@ code {
 }
 
 @media (max-width: 1180px) {
-  .hero-grid,
-  .story-layout {
+  .page {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "story"
+      "panel";
   }
 
-  /* Keep the visualization panel visible while scrolling on smaller screens. */
-  .sticky-panel {
-    position: sticky;
-    top: 14px;
+  .story-shell {
+    position: relative;
+    top: auto;
     height: auto;
-    max-height: 78vh;
-    overflow: auto;
-    order: -1;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .sticky-panel {
+    position: relative;
+    top: auto;
+    height: auto;
+    overflow: visible;
     margin-bottom: 18px;
   }
 
