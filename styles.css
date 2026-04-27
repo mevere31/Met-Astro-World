@@ -90,22 +90,21 @@ a {
 .story-shell {
   min-width: 0;
   grid-area: story;
-  position: sticky;
-  top: 24px;
-  align-self: start;
-  height: calc(100vh - 48px);
-  overflow: hidden;
-  padding-right: 6px;
+  position: relative;
+  top: auto;
+  align-self: stretch;
+  height: auto;
+  overflow: visible;
 }
 
 .sticky-panel {
   min-width: 0;
   grid-area: panel;
-  position: sticky;
-  top: 24px;
-  align-self: start;
-  height: calc(100vh - 48px);
-  overflow: auto;
+  position: relative;
+  top: auto;
+  align-self: stretch;
+  height: auto;
+  overflow: visible;
 }
 
 .loading {
