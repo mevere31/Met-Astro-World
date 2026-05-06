@@ -467,10 +467,9 @@ a {
 }
 
 .step-viz__svg {
-  display: block;
   width: 100%;
+  aspect-ratio: 860 / 420; /* wider/shorter blocks */
   height: auto;
-  min-height: 420px;
 }
 .step-controls .toggle-group {
   gap: 14px;              /* more space between buttons */
