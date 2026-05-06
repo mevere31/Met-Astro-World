@@ -1711,13 +1711,15 @@ function setObjectCardResult(card, item, metObject) {
 }
 
 function updateDetailCard(card, item, totalRows) {
+  if (!card?.title || !card?.meta) return;
+
   if (!item) {
     card.title.textContent = "Hover a mark for details";
     card.meta.textContent = `${totalRows} rows are active in the current filtered selection.`;
-    card.objectYear.textContent = "-";
-    card.eventYear.textContent = "-";
-    card.country.textContent = "-";
-    card.eventType.textContent = "-";
+    if (card.objectYear) card.objectYear.textContent = "-";
+    if (card.eventYear) card.eventYear.textContent = "-";
+    if (card.country) card.country.textContent = "-";
+    if (card.eventType) card.eventType.textContent = "-";
     setObjectCardIdle(card);
     return;
   }

@@ -472,6 +472,14 @@ a {
   height: auto;
   min-height: 420px;
 }
+.step-controls .toggle-group {
+  gap: 14px;              /* more space between buttons */
+}
+
+.step-controls .panel-toggles {
+  gap: 14px;              /* more space between the two toggle rows */
+  margin-top: 10px;       /* optional */
+}
 
 .story-card {
   width: min(100%, 700px);
