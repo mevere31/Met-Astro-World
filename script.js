@@ -86,49 +86,37 @@ function renderPage(records) {
   const cities = analytics.topCities.map((entry) => entry.label);
   app.className = "";
   app.innerHTML = `
-    <main class="page">
-      <section class="story-shell">
-        <header class="masthead">
-          <span class="eyebrow">Met Astro World</span>
-          <h1>From Earthly Objects to Celestial Time</h1>
-          <p class="lede">
-            This narrative follows a sample of ${analytics.totalRows} objects in the Met Collection designated as “Highlights”, connected
-            to historical incidents, made between ${analytics.objectRange.min} and ${analytics.objectRange.max}.
-            That is ${analytics.objectRange.span} years of cultural production.
-          </p>
-          <div class="hero-metrics">
-            <div class="metric-card">
-              <strong>${analytics.totalRows}</strong>
-              <span>Total rows</span>
-            </div>
-            <div class="metric-card">
-              <strong>${analytics.objectRange.min}-${analytics.objectRange.max}</strong>
-              <span>Object creation span</span>
-            </div>
-            <div class="metric-card">
-              <strong>${analytics.countryCount}</strong>
-              <span>Countries represented</span>
-            </div>
-          </div>
-        </header>
+  <header class="masthead" id="masthead">
+    <div class="masthead__inner">
+      <span class="eyebrow">Met Astro World</span>
+      <h1>From Earthly Objects to Celestial Time: How The Met Collection's Highlights Objects Sit Between Human History and Planetary Cycles</h1>
+      <p class="lede">
+        This narrative follows a sample of ${analytics.totalRows} objects in the Met Collection designated as “Highlights”.
+        These objects were created in years connected to important historical incidents between ${analytics.objectRange.min} and ${analytics.objectRange.max}.
+        These objects represent ${analytics.objectRange.span} years of cultural production.
+      </p>
+      <a class="masthead__btn" href="#section-01">Skip to Section 01</a>
+    </div>
+  </header>
 
+    <main class="page" id="section-01">
+      <section class="story-shell">
         <section class="story">
           <article class="story-step story-step--hero is-active" data-step="intro">
             <div class="copy-card">
               <div class="step-topline">
-                <span class="eyebrow">00 / Overview</span>
-                <span class="step-tag">Scene setter</span>
+                <span class="eyebrow">01 | Overview</span>
               </div>
-              <h2>321 years of cultural production—set against history and the sky.</h2>
+              <h2>321 years of cultural production—set against historical and celestial change.</h2>
               <p class="lede">
                 The Met Museum was founded in 1870 and as of 2026 is 156 years old. A few of the objects in this
                 collection were acquired as early as 1889.
               </p>
               <div class="metric-grid">
-                <div class="metric"><strong>${analytics.totalRows}</strong><span>Total dataset rows</span></div>
-                <div class="metric"><strong>${analytics.objectRange.span}</strong><span>Years of cultural production</span></div>
-                <div class="metric"><strong>${analytics.objectRange.min}</strong><span>Earliest object year</span></div>
-                <div class="metric"><strong>${analytics.objectRange.max}</strong><span>Latest object year</span></div>
+                <div class="metric"><strong>${analytics.totalRows}</strong><span>Total Objects in Sample</span></div>
+                <div class="metric"><strong>${analytics.objectRange.span}</strong><span>Years of Cultural Production</span></div>
+                <div class="metric"><strong>${analytics.objectRange.min}</strong><span>Earliest Object Year</span></div>
+                <div class="metric"><strong>${analytics.objectRange.max}</strong><span>Latest Object Year</span></div>
               </div>
             </div>
           </article>
@@ -136,8 +124,7 @@ function renderPage(records) {
           <article class="story-step" data-step="patterns">
             <div class="copy-card">
               <div class="step-topline">
-                <span class="eyebrow">01 / Temporal clustering</span>
-                <span class="step-tag">Distribution</span>
+                <span class="eyebrow">02 | Temporal Distribution</span>
               </div>
               <h2>These objects are not evenly spread in time.</h2>
               <p>
@@ -156,8 +143,7 @@ function renderPage(records) {
           <article class="story-step" data-step="geography">
             <div class="copy-card">
               <div class="step-topline">
-                <span class="eyebrow">02 / Geographic concentration</span>
-                <span class="step-tag">Place</span>
+                <span class="eyebrow">03 | Geographic Concentration</span>
               </div>
               <h2>The objects are globally distributed, but strongly concentrated.</h2>
               <p>
@@ -175,18 +161,17 @@ function renderPage(records) {
           <article class="story-step" data-step="history">
             <div class="copy-card">
               <div class="step-topline">
-                <span class="eyebrow">03 / Objects beside incidents</span>
-                <span class="step-tag">Alignment</span>
+                <span class="eyebrow">04 | Object Creation Linked with History</span>
               </div>
-              <h2>Object dates sit unusually close to historical event dates.</h2>
+              <h2>Object creation dates sit in alignment to historical event dates.</h2>
               <p>
-                Most object dates in this file are tightly linked to incident dates, because the dataset is curated as object-incident pairs.
+                Most object dates in this project are tightly linked to incident dates, because the dataset is curated as object-incident pairs.
                 The median gap is <strong>${analytics.gapMetrics.medianGap}</strong> years.
               </p>
               <div class="metric-grid">
-                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within1)}</strong><span>Within ±1 year</span></div>
-                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within5)}</strong><span>Within ±5 years</span></div>
-                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within25)}</strong><span>Within ±25 years</span></div>
+                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within1)}</strong><span>Within ±1 year of a historical incident</span></div>
+                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within5)}</strong><span>Within ±5 years of a historical incident</span></div>
+                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within25)}</strong><span>Within ±25 years of a historical incident</span></div>
               </div>
             </div>
           </article>
@@ -194,31 +179,33 @@ function renderPage(records) {
           <article class="story-step" data-step="transits">
             <div class="copy-card">
               <div class="step-topline">
-                <span class="eyebrow">04 / Symbolic transit layer</span>
-                <span class="step-tag">Interpretive lens</span>
+                <span class="eyebrow">05 | Object Creation Linked with Astrological Transitsr</span>
               </div>
               <h2>This is a symbolic lens, not a causal claim.</h2>
               <p>
-                It asks whether object creation clusters overlap with broad collective-cycle transit windows. The following transits
-                feature movements by planets considered generation or era markers in astrology.
+                The project asks whether object creation clusters overlap with broad collective-cycle transit windows. The following transits
+                feature movements by planets considered generation or era markers in astrology. Jupiter, Saturn, and Uranus mark generational changes and societal restructures in astrological history. Uranus represents technology, innovation, discovery, and all that is progressive. 
+                Saturn is associated with restriction and limitation, it ushers in a generation's growth into adulthood and maturity. Jupiter is expansive and teaches reaching for broader purpose, reach, and possiblity.
               </p>
-              <ul class="insight-list">
-                <li>Jupiter-Saturn ±5 years: <strong>${formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)}</strong></li>
-                <li>Saturn in Aries ±5 years: <strong>${formatPercent(analytics.transitMetrics.saturnAries.plusMinus5)}</strong></li>
-                <li>Uranus in Aries ±3 years: <strong>${formatPercent(analytics.transitMetrics.uranusAries.plusMinus3)}</strong></li>
-              </ul>
+               <div class="metric-grid">
+                <div class="metric"><strong>${formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)}</strong><span>Jupiter-Saturn Conjuction ±5 years: </span></div>
+                <div class="metric"><strong>${formatPercent(analytics.transitMetrics.saturnAries.plusMinus5)}</strong><span>Saturn in Aries Transit ±5 years: </span></div>
+                <div class="metric"><strong>${formatPercent(analytics.transitMetrics.uranusAries.plusMinus3)}</strong><span>Uranus in Aries transit ±3 years: </span></div>
+              </div>
+               <p>
+               Two of these transits happen in the sign of Aries. When a planet is in Aries it carries a "cardinal fire" energy focused on initiative, boldness, and leadership.
+              </p>
             </div>
           </article>
 
           <article class="story-step story-step--closing" data-step="takeaways">
             <div class="copy-card">
               <div class="step-topline">
-                <span class="eyebrow">05 / Takeaways</span>
-                <span class="step-tag">Synthesis</span>
+                <span class="eyebrow">06 | Takeaways</span>
               </div>
-              <h2>Three clocks, one narrative frame.</h2>
+              <h2>Three temporal spaces, one narrative frame.</h2>
               <p>
-                This dataset combines three clocks: object creation time, historical event time, and symbolic transit time.
+                This dataset combines three clocks: object creation dates, historical event dates, and astrological transit dates.
                 Seen together, they make cultural memories easier to feel and compare.
               </p>
               <div class="metric-grid">
