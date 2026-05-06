@@ -87,6 +87,22 @@ function renderPage(records) {
   app.className = "";
   app.innerHTML = `
   <header class="masthead" id="masthead">
+    <div class="astro-sky" aria-hidden="true"></div>
+    <svg class="zodiac-wheel" viewBox="0 0 1000 1000" aria-hidden="true">
+  <defs>
+    <!-- A real circle made of two arcs -->
+    <path id="zodiacPath"
+      d="M 500 120
+         A 380 380 0 1 1 500 880
+         A 380 380 0 1 1 500 120" />
+  </defs>
+
+  <text class="zodiac-wheel__text">
+    <textPath href="#zodiacPath" startOffset="50%" text-anchor="middle">
+      ♈︎  ♉︎  ♊︎  ♋︎  ♌︎  ♍︎  ♎︎  ♏︎  ♐︎  ♑︎  ♒︎  ♓︎
+    </textPath>
+  </text>
+</svg>
     <div class="masthead__inner">
       <span class="eyebrow">Met Astro World</span>
       <h1>From Earthly Objects to Celestial Time: How The Met Collection's Highlights Objects Sit Between Human History and Planetary Cycles</h1>
@@ -99,7 +115,7 @@ function renderPage(records) {
     </div>
   </header>
 
-    <main class="page" id="section-01">
+  <main class="page" id="section-01">
       <section class="story-shell">
         <section class="story">
           <article class="story-step story-step--hero is-active" data-step="intro">
@@ -107,7 +123,7 @@ function renderPage(records) {
               <div class="step-topline">
                 <span class="eyebrow">01 | Overview</span>
               </div>
-              <h2>321 years of cultural production—set against historical and celestial change.</h2>
+              <h2>321 years of cultural production set against historical and celestial change.</h2>
               <p class="lede">
                 The Met Museum was founded in 1870 and as of 2026 is 156 years old. A few of the objects in this
                 collection were acquired as early as 1889.
@@ -212,7 +228,7 @@ function renderPage(records) {
               <svg class="step-viz__svg" data-step-viz="transits" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
           </article>
-
+          
           <article class="story-step story-step--closing" data-step="takeaways">
             <div class="copy-card">
               <div class="step-topline">
@@ -243,7 +259,6 @@ function renderPage(records) {
         <div class="panel-content">
           <div class="panel-topbar">
             <span class="panel-pill"><span class="panel-dot"></span>Interactive panel</span>
-            <span class="panel-pill">Stage 02</span>
           </div>
 
           <div class="viz-header">
