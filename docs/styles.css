@@ -21,6 +21,12 @@
   --font-heading: "Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 }
 
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+}
+
 * {
   box-sizing: border-box;
 }
