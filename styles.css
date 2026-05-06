@@ -438,10 +438,12 @@ a {
 .story {
   padding-bottom: 35vh;
 }
+/* --- Static per-section vizzes layout --- */
 
-/* Scrollytelling steps: give each section its own “scene” */
+/* Story steps currently use flex; stack content vertically */
 .story-step {
-  min-height: 105vh;
+  min-height: 105vh;     /* scene height */
+  padding: 10vh 0;       /* scene breathing room */
   display: flex;
   align-items: center;
   padding: 10vh 0;

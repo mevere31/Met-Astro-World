@@ -86,49 +86,89 @@ function renderPage(records) {
   const cities = analytics.topCities.map((entry) => entry.label);
   app.className = "";
   app.innerHTML = `
-    <main class="page">
-      <section class="story-shell">
-        <header class="masthead">
-          <span class="eyebrow">Met Astro World</span>
-          <h1>From Earthly Objects to Celestial Time</h1>
-          <p class="lede">
-            This narrative follows a sample of ${analytics.totalRows} objects in the Met Collection designated as “Highlights”, connected
-            to historical incidents, made between ${analytics.objectRange.min} and ${analytics.objectRange.max}.
-            That is ${analytics.objectRange.span} years of cultural production.
-          </p>
-          <div class="hero-metrics">
-            <div class="metric-card">
-              <strong>${analytics.totalRows}</strong>
-              <span>Total rows</span>
-            </div>
-            <div class="metric-card">
-              <strong>${analytics.objectRange.min}-${analytics.objectRange.max}</strong>
-              <span>Object creation span</span>
-            </div>
-            <div class="metric-card">
-              <strong>${analytics.countryCount}</strong>
-              <span>Countries represented</span>
-            </div>
-          </div>
-        </header>
+  <header class="masthead" id="masthead">
+    <div class="astro-sky" aria-hidden="true"></div>
+    <svg class="zodiac-wheel" viewBox="0 0 1000 1000" aria-hidden="true">
+  <defs>
+    <!-- A real circle made of two arcs -->
+    <path id="zodiacPath"
+      d="M 500 120
+         A 380 380 0 1 1 500 880
+         A 380 380 0 1 1 500 120" />
+  </defs>
 
+  <text class="zodiac-wheel__text">
+    <textPath href="#zodiacPath" startOffset="50%" text-anchor="middle">
+      ♈︎  ♉︎  ♊︎  ♋︎  ♌︎  ♍︎  ♎︎  ♏︎  ♐︎  ♑︎  ♒︎  ♓︎
+    </textPath>
+  </text>
+</svg>
+    <div class="masthead__inner">
+      <span class="eyebrow">Met Astro World</span>
+      <h1>From Earthly Objects to Celestial Time: How The Met Collection's Highlights Objects Sit Between Human History and Planetary Cycles</h1>
+      <p class="lede">
+        This narrative follows a sample of ${analytics.totalRows} objects in the Met Collection designated as “Highlights”.
+        These objects were created in years connected to important historical incidents between ${analytics.objectRange.min} and ${analytics.objectRange.max}.
+        These objects represent ${analytics.objectRange.span} years of cultural production.
+      </p>
+      <a class="masthead__btn" href="#section-01">Skip to Section 01</a>
+    </div>
+  </header>
+
+  <main class="page" id="section-01">
+      <section class="story-shell">
         <section class="story">
           <article class="story-step story-step--hero is-active" data-step="intro">
             <div class="copy-card">
               <div class="step-topline">
-                <span class="eyebrow">00 / Overview</span>
-                <span class="step-tag">Scene setter</span>
+                <span class="eyebrow">01 | Overview</span>
               </div>
-              <h2>321 years of cultural production—set against history and the sky.</h2>
+              <h2>321 years of cultural production set against historical and celestial change.</h2>
               <p class="lede">
                 The Met Museum was founded in 1870 and as of 2026 is 156 years old. A few of the objects in this
                 collection were acquired as early as 1889.
               </p>
               <div class="metric-grid">
-                <div class="metric"><strong>${analytics.totalRows}</strong><span>Total dataset rows</span></div>
-                <div class="metric"><strong>${analytics.objectRange.span}</strong><span>Years of cultural production</span></div>
-                <div class="metric"><strong>${analytics.objectRange.min}</strong><span>Earliest object year</span></div>
-                <div class="metric"><strong>${analytics.objectRange.max}</strong><span>Latest object year</span></div>
+                <div class="metric"><strong>${analytics.totalRows}</strong><span>Total Objects in Sample</span></div>
+                <div class="metric"><strong>${analytics.objectRange.span}</strong><span>Years of Cultural Production</span></div>
+                <div class="metric"><strong>${analytics.objectRange.min}</strong><span>Earliest Object Year</span></div>
+                <div class="metric"><strong>${analytics.objectRange.max}</strong><span>Latest Object Year</span></div>
+              </div>
+            </div>
+            <div class="step-controls" data-step-scope="intro" aria-label="Overview controls">
+              <div class="panel-controls">
+                <label class="control">
+                  <span class="control-label">Country focus</span>
+                  <select class="control-select" data-country>
+                    <option value="all">All countries</option>
+                    ${analytics.topCountries.slice(0, 10).map((country) => `<option value="${escapeHTML(country.label)}">${escapeHTML(country.label)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">City</span>
+                  <select class="control-select" data-city>
+                    <option value="all">All cities</option>
+                    ${cities.slice(0, 12).map((city) => `<option value="${escapeHTML(city)}">${escapeHTML(city)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">Event type</span>
+                  <select class="control-select" data-event>
+                    <option value="all">All event types</option>
+                    ${eventTypes.map((type) => `<option value="${escapeHTML(type)}">${escapeHTML(type)}</option>`).join("")}
+                  </select>
+                </label>
+                <button type="button" class="control-reset" data-reset>Reset filters</button>
+              </div>
+              <div class="panel-toggles">
+                <div class="toggle-group" role="group" aria-label="Geography view toggle">
+                  <button type="button" class="toggle is-active" data-geo-mode="country">Country view</button>
+                  <button type="button" class="toggle" data-geo-mode="city">City view</button>
+                </div>
+                <div class="toggle-group" role="group" aria-label="Transit overlay toggle">
+                  <button type="button" class="toggle" data-transit-mode="history-only">History only</button>
+                  <button type="button" class="toggle is-active" data-transit-mode="history-plus-transits">History + transits</button>
+                </div>
               </div>
             </div>
             <div class="step-viz">
@@ -139,8 +179,7 @@ function renderPage(records) {
           <article class="story-step" data-step="patterns">
             <div class="copy-card">
               <div class="step-topline">
-                <span class="eyebrow">01 / Temporal clustering</span>
-                <span class="step-tag">Distribution</span>
+                <span class="eyebrow">02 | Temporal Distribution</span>
               </div>
               <h2>These objects are not evenly spread in time.</h2>
               <p>
@@ -154,6 +193,42 @@ function renderPage(records) {
                 <li>21st century: <strong>${analytics.centuries["21st"]}</strong> (4.23%)</li>
               </ul>
             </div>
+            <div class="step-controls" data-step-scope="patterns" aria-label="Temporal distribution controls">
+              <div class="panel-controls">
+                <label class="control">
+                  <span class="control-label">Country focus</span>
+                  <select class="control-select" data-country>
+                    <option value="all">All countries</option>
+                    ${analytics.topCountries.slice(0, 10).map((country) => `<option value="${escapeHTML(country.label)}">${escapeHTML(country.label)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">City</span>
+                  <select class="control-select" data-city>
+                    <option value="all">All cities</option>
+                    ${cities.slice(0, 12).map((city) => `<option value="${escapeHTML(city)}">${escapeHTML(city)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">Event type</span>
+                  <select class="control-select" data-event>
+                    <option value="all">All event types</option>
+                    ${eventTypes.map((type) => `<option value="${escapeHTML(type)}">${escapeHTML(type)}</option>`).join("")}
+                  </select>
+                </label>
+                <button type="button" class="control-reset" data-reset>Reset filters</button>
+              </div>
+              <div class="panel-toggles">
+                <div class="toggle-group" role="group" aria-label="Geography view toggle">
+                  <button type="button" class="toggle is-active" data-geo-mode="country">Country view</button>
+                  <button type="button" class="toggle" data-geo-mode="city">City view</button>
+                </div>
+                <div class="toggle-group" role="group" aria-label="Transit overlay toggle">
+                  <button type="button" class="toggle" data-transit-mode="history-only">History only</button>
+                  <button type="button" class="toggle is-active" data-transit-mode="history-plus-transits">History + transits</button>
+                </div>
+              </div>
+            </div>
             <div class="step-viz">
               <svg class="step-viz__svg" data-step-viz="patterns" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
@@ -162,8 +237,7 @@ function renderPage(records) {
           <article class="story-step" data-step="geography">
             <div class="copy-card">
               <div class="step-topline">
-                <span class="eyebrow">02 / Geographic concentration</span>
-                <span class="step-tag">Place</span>
+                <span class="eyebrow">03 | Geographic Concentration</span>
               </div>
               <h2>The objects are globally distributed, but strongly concentrated.</h2>
               <p>
@@ -176,6 +250,42 @@ function renderPage(records) {
                 `).join("")}
               </ul>
             </div>
+            <div class="step-controls" data-step-scope="geography" aria-label="Geography controls">
+              <div class="panel-controls">
+                <label class="control">
+                  <span class="control-label">Country focus</span>
+                  <select class="control-select" data-country>
+                    <option value="all">All countries</option>
+                    ${analytics.topCountries.slice(0, 10).map((country) => `<option value="${escapeHTML(country.label)}">${escapeHTML(country.label)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">City</span>
+                  <select class="control-select" data-city>
+                    <option value="all">All cities</option>
+                    ${cities.slice(0, 12).map((city) => `<option value="${escapeHTML(city)}">${escapeHTML(city)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">Event type</span>
+                  <select class="control-select" data-event>
+                    <option value="all">All event types</option>
+                    ${eventTypes.map((type) => `<option value="${escapeHTML(type)}">${escapeHTML(type)}</option>`).join("")}
+                  </select>
+                </label>
+                <button type="button" class="control-reset" data-reset>Reset filters</button>
+              </div>
+              <div class="panel-toggles">
+                <div class="toggle-group" role="group" aria-label="Geography view toggle">
+                  <button type="button" class="toggle is-active" data-geo-mode="country">Country view</button>
+                  <button type="button" class="toggle" data-geo-mode="city">City view</button>
+                </div>
+                <div class="toggle-group" role="group" aria-label="Transit overlay toggle">
+                  <button type="button" class="toggle" data-transit-mode="history-only">History only</button>
+                  <button type="button" class="toggle is-active" data-transit-mode="history-plus-transits">History + transits</button>
+                </div>
+              </div>
+            </div>
             <div class="step-viz">
               <svg class="step-viz__svg" data-step-viz="geography" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
@@ -184,18 +294,53 @@ function renderPage(records) {
           <article class="story-step" data-step="history">
             <div class="copy-card">
               <div class="step-topline">
-                <span class="eyebrow">03 / Objects beside incidents</span>
-                <span class="step-tag">Alignment</span>
+                <span class="eyebrow">04 | Object Creation Linked with History</span>
               </div>
-              <h2>Object dates sit unusually close to historical event dates.</h2>
+              <h2>Object creation dates sit in alignment to historical event dates.</h2>
               <p>
-                Most object dates in this file are tightly linked to incident dates, because the dataset is curated as object-incident pairs.
+                Most object dates in this project are tightly linked to incident dates, because the dataset is curated as object-incident pairs.
                 The median gap is <strong>${analytics.gapMetrics.medianGap}</strong> years.
               </p>
               <div class="metric-grid">
-                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within1)}</strong><span>Within ±1 year</span></div>
-                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within5)}</strong><span>Within ±5 years</span></div>
-                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within25)}</strong><span>Within ±25 years</span></div>
+                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within1)}</strong><span>Within ±1 year of a historical incident</span></div>
+                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within5)}</strong><span>Within ±5 years of a historical incident</span></div>
+                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within25)}</strong><span>Within ±25 years of a historical incident</span></div>
+              </div>
+            </div>
+            <div class="step-controls" data-step-scope="history" aria-label="History controls">
+              <div class="panel-controls">
+                <label class="control">
+                  <span class="control-label">Country focus</span>
+                  <select class="control-select" data-country>
+                    <option value="all">All countries</option>
+                    ${analytics.topCountries.slice(0, 10).map((country) => `<option value="${escapeHTML(country.label)}">${escapeHTML(country.label)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">City</span>
+                  <select class="control-select" data-city>
+                    <option value="all">All cities</option>
+                    ${cities.slice(0, 12).map((city) => `<option value="${escapeHTML(city)}">${escapeHTML(city)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">Event type</span>
+                  <select class="control-select" data-event>
+                    <option value="all">All event types</option>
+                    ${eventTypes.map((type) => `<option value="${escapeHTML(type)}">${escapeHTML(type)}</option>`).join("")}
+                  </select>
+                </label>
+                <button type="button" class="control-reset" data-reset>Reset filters</button>
+              </div>
+              <div class="panel-toggles">
+                <div class="toggle-group" role="group" aria-label="Geography view toggle">
+                  <button type="button" class="toggle is-active" data-geo-mode="country">Country view</button>
+                  <button type="button" class="toggle" data-geo-mode="city">City view</button>
+                </div>
+                <div class="toggle-group" role="group" aria-label="Transit overlay toggle">
+                  <button type="button" class="toggle" data-transit-mode="history-only">History only</button>
+                  <button type="button" class="toggle is-active" data-transit-mode="history-plus-transits">History + transits</button>
+                </div>
               </div>
             </div>
             <div class="step-viz">
@@ -206,34 +351,72 @@ function renderPage(records) {
           <article class="story-step" data-step="transits">
             <div class="copy-card">
               <div class="step-topline">
-                <span class="eyebrow">04 / Symbolic transit layer</span>
-                <span class="step-tag">Interpretive lens</span>
+                <span class="eyebrow">05 | Object Creation Linked with Astrological Transitsr</span>
               </div>
               <h2>This is a symbolic lens, not a causal claim.</h2>
               <p>
-                It asks whether object creation clusters overlap with broad collective-cycle transit windows. The following transits
-                feature movements by planets considered generation or era markers in astrology.
+                The project asks whether object creation clusters overlap with broad collective-cycle transit windows. The following transits
+                feature movements by planets considered generation or era markers in astrology. Jupiter, Saturn, and Uranus mark generational changes and societal restructures in astrological history. Uranus represents technology, innovation, discovery, and all that is progressive. 
+                Saturn is associated with restriction and limitation, it ushers in a generation's growth into adulthood and maturity. Jupiter is expansive and teaches reaching for broader purpose, reach, and possiblity.
               </p>
-              <ul class="insight-list">
-                <li>Jupiter-Saturn ±5 years: <strong>${formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)}</strong></li>
-                <li>Saturn in Aries ±5 years: <strong>${formatPercent(analytics.transitMetrics.saturnAries.plusMinus5)}</strong></li>
-                <li>Uranus in Aries ±3 years: <strong>${formatPercent(analytics.transitMetrics.uranusAries.plusMinus3)}</strong></li>
-              </ul>
+               <div class="metric-grid">
+                <div class="metric"><strong>${formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)}</strong><span>Jupiter-Saturn Conjuction ±5 years: </span></div>
+                <div class="metric"><strong>${formatPercent(analytics.transitMetrics.saturnAries.plusMinus5)}</strong><span>Saturn in Aries Transit ±5 years: </span></div>
+                <div class="metric"><strong>${formatPercent(analytics.transitMetrics.uranusAries.plusMinus3)}</strong><span>Uranus in Aries transit ±3 years: </span></div>
+              </div>
+               <p>
+               Two of these transits happen in the sign of Aries. When a planet is in Aries it carries a "cardinal fire" energy focused on initiative, boldness, and leadership.
+              </p>
+            </div>
+            <div class="step-controls" data-step-scope="transits" aria-label="Transits controls">
+              <div class="panel-controls">
+                <label class="control">
+                  <span class="control-label">Country focus</span>
+                  <select class="control-select" data-country>
+                    <option value="all">All countries</option>
+                    ${analytics.topCountries.slice(0, 10).map((country) => `<option value="${escapeHTML(country.label)}">${escapeHTML(country.label)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">City</span>
+                  <select class="control-select" data-city>
+                    <option value="all">All cities</option>
+                    ${cities.slice(0, 12).map((city) => `<option value="${escapeHTML(city)}">${escapeHTML(city)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">Event type</span>
+                  <select class="control-select" data-event>
+                    <option value="all">All event types</option>
+                    ${eventTypes.map((type) => `<option value="${escapeHTML(type)}">${escapeHTML(type)}</option>`).join("")}
+                  </select>
+                </label>
+                <button type="button" class="control-reset" data-reset>Reset filters</button>
+              </div>
+              <div class="panel-toggles">
+                <div class="toggle-group" role="group" aria-label="Geography view toggle">
+                  <button type="button" class="toggle is-active" data-geo-mode="country">Country view</button>
+                  <button type="button" class="toggle" data-geo-mode="city">City view</button>
+                </div>
+                <div class="toggle-group" role="group" aria-label="Transit overlay toggle">
+                  <button type="button" class="toggle" data-transit-mode="history-only">History only</button>
+                  <button type="button" class="toggle is-active" data-transit-mode="history-plus-transits">History + transits</button>
+                </div>
+              </div>
             </div>
             <div class="step-viz">
               <svg class="step-viz__svg" data-step-viz="transits" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
           </article>
-
+          
           <article class="story-step story-step--closing" data-step="takeaways">
             <div class="copy-card">
               <div class="step-topline">
-                <span class="eyebrow">05 / Takeaways</span>
-                <span class="step-tag">Synthesis</span>
+                <span class="eyebrow">06 | Takeaways</span>
               </div>
-              <h2>Three clocks, one narrative frame.</h2>
+              <h2>Three temporal spaces, one narrative frame.</h2>
               <p>
-                This dataset combines three clocks: object creation time, historical event time, and symbolic transit time.
+                This dataset combines three clocks: object creation dates, historical event dates, and astrological transit dates.
                 Seen together, they make cultural memories easier to feel and compare.
               </p>
               <div class="metric-grid">
@@ -252,126 +435,6 @@ function renderPage(records) {
           </article>
         </section>
       </section>
-
-      <aside class="sticky-panel">
-        <div class="panel-content">
-          <div class="panel-topbar">
-            <span class="panel-pill"><span class="panel-dot"></span>Interactive panel</span>
-            <span class="panel-pill">Stage 02</span>
-          </div>
-
-          <div class="viz-header">
-            <div>
-              <span class="eyebrow" id="viz-kicker">Overview</span>
-              <h3 id="viz-title">Dataset overview</h3>
-            </div>
-            <span class="panel-step-index" id="panel-step-index">00</span>
-          </div>
-
-          <p id="viz-description" class="viz-description">
-            The visual panel updates as each story chapter becomes active.
-          </p>
-
-          <div class="panel-controls">
-            <label class="control">
-              <span class="control-label">Country focus</span>
-              <select id="country-filter" class="control-select">
-                <option value="all">All countries</option>
-                ${analytics.topCountries.slice(0, 10).map((country) => `<option value="${escapeHTML(country.label)}">${escapeHTML(country.label)}</option>`).join("")}
-              </select>
-            </label>
-            <label class="control">
-              <span class="control-label">City</span>
-              <select id="city-filter" class="control-select">
-                <option value="all">All cities</option>
-                ${cities.slice(0, 12).map((city) => `<option value="${escapeHTML(city)}">${escapeHTML(city)}</option>`).join("")}
-              </select>
-            </label>
-            <label class="control">
-              <span class="control-label">Event type</span>
-              <select id="event-filter" class="control-select">
-                <option value="all">All event types</option>
-                ${eventTypes.map((type) => `<option value="${escapeHTML(type)}">${escapeHTML(type)}</option>`).join("")}
-              </select>
-            </label>
-            <button type="button" class="control-reset" id="filter-reset">Reset filters</button>
-          </div>
-
-          <div class="panel-toggles">
-            <div class="toggle-group" role="group" aria-label="Geography view toggle">
-              <button type="button" class="toggle is-active" id="geo-view-country" data-value="country">Country view</button>
-              <button type="button" class="toggle" id="geo-view-city" data-value="city">City view</button>
-            </div>
-            <div class="toggle-group" role="group" aria-label="Transit overlay toggle">
-              <button type="button" class="toggle is-active" id="transit-overlay-off" data-value="off">History only</button>
-              <button type="button" class="toggle" id="transit-overlay-on" data-value="on">History + transits</button>
-            </div>
-          </div>
-
-          <div class="panel-highlights">
-            <div class="panel-highlight">
-              <span class="panel-label">Rows</span>
-              <strong id="stat-rows">${analytics.totalRows}</strong>
-            </div>
-            <div class="panel-highlight">
-              <span class="panel-label">Span</span>
-              <strong id="stat-span">${analytics.objectRange.span}y</strong>
-            </div>
-            <div class="panel-highlight">
-              <span class="panel-label">Countries</span>
-              <strong id="stat-countries">${analytics.countryCount}</strong>
-            </div>
-          </div>
-
-          <div class="legend" id="legend"></div>
-          <div class="viz-frame">
-            <svg class="viz-layer is-active" id="viz" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
-            <svg class="viz-layer" id="viz-next" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
-          </div>
-          <div class="panel-debug" id="panel-debug" aria-hidden="true"></div>
-
-          <details class="dq-drawer" id="dq-panel">
-            <summary class="dq-summary">
-              <span>Methodology &amp; data quality</span>
-              <span class="dq-summary__hint">Transit window, missing fields, duplicates</span>
-            </summary>
-            <div class="dq-body">
-              <div class="dq-block">
-                <div class="dq-block__title">Transit proximity window</div>
-                <div class="dq-slider">
-                  <input id="transit-window" type="range" min="1" max="10" step="1" value="5" />
-                  <div class="dq-slider__meta">
-                    <span class="dq-label">Current</span>
-                    <strong id="transit-window-value">±5 years</strong>
-                  </div>
-                </div>
-                <p class="dq-note">
-                  Overlap numbers are simple year-level proximity checks (exploratory), not timestamp-accurate transits.
-                </p>
-              </div>
-
-              <div class="dq-block">
-                <div class="dq-block__title">Data quality snapshot</div>
-                <div class="dq-metrics">
-                  <div class="dq-metric"><span>Duplicate Object.IDs</span><strong id="dq-dup-objects">-</strong></div>
-                  <div class="dq-metric"><span>Missing incident year</span><strong id="dq-missing-event-year">-</strong></div>
-                  <div class="dq-metric"><span>Missing object year</span><strong id="dq-missing-object-year">-</strong></div>
-                  <div class="dq-metric"><span>Unknown city</span><strong id="dq-unknown-city">-</strong></div>
-                  <div class="dq-metric"><span>Unknown country</span><strong id="dq-unknown-country">-</strong></div>
-                </div>
-              </div>
-            </div>
-          </details>
-
-          <div class="panel-footer">
-            <div class="panel-note" id="viz-footnote"></div>
-            <div class="panel-progress">
-              <span class="panel-progress-label">Active view</span>
-              <span class="panel-progress-value" id="panel-progress-value">Overview</span>
-            </div>
-          </div>
-        </div>
-      </aside>
     </main>
     <div class="tooltip" id="tooltip"></div>
     <aside class="detail-card" id="detail-card">
@@ -406,35 +469,7 @@ function renderPage(records) {
 }
 
 function setupScrollytelling(records) {
-  const vizFrame = document.querySelector(".viz-frame");
-  const svgPrimary = document.getElementById("viz");
-  const svgSecondary = document.getElementById("viz-next");
   const tooltip = document.getElementById("tooltip");
-  const legend = document.getElementById("legend");
-  const title = document.getElementById("viz-title");
-  const kicker = document.getElementById("viz-kicker");
-  const description = document.getElementById("viz-description");
-  const footnote = document.getElementById("viz-footnote");
-  const stepIndex = document.getElementById("panel-step-index");
-  const progressValue = document.getElementById("panel-progress-value");
-  const countryFilter = document.getElementById("country-filter");
-  const geographyModeButtons = Array.from(document.querySelectorAll("[data-geo-mode]"));
-  const transitModeButtons = Array.from(document.querySelectorAll("[data-transit-mode]"));
-  const transitWindow = document.getElementById("transit-window");
-  const transitWindowValue = document.getElementById("transit-window-value");
-  const dqPanel = document.getElementById("dq-panel");
-  const dqDuplicateIds = document.getElementById("dq-duplicate-ids");
-  const dqMissingIncidentYear = document.getElementById("dq-missing-incident-year");
-  const dqUnknownCity = document.getElementById("dq-unknown-city");
-  const dqUnknownCountry = document.getElementById("dq-unknown-country");
-  const dqMissingObjectYear = document.getElementById("dq-missing-object-year");
-  const cityFilter = document.getElementById("city-filter");
-  const eventFilter = document.getElementById("event-filter");
-  const resetButton = document.getElementById("filter-reset");
-  const statRows = document.getElementById("stat-rows");
-  const statSpan = document.getElementById("stat-span");
-  const statCountries = document.getElementById("stat-countries");
-  const panelDebug = document.getElementById("panel-debug");
   const stepNodes = Array.from(document.querySelectorAll(".story-step"));
   const detailCard = {
     title: document.getElementById("detail-title"),
@@ -460,181 +495,171 @@ function setupScrollytelling(records) {
     takeaways: "05"
   };
 
-  const transitionMs = MOTION.enabled ? 260 : 0;
-  let activeSvg = svgPrimary;
-  let inactiveSvg = svgSecondary;
   let currentStep = "intro";
-  let geographyMode = "country";
-  let transitMode = "history-plus-transits";
-  let state = buildState(records, countryFilter.value, cityFilter.value, eventFilter.value, Number.parseInt(transitWindow?.value || "5", 10));
+  const baseAnalytics = computeAnalytics(records);
 
   const ui = {
-    title,
-    kicker,
-    description,
-    footnote,
-    legend,
     tooltip,
-    stepIndex,
-    progressValue,
     detailCard,
-    view: {
-      get geographyMode() {
-        return geographyMode;
-      },
-      get transitMode() {
-        return transitMode;
-      }
-    }
+    view: {}
   };
   const renders = {
-    intro: (svg) => renderIntro(svg, state.analytics, ui),
-    patterns: (svg) => renderPatterns(svg, state.analytics, ui),
-    geography: (svg) => renderGeography(svg, state.analytics, ui),
-    history: (svg) => renderHistory(svg, state.analytics, ui),
-    transits: (svg) => renderTransits(svg, state.analytics, ui),
-    takeaways: (svg) => renderTakeaways(svg, state.analytics, ui)
+    intro: (svg, analytics, settings) => renderIntro(svg, analytics, ui, settings),
+    patterns: (svg, analytics, settings) => renderPatterns(svg, analytics, ui, settings),
+    geography: (svg, analytics, settings) => renderGeography(svg, analytics, ui, settings),
+    history: (svg, analytics, settings) => renderHistory(svg, analytics, ui, settings),
+    transits: (svg, analytics, settings) => renderTransits(svg, analytics, ui, settings),
+    takeaways: (svg, analytics, settings) => renderTakeaways(svg, analytics, ui, settings)
   };
 
-  function renderStaticSectionVizzesOnce() {
-    const nullTextNode = { textContent: "" };
-    const nullLegendNode = { innerHTML: "" };
-    const staticUi = {
-      ...ui,
-      kicker: nullTextNode,
-      title: nullTextNode,
-      description: nullTextNode,
-      footnote: nullTextNode,
-      legend: nullLegendNode
-    };
+  const perStepSettings = new Map();
 
-    const staticRenders = {
-      intro: (svg) => renderIntro(svg, state.analytics, staticUi),
-      patterns: (svg) => renderPatterns(svg, state.analytics, staticUi),
-      geography: (svg) => renderGeography(svg, state.analytics, staticUi),
-      history: (svg) => renderHistory(svg, state.analytics, staticUi),
-      transits: (svg) => renderTransits(svg, state.analytics, staticUi),
-      takeaways: (svg) => renderTakeaways(svg, state.analytics, staticUi)
-    };
+  function getStepSettings(step) {
+    if (!perStepSettings.has(step)) {
+      perStepSettings.set(step, {
+        country: "all",
+        city: "all",
+        eventType: "all",
+        geoMode: "country",
+        transitMode: "history-plus-transits"
+      });
+    }
+    return perStepSettings.get(step);
+  }
 
-    document.querySelectorAll("[data-step-viz]").forEach((svg) => {
-      const step = svg.getAttribute("data-step-viz");
-      const render = staticRenders[step];
-      if (!render) return;
+  function populateCountryOptions(selectEl) {
+    if (!selectEl) return;
+    selectEl.innerHTML = [
+      `<option value="all">All countries</option>`,
+      ...baseAnalytics.topCountries.slice(0, 24).map((country) => `<option value="${escapeHTML(country.label)}">${escapeHTML(country.label)}</option>`)
+    ].join("");
+  }
+
+  function populateEventOptions(selectEl) {
+    if (!selectEl) return;
+    selectEl.innerHTML = [
+      `<option value="all">All event types</option>`,
+      ...baseAnalytics.topEventTypes.map((entry) => `<option value="${escapeHTML(entry.label)}">${escapeHTML(entry.label)}</option>`)
+    ].join("");
+  }
+
+  function populateCityOptions(selectEl, country, eventType) {
+    if (!selectEl) return;
+    const cities = getCityOptions(records, country, eventType);
+    selectEl.innerHTML = [
+      `<option value="all">All cities</option>`,
+      ...cities.slice(0, 32).map((city) => `<option value="${escapeHTML(city)}">${escapeHTML(city)}</option>`)
+    ].join("");
+  }
+
+  function renderStepViz(step) {
+    const svg = document.querySelector(`[data-step-viz="${step}"]`);
+    const render = renders[step];
+    if (!svg || !render) return;
+    const settings = getStepSettings(step);
+    const stepState = buildState(records, settings.country, settings.city, settings.eventType, 5);
+    clearSVG(svg);
+    try {
+      render(svg, stepState.analytics, settings);
+    } catch (error) {
+      console.error(error);
       clearSVG(svg);
-      try {
-        render(svg);
-      } catch (error) {
-        console.error(error);
-        clearSVG(svg);
-        appendText(svg, 430, 410, "Visualization error", "middle", "#edf4ff", 22, 800);
-        appendText(svg, 430, 448, String(error?.message || error), "middle", "#9cadc6", 14, 500);
+      appendText(svg, 430, 410, "Visualization error", "middle", "#edf4ff", 22, 800);
+      appendText(svg, 430, 448, String(error?.message || error), "middle", "#9cadc6", 14, 500);
+    }
+  }
+
+  function initStepToolbarControls() {
+    document.querySelectorAll(".step-controls[data-step-scope]").forEach((controls) => {
+      const step = controls.getAttribute("data-step-scope");
+      if (!step || !renders[step]) return;
+      const settings = getStepSettings(step);
+      const countrySelect = controls.querySelector("[data-country]");
+      const citySelect = controls.querySelector("[data-city]");
+      const eventSelect = controls.querySelector("[data-event]");
+      const resetBtn = controls.querySelector("[data-reset]");
+      const geoButtons = Array.from(controls.querySelectorAll("[data-geo-mode]"));
+      const transitButtons = Array.from(controls.querySelectorAll("[data-transit-mode]"));
+
+      populateCountryOptions(countrySelect);
+      populateEventOptions(eventSelect);
+      populateCityOptions(citySelect, settings.country, settings.eventType);
+
+      if (countrySelect) countrySelect.value = settings.country;
+      if (eventSelect) eventSelect.value = settings.eventType;
+      if (citySelect) citySelect.value = settings.city;
+
+      function syncCityOptions() {
+        populateCityOptions(citySelect, settings.country, settings.eventType);
+        if (citySelect) {
+          const options = Array.from(citySelect.options).map((o) => o.value);
+          citySelect.value = options.includes(settings.city) ? settings.city : "all";
+          settings.city = citySelect.value;
+        }
       }
+
+      function syncToggleActive(buttons, key, value) {
+        buttons.forEach((btn) => btn.classList.toggle("is-active", btn.getAttribute(key) === value));
+      }
+
+      syncToggleActive(geoButtons, "data-geo-mode", settings.geoMode);
+      syncToggleActive(transitButtons, "data-transit-mode", settings.transitMode);
+
+      countrySelect?.addEventListener("change", () => {
+        settings.country = countrySelect.value || "all";
+        settings.city = "all";
+        syncCityOptions();
+        renderStepViz(step);
+      });
+
+      eventSelect?.addEventListener("change", () => {
+        settings.eventType = eventSelect.value || "all";
+        settings.city = "all";
+        syncCityOptions();
+        renderStepViz(step);
+      });
+
+      citySelect?.addEventListener("change", () => {
+        settings.city = citySelect.value || "all";
+        renderStepViz(step);
+      });
+
+      geoButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          settings.geoMode = btn.getAttribute("data-geo-mode") || "country";
+          syncToggleActive(geoButtons, "data-geo-mode", settings.geoMode);
+          renderStepViz(step);
+        });
+      });
+
+      transitButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          settings.transitMode = btn.getAttribute("data-transit-mode") || "history-plus-transits";
+          syncToggleActive(transitButtons, "data-transit-mode", settings.transitMode);
+          renderStepViz(step);
+        });
+      });
+
+      resetBtn?.addEventListener("click", () => {
+        settings.country = "all";
+        settings.city = "all";
+        settings.eventType = "all";
+        settings.geoMode = "country";
+        settings.transitMode = "history-plus-transits";
+
+        if (countrySelect) countrySelect.value = "all";
+        if (eventSelect) eventSelect.value = "all";
+        syncCityOptions();
+        syncToggleActive(geoButtons, "data-geo-mode", settings.geoMode);
+        syncToggleActive(transitButtons, "data-transit-mode", settings.transitMode);
+        renderStepViz(step);
+      });
     });
   }
 
-  function swapVizLayers() {
-    const currentActive = activeSvg;
-    activeSvg = inactiveSvg;
-    inactiveSvg = currentActive;
-  }
-
-  function renderWithTransition(renderFn) {
-    if (!vizFrame) {
-      renderFn(activeSvg);
-      return;
-    }
-
-    // Prepare inactive layer.
-    clearSVG(inactiveSvg);
-    try {
-      renderFn(inactiveSvg);
-    } catch (error) {
-      console.error(error);
-      clearSVG(inactiveSvg);
-      appendText(inactiveSvg, 430, 410, "Visualization error", "middle", "#edf4ff", 22, 800);
-      appendText(inactiveSvg, 430, 448, String(error?.message || error), "middle", "#9cadc6", 14, 500);
-    }
-
-    if (!inactiveSvg.childNodes.length) {
-      appendText(inactiveSvg, 430, 410, "No visualization rendered for this section yet", "middle", "#edf4ff", 18, 800);
-      appendText(inactiveSvg, 430, 446, "This step needs its planned visual element implemented.", "middle", "#9cadc6", 14, 500);
-    }
-
-    if (transitionMs === 0) {
-      activeSvg.classList.remove("is-active");
-      inactiveSvg.classList.add("is-active");
-      clearSVG(activeSvg);
-      swapVizLayers();
-      return;
-    }
-
-    const oldActive = activeSvg;
-    const newActive = inactiveSvg;
-    vizFrame.classList.add("viz-frame--transitioning");
-    newActive.classList.add("is-active");
-    oldActive.classList.remove("is-active");
-
-    window.setTimeout(() => {
-      // Clear the now-inactive SVG so it doesn't capture events.
-      clearSVG(oldActive);
-      swapVizLayers();
-      vizFrame.classList.remove("viz-frame--transitioning");
-    }, transitionMs + 40);
-  }
-
-  function renderCurrentStep() {
-    const filteredLabel = getFilterLabel(state.filters);
-    statRows.textContent = String(state.analytics.totalRows);
-    statSpan.textContent = `${state.analytics.objectRange.span}y`;
-    statCountries.textContent = String(state.analytics.countryCount);
-    progressValue.textContent = `${stepLabel(currentStep)}${filteredLabel ? ` / ${filteredLabel}` : ""}`;
-    ui.stepIndex.textContent = stepMeta[currentStep];
-    renderDataQualityPanel();
-    renderWithTransition((svg) => renders[currentStep](svg));
-    if (panelDebug) {
-      panelDebug.textContent = `step=${currentStep} activeSvg=${activeSvg?.id}:${activeSvg?.className?.baseVal || ""}`;
-    }
-  }
-
-  function renderDataQualityPanel() {
-    if (!dqPanel) return;
-    const dq = state.analytics.dataQuality;
-    if (!dq) return;
-    if (dqDuplicateIds) dqDuplicateIds.textContent = String(dq.duplicateObjectIds);
-    if (dqMissingIncidentYear) dqMissingIncidentYear.textContent = String(dq.missingIncidentYear);
-    if (dqUnknownCity) dqUnknownCity.textContent = String(dq.unknownCity);
-    if (dqUnknownCountry) dqUnknownCountry.textContent = String(dq.unknownCountry);
-    if (dqMissingObjectYear) dqMissingObjectYear.textContent = String(dq.missingObjectYear);
-  }
-
-  function rebuildCityOptions() {
-    if (!cityFilter) return;
-    const cities = getCityOptions(records, countryFilter.value, eventFilter.value);
-    const current = cityFilter.value;
-    cityFilter.innerHTML = [
-      `<option value="all">All cities</option>`,
-      ...cities.map((city) => `<option value="${escapeHTML(city)}">${escapeHTML(city)}</option>`)
-    ].join("");
-    cityFilter.value = cities.includes(current) ? current : "all";
-  }
-
-  function applyFilters() {
-    rebuildCityOptions();
-    state = buildState(records, countryFilter.value, cityFilter.value, eventFilter.value, Number.parseInt(transitWindow?.value || "5", 10));
-    updateDetailCard(detailCard, null, state.analytics.totalRows);
-    renderCurrentStep();
-  }
-
-  function resetFilters() {
-    countryFilter.value = "all";
-    cityFilter.value = "all";
-    eventFilter.value = "all";
-    if (transitWindow) {
-      transitWindow.value = "5";
-    }
-    applyFilters();
-  }
+  initStepToolbarControls();
+  // Initial static renders
+  Object.keys(stepMeta).forEach((step) => renderStepViz(step));
 
   const observer = new IntersectionObserver((entries) => {
     const visible = entries
@@ -654,26 +679,10 @@ function setupScrollytelling(records) {
     stepNodes.forEach((node) => {
       node.classList.toggle("is-active", node.dataset.step === step);
     });
-    renderCurrentStep();
   }, { threshold: [0.35, 0.55, 0.75] });
 
   stepNodes.forEach((step) => observer.observe(step));
-  countryFilter.addEventListener("change", applyFilters);
-  cityFilter.addEventListener("change", applyFilters);
-  eventFilter.addEventListener("change", applyFilters);
-  resetButton.addEventListener("click", resetFilters);
-  updateDetailCard(detailCard, null, state.analytics.totalRows);
-  rebuildCityOptions();
-  if (transitWindow && transitWindowValue) {
-    transitWindowValue.textContent = `±${transitWindow.value} years`;
-    transitWindow.addEventListener("input", () => {
-      transitWindowValue.textContent = `±${transitWindow.value} years`;
-    });
-    transitWindow.addEventListener("change", applyFilters);
-  }
-  renderDataQualityPanel();
-  renderStaticSectionVizzesOnce();
-  renderCurrentStep();
+  updateDetailCard(detailCard, null, baseAnalytics.totalRows);
 
   window.addEventListener("mousemove", (event) => {
     tooltip.style.left = `${event.clientX + 18}px`;
@@ -843,7 +852,7 @@ function renderIntroCollage(svg, analytics) {
   overlay.style.pointerEvents = "none";
 }
 
-function renderIntro(svg, analytics, ui) {
+function renderIntro(svg, analytics, ui, settings = {}) {
   updateHeader(ui, {
     kicker: "Overview",
     title: "Timeline of object creation years",
@@ -885,9 +894,11 @@ function renderIntro(svg, analytics, ui) {
 
   appendText(svg, width / 2, 78, `${analytics.objectRange.span} years of object creation`, "middle", "#edf4ff", 30, 750);
   appendText(svg, width / 2, 110, `From ${analytics.objectRange.min} to ${analytics.objectRange.max}`, "middle", "#95a8c8", 16, 500);
+
+  applyPlanetOverlay(svg, settings.planet);
 }
 
-function renderPatterns(svg, analytics, ui) {
+function renderPatterns(svg, analytics, ui, settings = {}) {
   updateHeader(ui, {
     kicker: "Temporal clustering",
     title: "Density by creation year",
@@ -965,10 +976,12 @@ function renderPatterns(svg, analytics, ui) {
       bar.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
     });
   }
+
+  applyPlanetOverlay(svg, settings.planet);
 }
 
-function renderGeography(svg, analytics, ui) {
-  const mode = ui.geoMode === "city" ? "city" : "country";
+function renderGeography(svg, analytics, ui, settings = {}) {
+  const mode = settings.geoMode === "city" ? "city" : "country";
   clearSVG(svg);
 
   const width = 860;
@@ -1059,9 +1072,11 @@ function renderGeography(svg, analytics, ui) {
 
   appendText(svg, width / 2, 82, `${formatPercent(analytics.topFiveShare)} of the sample comes from just five countries`, "middle", "#edf4ff", 26, 720);
   appendText(svg, width / 2, 114, "Toggle to City view to see hotspots like Paris", "middle", "#95a8c8", 15, 500);
+
+  applyPlanetOverlay(svg, settings.planet);
 }
 
-function renderHistory(svg, analytics, ui) {
+function renderHistory(svg, analytics, ui, settings = {}) {
   updateHeader(ui, {
     kicker: "Object vs event years",
     title: "Two-lane history alignment view",
@@ -1120,10 +1135,12 @@ function renderHistory(svg, analytics, ui) {
   [1701, 1789, 1800, 1900, 1939, 2022].forEach((year) => {
     appendText(svg, x(year), height - margin.bottom + 34, String(year), "middle", "#95a8c8", 13, 500);
   });
+
+  applyPlanetOverlay(svg, settings.planet);
 }
 
-function renderTransits(svg, analytics, ui) {
-  const transitsEnabled = ui?.toggles?.transitsEnabled ?? true;
+function renderTransits(svg, analytics, ui, settings = {}) {
+  const transitsEnabled = settings.transitMode !== "history-only";
   updateHeader(ui, {
     kicker: "Symbolic sky layer",
     title: transitsEnabled ? "Objects and transit milestone windows" : "History-only baseline (no transits)",
@@ -1202,6 +1219,7 @@ function renderTransits(svg, analytics, ui) {
   });
 
   if (!transitsEnabled) {
+    applyPlanetOverlay(svg, settings.planet);
     return;
   }
 
@@ -1217,9 +1235,11 @@ function renderTransits(svg, analytics, ui) {
     appendText(svg, 84 + index * 240, 690, card[0], "start", "#9cadc6", 13, 600);
     appendText(svg, 84 + index * 240, 722, card[1], "start", "#edf4ff", 28, 700);
   });
+
+  applyPlanetOverlay(svg, settings.planet);
 }
 
-function renderTakeaways(svg, analytics, ui) {
+function renderTakeaways(svg, analytics, ui, settings = {}) {
   updateHeader(ui, {
     kicker: "Takeaways",
     title: "Three strongest signals in the prototype",
@@ -1739,6 +1759,44 @@ function setLegend(node, items) {
       ${escapeHTML(item.label)}
     </span>
   `).join("");
+}
+
+function applyPlanetOverlay(svg, planet) {
+  if (!svg || !planet || planet === "none") return;
+
+  const planetLabel = String(planet);
+  const palette = {
+    saturn: { color: "#b68cff", ring: true },
+    jupiter: { color: "#ffd27f", ring: false },
+    uranus: { color: "#79e2b0", ring: false },
+    neptune: { color: "#7fd6ff", ring: false },
+    pluto: { color: "#ff4fd8", ring: false }
+  };
+  const token = palette[planetLabel] || { color: "rgba(255,255,255,0.7)", ring: false };
+
+  // Subtle badge in the upper-right corner (doesn't affect the underlying chart).
+  const cx = 820;
+  const cy = 64;
+  const r = 16;
+  const planetDot = appendCircle(svg, cx, cy, r, token.color, 0.22);
+  planetDot.setAttribute("stroke", token.color);
+  planetDot.setAttribute("stroke-width", "1.4");
+
+  if (token.ring) {
+    const ring = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+    ring.setAttribute("cx", String(cx));
+    ring.setAttribute("cy", String(cy));
+    ring.setAttribute("rx", "26");
+    ring.setAttribute("ry", "10");
+    ring.setAttribute("fill", "none");
+    ring.setAttribute("stroke", token.color);
+    ring.setAttribute("stroke-width", "1.2");
+    ring.setAttribute("opacity", "0.55");
+    ring.setAttribute("transform", `rotate(-18 ${cx} ${cy})`);
+    svg.appendChild(ring);
+  }
+
+  appendText(svg, cx - 26, cy + 4, planetLabel.toUpperCase(), "end", "rgba(237,243,251,0.85)", 12, 700);
 }
 
 function tally(values) {
