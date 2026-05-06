@@ -661,7 +661,7 @@ function setupScrollytelling(records) {
 
   initStepToolbarControls();
   // Initial static renders
-  Object.keys(stepMeta).forEach((step) => renderStepViz(step));
+  renderStepViz("intro");
 
   const observer = new IntersectionObserver((entries) => {
     const visible = entries
@@ -678,6 +678,7 @@ function setupScrollytelling(records) {
     }
 
     currentStep = step;
+    renderStepViz(step);
     stepNodes.forEach((node) => {
       node.classList.toggle("is-active", node.dataset.step === step);
     });
@@ -809,7 +810,6 @@ function renderIntroCollage(svg, analytics) {
   const key = `${analytics.totalRows}-${analytics.objectRange.min}-${analytics.objectRange.max}`;
   svg.dataset.introKey = key;
 
-  appendText(svg, padding, startY - 6, "Met Open Access collage", "start", "rgba(237,244,255,0.9)", 12, 700);
 
   ids.forEach((objectId, index) => {
     const col = index % cols;
@@ -875,8 +875,10 @@ function renderIntro(svg, analytics, ui, settings = {}) {
   const axisY = height / 2;
   const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, width - margin.right);
 
+  appendText(svg, margin.left, margin.top - 36, `${analytics.objectRange.span} years of object creation`, "start", "#edf4ff", 22, 800);
+  appendText(svg, margin.left, margin.top - 14, `From ${analytics.objectRange.min} to ${analytics.objectRange.max}`, "start", "#95a8c8", 14, 600);
+
   appendAtmosphere(svg, width, height);
-  renderIntroCollage(svg, analytics);
   appendLine(svg, margin.left, axisY, width - margin.right, axisY, "#8e77ff", 2, 0.5);
 
   [analytics.objectRange.min, 1800, 1900, analytics.objectRange.max].forEach((year) => {
@@ -885,19 +887,37 @@ function renderIntro(svg, analytics, ui, settings = {}) {
     appendText(svg, px, axisY + 44, String(year), "middle", "#9cadc6", 14, 500);
   });
 
-  analytics.objectYears.forEach((year, index) => {
-    const amplitude = 14 + (index % 5) * 5;
-    const y = axisY + Math.sin(index * 0.65) * amplitude;
-    const circle = appendCircle(svg, x(year), y, 4.1, "#7fd6ff", 0.84);
-    animateCirclePop(circle, 4.1, Math.min(index, 44) * 6);
-    circle.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `Object year ${year}`));
-    circle.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
+ analytics.objectYears.forEach((year, index) => {
+  const amplitude = 14 + (index % 5) * 5;
+  const y = axisY + Math.sin(index * 0.65) * amplitude;
+  const circle = appendCircle(svg, x(year), y, 4.1, "#7fd6ff", 0.84);
+  animateCirclePop(circle, 4.1, Math.min(index, 44) * 6);
+
+  circle.addEventListener("mouseenter", async () => {
+    const example = analytics.timelineExamples?.get(year) || null;
+
+    if (!example?.objectId) {
+      showTooltip(ui.tooltip, `Year ${year}`);
+      return;
+    }
+
+    showTooltip(ui.tooltip, `Loading image…<br>Object ID ${example.objectId}<br>Year ${year}`);
+
+    const metObject = await fetchMetObject(example.objectId);
+    const href = metObject?.primaryImageSmall || metObject?.primaryImage || MET_STEPS_FALLBACK_IMAGE;
+
+    showTooltip(
+      ui.tooltip,
+      `<img src="${href}" alt="" style="display:block;width:160px;height:110px;object-fit:cover;border-radius:12px;margin-bottom:8px;border:1px solid rgba(255,255,255,0.14)"/>
+<div style="font-weight:700;margin-bottom:4px">Object ID ${example.objectId}</div>
+<div style="color:rgba(197,210,234,0.9)">Year ${year}</div>`
+    );
   });
 
-  appendText(svg, width / 2, 78, `${analytics.objectRange.span} years of object creation`, "middle", "#edf4ff", 30, 750);
-  appendText(svg, width / 2, 110, `From ${analytics.objectRange.min} to ${analytics.objectRange.max}`, "middle", "#95a8c8", 16, 500);
+  circle.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
+});
 
-  applyPlanetOverlay(svg, settings.planet);
+applyPlanetOverlay(svg, settings.planet);
 }
 
 function renderPatterns(svg, analytics, ui, settings = {}) {
@@ -1713,13 +1733,15 @@ function setObjectCardResult(card, item, metObject) {
 }
 
 function updateDetailCard(card, item, totalRows) {
+  if (!card?.title || !card?.meta) return;
+
   if (!item) {
     card.title.textContent = "Hover a mark for details";
     card.meta.textContent = `${totalRows} rows are active in the current filtered selection.`;
-    card.objectYear.textContent = "-";
-    card.eventYear.textContent = "-";
-    card.country.textContent = "-";
-    card.eventType.textContent = "-";
+    if (card.objectYear) card.objectYear.textContent = "-";
+    if (card.eventYear) card.eventYear.textContent = "-";
+    if (card.country) card.country.textContent = "-";
+    if (card.eventType) card.eventType.textContent = "-";
     setObjectCardIdle(card);
     return;
   }
