@@ -131,6 +131,9 @@ function renderPage(records) {
                 <div class="metric"><strong>${analytics.objectRange.max}</strong><span>Latest object year</span></div>
               </div>
             </div>
+            <div class="step-viz">
+              <svg class="step-viz__svg" data-step-viz="intro" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
+            </div>
           </article>
 
           <article class="story-step" data-step="patterns">
@@ -151,6 +154,9 @@ function renderPage(records) {
                 <li>21st century: <strong>${analytics.centuries["21st"]}</strong> (4.23%)</li>
               </ul>
             </div>
+            <div class="step-viz">
+              <svg class="step-viz__svg" data-step-viz="patterns" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
+            </div>
           </article>
 
           <article class="story-step" data-step="geography">
@@ -169,6 +175,9 @@ function renderPage(records) {
                   <li>${index + 1}. <strong>${escapeHTML(country.label)}</strong>: ${country.count} rows</li>
                 `).join("")}
               </ul>
+            </div>
+            <div class="step-viz">
+              <svg class="step-viz__svg" data-step-viz="geography" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
           </article>
 
@@ -189,6 +198,9 @@ function renderPage(records) {
                 <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within25)}</strong><span>Within ±25 years</span></div>
               </div>
             </div>
+            <div class="step-viz">
+              <svg class="step-viz__svg" data-step-viz="history" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
+            </div>
           </article>
 
           <article class="story-step" data-step="transits">
@@ -207,6 +219,9 @@ function renderPage(records) {
                 <li>Saturn in Aries ±5 years: <strong>${formatPercent(analytics.transitMetrics.saturnAries.plusMinus5)}</strong></li>
                 <li>Uranus in Aries ±3 years: <strong>${formatPercent(analytics.transitMetrics.uranusAries.plusMinus3)}</strong></li>
               </ul>
+            </div>
+            <div class="step-viz">
+              <svg class="step-viz__svg" data-step-viz="transits" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
           </article>
 
@@ -230,6 +245,9 @@ function renderPage(records) {
                 <a class="cta" href="https://www.metmuseum.org/en/hubs/open-access" target="_blank" rel="noreferrer">Met Open Access</a>
                 <a class="cta" href="https://ssd.jpl.nasa.gov/horizons/" target="_blank" rel="noreferrer">NASA JPL Horizons</a>
               </div>
+            </div>
+            <div class="step-viz">
+              <svg class="step-viz__svg" data-step-viz="takeaways" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
           </article>
         </section>
@@ -478,6 +496,43 @@ function setupScrollytelling(records) {
     takeaways: (svg) => renderTakeaways(svg, state.analytics, ui)
   };
 
+  function renderStaticSectionVizzesOnce() {
+    const nullTextNode = { textContent: "" };
+    const nullLegendNode = { innerHTML: "" };
+    const staticUi = {
+      ...ui,
+      kicker: nullTextNode,
+      title: nullTextNode,
+      description: nullTextNode,
+      footnote: nullTextNode,
+      legend: nullLegendNode
+    };
+
+    const staticRenders = {
+      intro: (svg) => renderIntro(svg, state.analytics, staticUi),
+      patterns: (svg) => renderPatterns(svg, state.analytics, staticUi),
+      geography: (svg) => renderGeography(svg, state.analytics, staticUi),
+      history: (svg) => renderHistory(svg, state.analytics, staticUi),
+      transits: (svg) => renderTransits(svg, state.analytics, staticUi),
+      takeaways: (svg) => renderTakeaways(svg, state.analytics, staticUi)
+    };
+
+    document.querySelectorAll("[data-step-viz]").forEach((svg) => {
+      const step = svg.getAttribute("data-step-viz");
+      const render = staticRenders[step];
+      if (!render) return;
+      clearSVG(svg);
+      try {
+        render(svg);
+      } catch (error) {
+        console.error(error);
+        clearSVG(svg);
+        appendText(svg, 430, 410, "Visualization error", "middle", "#edf4ff", 22, 800);
+        appendText(svg, 430, 448, String(error?.message || error), "middle", "#9cadc6", 14, 500);
+      }
+    });
+  }
+
   function swapVizLayers() {
     const currentActive = activeSvg;
     activeSvg = inactiveSvg;
@@ -617,6 +672,7 @@ function setupScrollytelling(records) {
     transitWindow.addEventListener("change", applyFilters);
   }
   renderDataQualityPanel();
+  renderStaticSectionVizzesOnce();
   renderCurrentStep();
 
   window.addEventListener("mousemove", (event) => {
