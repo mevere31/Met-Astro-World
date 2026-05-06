@@ -135,18 +135,41 @@ function renderPage(records) {
                 <div class="metric"><strong>${analytics.objectRange.max}</strong><span>Latest Object Year</span></div>
               </div>
             </div>
-            <div class="step-controls" data-step-scope="intro" aria-label="Overview visualization controls">
-              <label class="control">
-                <span class="control-label">Planet overlay</span>
-                <select class="control-select" data-planet>
-                  <option value="none">None</option>
-                  <option value="saturn">Saturn</option>
-                  <option value="jupiter">Jupiter</option>
-                  <option value="uranus">Uranus</option>
-                  <option value="neptune">Neptune</option>
-                  <option value="pluto">Pluto</option>
-                </select>
-              </label>
+            <div class="step-controls" data-step-scope="intro" aria-label="Overview controls">
+              <div class="panel-controls">
+                <label class="control">
+                  <span class="control-label">Country focus</span>
+                  <select class="control-select" data-country>
+                    <option value="all">All countries</option>
+                    ${analytics.topCountries.slice(0, 10).map((country) => `<option value="${escapeHTML(country.label)}">${escapeHTML(country.label)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">City</span>
+                  <select class="control-select" data-city>
+                    <option value="all">All cities</option>
+                    ${cities.slice(0, 12).map((city) => `<option value="${escapeHTML(city)}">${escapeHTML(city)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">Event type</span>
+                  <select class="control-select" data-event>
+                    <option value="all">All event types</option>
+                    ${eventTypes.map((type) => `<option value="${escapeHTML(type)}">${escapeHTML(type)}</option>`).join("")}
+                  </select>
+                </label>
+                <button type="button" class="control-reset" data-reset>Reset filters</button>
+              </div>
+              <div class="panel-toggles">
+                <div class="toggle-group" role="group" aria-label="Geography view toggle">
+                  <button type="button" class="toggle is-active" data-geo-mode="country">Country view</button>
+                  <button type="button" class="toggle" data-geo-mode="city">City view</button>
+                </div>
+                <div class="toggle-group" role="group" aria-label="Transit overlay toggle">
+                  <button type="button" class="toggle" data-transit-mode="history-only">History only</button>
+                  <button type="button" class="toggle is-active" data-transit-mode="history-plus-transits">History + transits</button>
+                </div>
+              </div>
             </div>
             <div class="step-viz">
               <svg class="step-viz__svg" data-step-viz="intro" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
@@ -170,18 +193,41 @@ function renderPage(records) {
                 <li>21st century: <strong>${analytics.centuries["21st"]}</strong> (4.23%)</li>
               </ul>
             </div>
-            <div class="step-controls" data-step-scope="patterns" aria-label="Temporal distribution visualization controls">
-              <label class="control">
-                <span class="control-label">Planet overlay</span>
-                <select class="control-select" data-planet>
-                  <option value="none">None</option>
-                  <option value="saturn">Saturn</option>
-                  <option value="jupiter">Jupiter</option>
-                  <option value="uranus">Uranus</option>
-                  <option value="neptune">Neptune</option>
-                  <option value="pluto">Pluto</option>
-                </select>
-              </label>
+            <div class="step-controls" data-step-scope="patterns" aria-label="Temporal distribution controls">
+              <div class="panel-controls">
+                <label class="control">
+                  <span class="control-label">Country focus</span>
+                  <select class="control-select" data-country>
+                    <option value="all">All countries</option>
+                    ${analytics.topCountries.slice(0, 10).map((country) => `<option value="${escapeHTML(country.label)}">${escapeHTML(country.label)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">City</span>
+                  <select class="control-select" data-city>
+                    <option value="all">All cities</option>
+                    ${cities.slice(0, 12).map((city) => `<option value="${escapeHTML(city)}">${escapeHTML(city)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">Event type</span>
+                  <select class="control-select" data-event>
+                    <option value="all">All event types</option>
+                    ${eventTypes.map((type) => `<option value="${escapeHTML(type)}">${escapeHTML(type)}</option>`).join("")}
+                  </select>
+                </label>
+                <button type="button" class="control-reset" data-reset>Reset filters</button>
+              </div>
+              <div class="panel-toggles">
+                <div class="toggle-group" role="group" aria-label="Geography view toggle">
+                  <button type="button" class="toggle is-active" data-geo-mode="country">Country view</button>
+                  <button type="button" class="toggle" data-geo-mode="city">City view</button>
+                </div>
+                <div class="toggle-group" role="group" aria-label="Transit overlay toggle">
+                  <button type="button" class="toggle" data-transit-mode="history-only">History only</button>
+                  <button type="button" class="toggle is-active" data-transit-mode="history-plus-transits">History + transits</button>
+                </div>
+              </div>
             </div>
             <div class="step-viz">
               <svg class="step-viz__svg" data-step-viz="patterns" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
@@ -204,18 +250,41 @@ function renderPage(records) {
                 `).join("")}
               </ul>
             </div>
-            <div class="step-controls" data-step-scope="geography" aria-label="Geographic visualization controls">
-              <label class="control">
-                <span class="control-label">Planet overlay</span>
-                <select class="control-select" data-planet>
-                  <option value="none">None</option>
-                  <option value="saturn">Saturn</option>
-                  <option value="jupiter">Jupiter</option>
-                  <option value="uranus">Uranus</option>
-                  <option value="neptune">Neptune</option>
-                  <option value="pluto">Pluto</option>
-                </select>
-              </label>
+            <div class="step-controls" data-step-scope="geography" aria-label="Geography controls">
+              <div class="panel-controls">
+                <label class="control">
+                  <span class="control-label">Country focus</span>
+                  <select class="control-select" data-country>
+                    <option value="all">All countries</option>
+                    ${analytics.topCountries.slice(0, 10).map((country) => `<option value="${escapeHTML(country.label)}">${escapeHTML(country.label)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">City</span>
+                  <select class="control-select" data-city>
+                    <option value="all">All cities</option>
+                    ${cities.slice(0, 12).map((city) => `<option value="${escapeHTML(city)}">${escapeHTML(city)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">Event type</span>
+                  <select class="control-select" data-event>
+                    <option value="all">All event types</option>
+                    ${eventTypes.map((type) => `<option value="${escapeHTML(type)}">${escapeHTML(type)}</option>`).join("")}
+                  </select>
+                </label>
+                <button type="button" class="control-reset" data-reset>Reset filters</button>
+              </div>
+              <div class="panel-toggles">
+                <div class="toggle-group" role="group" aria-label="Geography view toggle">
+                  <button type="button" class="toggle is-active" data-geo-mode="country">Country view</button>
+                  <button type="button" class="toggle" data-geo-mode="city">City view</button>
+                </div>
+                <div class="toggle-group" role="group" aria-label="Transit overlay toggle">
+                  <button type="button" class="toggle" data-transit-mode="history-only">History only</button>
+                  <button type="button" class="toggle is-active" data-transit-mode="history-plus-transits">History + transits</button>
+                </div>
+              </div>
             </div>
             <div class="step-viz">
               <svg class="step-viz__svg" data-step-viz="geography" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
@@ -238,18 +307,41 @@ function renderPage(records) {
                 <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within25)}</strong><span>Within ±25 years of a historical incident</span></div>
               </div>
             </div>
-            <div class="step-controls" data-step-scope="history" aria-label="History visualization controls">
-              <label class="control">
-                <span class="control-label">Planet overlay</span>
-                <select class="control-select" data-planet>
-                  <option value="none">None</option>
-                  <option value="saturn">Saturn</option>
-                  <option value="jupiter">Jupiter</option>
-                  <option value="uranus">Uranus</option>
-                  <option value="neptune">Neptune</option>
-                  <option value="pluto">Pluto</option>
-                </select>
-              </label>
+            <div class="step-controls" data-step-scope="history" aria-label="History controls">
+              <div class="panel-controls">
+                <label class="control">
+                  <span class="control-label">Country focus</span>
+                  <select class="control-select" data-country>
+                    <option value="all">All countries</option>
+                    ${analytics.topCountries.slice(0, 10).map((country) => `<option value="${escapeHTML(country.label)}">${escapeHTML(country.label)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">City</span>
+                  <select class="control-select" data-city>
+                    <option value="all">All cities</option>
+                    ${cities.slice(0, 12).map((city) => `<option value="${escapeHTML(city)}">${escapeHTML(city)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">Event type</span>
+                  <select class="control-select" data-event>
+                    <option value="all">All event types</option>
+                    ${eventTypes.map((type) => `<option value="${escapeHTML(type)}">${escapeHTML(type)}</option>`).join("")}
+                  </select>
+                </label>
+                <button type="button" class="control-reset" data-reset>Reset filters</button>
+              </div>
+              <div class="panel-toggles">
+                <div class="toggle-group" role="group" aria-label="Geography view toggle">
+                  <button type="button" class="toggle is-active" data-geo-mode="country">Country view</button>
+                  <button type="button" class="toggle" data-geo-mode="city">City view</button>
+                </div>
+                <div class="toggle-group" role="group" aria-label="Transit overlay toggle">
+                  <button type="button" class="toggle" data-transit-mode="history-only">History only</button>
+                  <button type="button" class="toggle is-active" data-transit-mode="history-plus-transits">History + transits</button>
+                </div>
+              </div>
             </div>
             <div class="step-viz">
               <svg class="step-viz__svg" data-step-viz="history" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
@@ -276,18 +368,41 @@ function renderPage(records) {
                Two of these transits happen in the sign of Aries. When a planet is in Aries it carries a "cardinal fire" energy focused on initiative, boldness, and leadership.
               </p>
             </div>
-            <div class="step-controls" data-step-scope="transits" aria-label="Transits visualization controls">
-              <label class="control">
-                <span class="control-label">Planet overlay</span>
-                <select class="control-select" data-planet>
-                  <option value="none">None</option>
-                  <option value="saturn">Saturn</option>
-                  <option value="jupiter">Jupiter</option>
-                  <option value="uranus">Uranus</option>
-                  <option value="neptune">Neptune</option>
-                  <option value="pluto">Pluto</option>
-                </select>
-              </label>
+            <div class="step-controls" data-step-scope="transits" aria-label="Transits controls">
+              <div class="panel-controls">
+                <label class="control">
+                  <span class="control-label">Country focus</span>
+                  <select class="control-select" data-country>
+                    <option value="all">All countries</option>
+                    ${analytics.topCountries.slice(0, 10).map((country) => `<option value="${escapeHTML(country.label)}">${escapeHTML(country.label)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">City</span>
+                  <select class="control-select" data-city>
+                    <option value="all">All cities</option>
+                    ${cities.slice(0, 12).map((city) => `<option value="${escapeHTML(city)}">${escapeHTML(city)}</option>`).join("")}
+                  </select>
+                </label>
+                <label class="control">
+                  <span class="control-label">Event type</span>
+                  <select class="control-select" data-event>
+                    <option value="all">All event types</option>
+                    ${eventTypes.map((type) => `<option value="${escapeHTML(type)}">${escapeHTML(type)}</option>`).join("")}
+                  </select>
+                </label>
+                <button type="button" class="control-reset" data-reset>Reset filters</button>
+              </div>
+              <div class="panel-toggles">
+                <div class="toggle-group" role="group" aria-label="Geography view toggle">
+                  <button type="button" class="toggle is-active" data-geo-mode="country">Country view</button>
+                  <button type="button" class="toggle" data-geo-mode="city">City view</button>
+                </div>
+                <div class="toggle-group" role="group" aria-label="Transit overlay toggle">
+                  <button type="button" class="toggle" data-transit-mode="history-only">History only</button>
+                  <button type="button" class="toggle is-active" data-transit-mode="history-plus-transits">History + transits</button>
+                </div>
+              </div>
             </div>
             <div class="step-viz">
               <svg class="step-viz__svg" data-step-viz="transits" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
@@ -313,19 +428,6 @@ function renderPage(records) {
                 <a class="cta" href="https://www.metmuseum.org/en/hubs/open-access" target="_blank" rel="noreferrer">Met Open Access</a>
                 <a class="cta" href="https://ssd.jpl.nasa.gov/horizons/" target="_blank" rel="noreferrer">NASA JPL Horizons</a>
               </div>
-            </div>
-            <div class="step-controls" data-step-scope="takeaways" aria-label="Takeaways visualization controls">
-              <label class="control">
-                <span class="control-label">Planet overlay</span>
-                <select class="control-select" data-planet>
-                  <option value="none">None</option>
-                  <option value="saturn">Saturn</option>
-                  <option value="jupiter">Jupiter</option>
-                  <option value="uranus">Uranus</option>
-                  <option value="neptune">Neptune</option>
-                  <option value="pluto">Pluto</option>
-                </select>
-              </label>
             </div>
             <div class="step-viz">
               <svg class="step-viz__svg" data-step-viz="takeaways" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
@@ -394,38 +496,60 @@ function setupScrollytelling(records) {
   };
 
   let currentStep = "intro";
-  let geographyMode = "country";
-  let transitMode = "history-plus-transits";
-  let state = buildState(records, "all", "all", "all", 5);
+  const baseAnalytics = computeAnalytics(records);
 
   const ui = {
     tooltip,
     detailCard,
-    view: {
-      get geographyMode() {
-        return geographyMode;
-      },
-      get transitMode() {
-        return transitMode;
-      }
-    }
+    view: {}
   };
   const renders = {
-    intro: (svg, settings) => renderIntro(svg, state.analytics, ui, settings),
-    patterns: (svg, settings) => renderPatterns(svg, state.analytics, ui, settings),
-    geography: (svg, settings) => renderGeography(svg, state.analytics, ui, settings),
-    history: (svg, settings) => renderHistory(svg, state.analytics, ui, settings),
-    transits: (svg, settings) => renderTransits(svg, state.analytics, ui, settings),
-    takeaways: (svg, settings) => renderTakeaways(svg, state.analytics, ui, settings)
+    intro: (svg, analytics, settings) => renderIntro(svg, analytics, ui, settings),
+    patterns: (svg, analytics, settings) => renderPatterns(svg, analytics, ui, settings),
+    geography: (svg, analytics, settings) => renderGeography(svg, analytics, ui, settings),
+    history: (svg, analytics, settings) => renderHistory(svg, analytics, ui, settings),
+    transits: (svg, analytics, settings) => renderTransits(svg, analytics, ui, settings),
+    takeaways: (svg, analytics, settings) => renderTakeaways(svg, analytics, ui, settings)
   };
 
   const perStepSettings = new Map();
 
   function getStepSettings(step) {
     if (!perStepSettings.has(step)) {
-      perStepSettings.set(step, { planet: "none" });
+      perStepSettings.set(step, {
+        country: "all",
+        city: "all",
+        eventType: "all",
+        geoMode: "country",
+        transitMode: "history-plus-transits"
+      });
     }
     return perStepSettings.get(step);
+  }
+
+  function populateCountryOptions(selectEl) {
+    if (!selectEl) return;
+    selectEl.innerHTML = [
+      `<option value="all">All countries</option>`,
+      ...baseAnalytics.topCountries.slice(0, 24).map((country) => `<option value="${escapeHTML(country.label)}">${escapeHTML(country.label)}</option>`)
+    ].join("");
+  }
+
+  function populateEventOptions(selectEl) {
+    if (!selectEl) return;
+    selectEl.innerHTML = [
+      `<option value="all">All event types</option>`,
+      ...baseAnalytics.topEventTypes.map((entry) => `<option value="${escapeHTML(entry.label)}">${escapeHTML(entry.label)}</option>`)
+    ].join("");
+  }
+
+  function populateCityOptions(selectEl, country, eventType) {
+    if (!selectEl) return;
+    const cities = getCityOptions(records, country, eventType);
+    selectEl.innerHTML = [
+      `<option value="all">All cities</option>`,
+      ...cities.slice(0, 32).map((city) => `<option value="${escapeHTML(city)}">${escapeHTML(city)}</option>`)
+    ].join("");
   }
 
   function renderStepViz(step) {
@@ -433,9 +557,10 @@ function setupScrollytelling(records) {
     const render = renders[step];
     if (!svg || !render) return;
     const settings = getStepSettings(step);
+    const stepState = buildState(records, settings.country, settings.city, settings.eventType, 5);
     clearSVG(svg);
     try {
-      render(svg, settings);
+      render(svg, stepState.analytics, settings);
     } catch (error) {
       console.error(error);
       clearSVG(svg);
@@ -444,24 +569,95 @@ function setupScrollytelling(records) {
     }
   }
 
-  function initStepPlanetControls() {
+  function initStepToolbarControls() {
     document.querySelectorAll(".step-controls[data-step-scope]").forEach((controls) => {
       const step = controls.getAttribute("data-step-scope");
       if (!step || !renders[step]) return;
-      const planetSelect = controls.querySelector("[data-planet]");
-      if (!planetSelect) return;
-
       const settings = getStepSettings(step);
-      planetSelect.value = settings.planet;
+      const countrySelect = controls.querySelector("[data-country]");
+      const citySelect = controls.querySelector("[data-city]");
+      const eventSelect = controls.querySelector("[data-event]");
+      const resetBtn = controls.querySelector("[data-reset]");
+      const geoButtons = Array.from(controls.querySelectorAll("[data-geo-mode]"));
+      const transitButtons = Array.from(controls.querySelectorAll("[data-transit-mode]"));
 
-      planetSelect.addEventListener("change", () => {
-        settings.planet = planetSelect.value || "none";
+      populateCountryOptions(countrySelect);
+      populateEventOptions(eventSelect);
+      populateCityOptions(citySelect, settings.country, settings.eventType);
+
+      if (countrySelect) countrySelect.value = settings.country;
+      if (eventSelect) eventSelect.value = settings.eventType;
+      if (citySelect) citySelect.value = settings.city;
+
+      function syncCityOptions() {
+        populateCityOptions(citySelect, settings.country, settings.eventType);
+        if (citySelect) {
+          const options = Array.from(citySelect.options).map((o) => o.value);
+          citySelect.value = options.includes(settings.city) ? settings.city : "all";
+          settings.city = citySelect.value;
+        }
+      }
+
+      function syncToggleActive(buttons, key, value) {
+        buttons.forEach((btn) => btn.classList.toggle("is-active", btn.getAttribute(key) === value));
+      }
+
+      syncToggleActive(geoButtons, "data-geo-mode", settings.geoMode);
+      syncToggleActive(transitButtons, "data-transit-mode", settings.transitMode);
+
+      countrySelect?.addEventListener("change", () => {
+        settings.country = countrySelect.value || "all";
+        settings.city = "all";
+        syncCityOptions();
+        renderStepViz(step);
+      });
+
+      eventSelect?.addEventListener("change", () => {
+        settings.eventType = eventSelect.value || "all";
+        settings.city = "all";
+        syncCityOptions();
+        renderStepViz(step);
+      });
+
+      citySelect?.addEventListener("change", () => {
+        settings.city = citySelect.value || "all";
+        renderStepViz(step);
+      });
+
+      geoButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          settings.geoMode = btn.getAttribute("data-geo-mode") || "country";
+          syncToggleActive(geoButtons, "data-geo-mode", settings.geoMode);
+          renderStepViz(step);
+        });
+      });
+
+      transitButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          settings.transitMode = btn.getAttribute("data-transit-mode") || "history-plus-transits";
+          syncToggleActive(transitButtons, "data-transit-mode", settings.transitMode);
+          renderStepViz(step);
+        });
+      });
+
+      resetBtn?.addEventListener("click", () => {
+        settings.country = "all";
+        settings.city = "all";
+        settings.eventType = "all";
+        settings.geoMode = "country";
+        settings.transitMode = "history-plus-transits";
+
+        if (countrySelect) countrySelect.value = "all";
+        if (eventSelect) eventSelect.value = "all";
+        syncCityOptions();
+        syncToggleActive(geoButtons, "data-geo-mode", settings.geoMode);
+        syncToggleActive(transitButtons, "data-transit-mode", settings.transitMode);
         renderStepViz(step);
       });
     });
   }
 
-  initStepPlanetControls();
+  initStepToolbarControls();
   // Initial static renders
   Object.keys(stepMeta).forEach((step) => renderStepViz(step));
 
@@ -486,7 +682,7 @@ function setupScrollytelling(records) {
   }, { threshold: [0.35, 0.55, 0.75] });
 
   stepNodes.forEach((step) => observer.observe(step));
-  updateDetailCard(detailCard, null, state.analytics.totalRows);
+  updateDetailCard(detailCard, null, baseAnalytics.totalRows);
 
   window.addEventListener("mousemove", (event) => {
     tooltip.style.left = `${event.clientX + 18}px`;
@@ -785,7 +981,7 @@ function renderPatterns(svg, analytics, ui, settings = {}) {
 }
 
 function renderGeography(svg, analytics, ui, settings = {}) {
-  const mode = ui.geoMode === "city" ? "city" : "country";
+  const mode = settings.geoMode === "city" ? "city" : "country";
   clearSVG(svg);
 
   const width = 860;
@@ -944,7 +1140,7 @@ function renderHistory(svg, analytics, ui, settings = {}) {
 }
 
 function renderTransits(svg, analytics, ui, settings = {}) {
-  const transitsEnabled = ui?.toggles?.transitsEnabled ?? true;
+  const transitsEnabled = settings.transitMode !== "history-only";
   updateHeader(ui, {
     kicker: "Symbolic sky layer",
     title: transitsEnabled ? "Objects and transit milestone windows" : "History-only baseline (no transits)",
