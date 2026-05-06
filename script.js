@@ -139,7 +139,7 @@ function renderPage(records) {
               <svg class="step-viz__svg" data-step-viz="intro" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
           </article>
-// section 2
+
           <article class="story-step" data-step="patterns">
             <div class="copy-card">
               <div class="step-topline">
@@ -161,7 +161,7 @@ function renderPage(records) {
               <svg class="step-viz__svg" data-step-viz="patterns" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
           </article>
-// section 3
+
           <article class="story-step" data-step="geography">
             <div class="copy-card">
               <div class="step-topline">
@@ -182,7 +182,7 @@ function renderPage(records) {
               <svg class="step-viz__svg" data-step-viz="geography" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
           </article>
-// section 4
+
           <article class="story-step" data-step="history">
             <div class="copy-card">
               <div class="step-topline">
@@ -203,7 +203,7 @@ function renderPage(records) {
               <svg class="step-viz__svg" data-step-viz="history" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
           </article>
-// section 05
+
           <article class="story-step" data-step="transits">
             <div class="copy-card">
               <div class="step-topline">
@@ -228,7 +228,7 @@ function renderPage(records) {
               <svg class="step-viz__svg" data-step-viz="transits" viewBox="0 0 860 820" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
           </article>
-      // section 6 
+          
           <article class="story-step story-step--closing" data-step="takeaways">
             <div class="copy-card">
               <div class="step-topline">
