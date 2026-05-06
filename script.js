@@ -39,6 +39,8 @@ const TRANSIT_GROUPS = [
 const DEFAULT_TRANSIT_WINDOW_YEARS = 5;
 
 const MET_OBJECT_CACHE = new Map();
+const MET_STEPS_FALLBACK_IMAGE =
+  "https://upload.wikimedia.org/wikipedia/commons/7/70/Metropolitan_Museum_of_Art_entrance_NYC.JPG";
 
 function getMetObjectUrl(objectId) {
   return `https://www.metmuseum.org/art/collection/search/${objectId}`;
@@ -839,9 +841,9 @@ function renderIntroCollage(svg, analytics) {
     fetchMetObject(objectId).then((metObject) => {
       if (svg.dataset.introKey !== key) return;
       const href = metObject?.primaryImageSmall || metObject?.primaryImage || "";
-      if (!href) return;
-      image.setAttribute("href", href);
-      image.setAttributeNS("http://www.w3.org/1999/xlink", "href", href);
+      const finalHref = href || MET_STEPS_FALLBACK_IMAGE;
+      image.setAttribute("href", finalHref);
+      image.setAttributeNS("http://www.w3.org/1999/xlink", "href", finalHref);
       placeholder.setAttribute("fill", "rgba(255,255,255,0.02)");
     });
   });
@@ -1711,13 +1713,15 @@ function setObjectCardResult(card, item, metObject) {
 }
 
 function updateDetailCard(card, item, totalRows) {
+  if (!card?.title || !card?.meta) return;
+
   if (!item) {
     card.title.textContent = "Hover a mark for details";
     card.meta.textContent = `${totalRows} rows are active in the current filtered selection.`;
-    card.objectYear.textContent = "-";
-    card.eventYear.textContent = "-";
-    card.country.textContent = "-";
-    card.eventType.textContent = "-";
+    if (card.objectYear) card.objectYear.textContent = "-";
+    if (card.eventYear) card.eventYear.textContent = "-";
+    if (card.country) card.country.textContent = "-";
+    if (card.eventType) card.eventType.textContent = "-";
     setObjectCardIdle(card);
     return;
   }
