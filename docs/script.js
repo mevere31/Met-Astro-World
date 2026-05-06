@@ -1746,13 +1746,15 @@ function updateDetailCard(card, item, totalRows) {
 }
 
 function updateHeader(ui, content) {
-  ui.kicker.textContent = content.kicker;
-  ui.title.textContent = content.title;
-  ui.description.textContent = content.description;
-  ui.footnote.textContent = content.footnote;
+  if (!ui) return;
+  if (ui.kicker) ui.kicker.textContent = content.kicker;
+  if (ui.title) ui.title.textContent = content.title;
+  if (ui.description) ui.description.textContent = content.description;
+  if (ui.footnote) ui.footnote.textContent = content.footnote;
 }
 
 function setLegend(node, items) {
+  if (!node) return;
   node.innerHTML = items.map((item) => `
     <span class="legend-pill">
       <span class="swatch" style="background:${item.color}"></span>
