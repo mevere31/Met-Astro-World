@@ -7,6 +7,72 @@ const MOTION = {
   quickMs: 260
 };
 
+const SVG_TEXT_FONT = 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+
+let svgMeasureCtx = null;
+
+function measureSvgTextWidth(text, fontSizePx, fontWeight) {
+  if (!svgMeasureCtx) {
+    svgMeasureCtx = document.createElement("canvas").getContext("2d");
+  }
+  const w = typeof fontWeight === "number" ? String(fontWeight) : fontWeight;
+  svgMeasureCtx.font = `${w} ${fontSizePx}px ${SVG_TEXT_FONT}`;
+  return svgMeasureCtx.measureText(text).width;
+}
+
+function wrapWordsToWidth(text, maxWidthPx, fontSize, fontWeight) {
+  const words = String(text).trim().split(/\s+/).filter(Boolean);
+  if (!words.length) {
+    return [""];
+  }
+  const lines = [];
+  let line = "";
+  const widthOf = (str) => measureSvgTextWidth(str, fontSize, fontWeight);
+
+  for (const word of words) {
+    if (widthOf(word) > maxWidthPx) {
+      if (line) {
+        lines.push(line);
+        line = "";
+      }
+      let chunk = "";
+      for (let i = 0; i < word.length; i += 1) {
+        const letter = word[i];
+        const trial = chunk + letter;
+        if (widthOf(trial) <= maxWidthPx) {
+          chunk = trial;
+        } else {
+          if (chunk) lines.push(chunk);
+          chunk = letter;
+        }
+      }
+      if (chunk) line = chunk;
+      continue;
+    }
+    const candidate = line ? `${line} ${word}` : word;
+    if (widthOf(candidate) <= maxWidthPx) {
+      line = candidate;
+    } else {
+      if (line) lines.push(line);
+      line = word;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function fitValueFontSize(text, innerWidthPx, maxSize = 46, minSize = 18) {
+  const str = String(text);
+  let size = maxSize;
+  while (size >= minSize) {
+    if (measureSvgTextWidth(str, size, 800) <= innerWidthPx) {
+      return size;
+    }
+    size -= 1;
+  }
+  return minSize;
+}
+
 const HISTORY_ANCHORS = [
   { year: 1789, label: "French Revolution", color: "#ffd27f" },
   { year: 1800, label: "Industrial Revolution midpoint", color: "#7fd6ff" },
@@ -1364,30 +1430,39 @@ function renderTakeaways(svg, analytics, ui, settings = {}) {
 
   cards.forEach((card) => {
     appendRect(svg, card.x, card.y, card.w, card.h, `${card.color}22`, `${card.color}66`, 24);
-    const innerPad = 24;
+    const innerPad = 26;
     const innerW = card.w - innerPad * 2;
+    const textMaxW = Math.max(40, innerW - 10);
 
-    const labelLines = wrapWords(card.label, estimateCharsPerLine(innerW, 18));
+    const labelLines = wrapWordsToWidth(card.label, textMaxW, 18, 700);
     const labelLineHeight = 22;
     let textY = card.y + 56;
     appendTextMultiline(svg, card.x + innerPad, textY, labelLines, "start", "#edf4ff", 18, 700, labelLineHeight);
     textY += labelLines.length * labelLineHeight + 14;
 
     const valueStr = String(card.value);
-    const valueSize = fitValueFontSize(valueStr, innerW, 46, 26);
+    const valueSize = fitValueFontSize(valueStr, textMaxW, 46, 18);
     appendText(svg, card.x + innerPad, textY, valueStr, "start", card.color, valueSize, 800);
     textY += valueSize + 14;
 
-    const detailLines = wrapWords(card.detail, estimateCharsPerLine(innerW, 14));
+    const detailLines = wrapWordsToWidth(card.detail, textMaxW, 14, 500);
     appendTextMultiline(svg, card.x + innerPad, textY, detailLines, "start", "#9cadc6", 14, 500, 19);
 
     const spark = analytics.yearBins.slice(card.x < 200 ? 0 : card.x < 400 ? 12 : 24, card.x < 200 ? 18 : card.x < 400 ? 30 : 42);
     const max = Math.max(...spark.map((point) => point.count), 1);
+    const n = spark.length;
+    let barW = 7;
+    let gap = n <= 1 ? 0 : (innerW - n * barW) / (n - 1);
+    if (n > 1 && gap < 2) {
+      barW = Math.max(3, Math.floor((innerW - (n - 1) * 2) / n));
+      gap = (innerW - n * barW) / (n - 1);
+    }
 
     spark.forEach((point, index) => {
       const barHeight = (point.count / max) * 110;
       const y = card.y + card.h - 36 - barHeight;
-      const rect = appendRect(svg, card.x + 24 + index * 10, y, 7, barHeight, `${card.color}aa`, "none", 4);
+      const bx = card.x + innerPad + index * (barW + gap);
+      const rect = appendRect(svg, bx, y, barW, barHeight, `${card.color}aa`, "none", 4);
       animateRectGrow(rect, y, barHeight, index * 14, 240);
     });
   });
@@ -2021,40 +2096,6 @@ function appendLine(svg, x1, y1, x2, y2, stroke, width, opacity = 1) {
   return node;
 }
 
-function estimateCharsPerLine(innerWidthPx, fontSize, avgCharFactor = 0.52) {
-  return Math.max(6, Math.floor(innerWidthPx / (fontSize * avgCharFactor)));
-}
-
-function wrapWords(text, maxChars) {
-  const words = String(text).trim().split(/\s+/).filter(Boolean);
-  if (!words.length) {
-    return [""];
-  }
-  const lines = [];
-  let line = "";
-  for (const word of words) {
-    if (word.length > maxChars) {
-      if (line) {
-        lines.push(line);
-        line = "";
-      }
-      for (let i = 0; i < word.length; i += maxChars) {
-        lines.push(word.slice(i, i + maxChars));
-      }
-      continue;
-    }
-    const candidate = line ? `${line} ${word}` : word;
-    if (candidate.length <= maxChars) {
-      line = candidate;
-    } else {
-      if (line) lines.push(line);
-      line = word;
-    }
-  }
-  if (line) lines.push(line);
-  return lines;
-}
-
 function appendTextMultiline(svg, x, y, lines, anchor, fill, size, weight, lineHeight) {
   const NS = "http://www.w3.org/2000/svg";
   const textEl = document.createElementNS(NS, "text");
@@ -2064,6 +2105,7 @@ function appendTextMultiline(svg, x, y, lines, anchor, fill, size, weight, lineH
   textEl.setAttribute("fill", fill);
   textEl.setAttribute("font-size", String(size));
   textEl.setAttribute("font-weight", String(weight));
+  textEl.setAttribute("font-family", SVG_TEXT_FONT);
   lines.forEach((lineText, index) => {
     const tspan = document.createElementNS(NS, "tspan");
     tspan.setAttribute("x", String(x));
@@ -2075,19 +2117,6 @@ function appendTextMultiline(svg, x, y, lines, anchor, fill, size, weight, lineH
   return textEl;
 }
 
-function fitValueFontSize(text, innerWidthPx, maxSize = 46, minSize = 24) {
-  const len = Math.max(String(text).length, 1);
-  let size = maxSize;
-  while (size >= minSize) {
-    const approxWidth = len * size * 0.55;
-    if (approxWidth <= innerWidthPx) {
-      return size;
-    }
-    size -= 2;
-  }
-  return minSize;
-}
-
 function appendText(svg, x, y, text, anchor, fill, size, weight, rotate = 0) {
   const node = document.createElementNS("http://www.w3.org/2000/svg", "text");
   node.setAttribute("x", x);
@@ -2096,6 +2125,7 @@ function appendText(svg, x, y, text, anchor, fill, size, weight, rotate = 0) {
   node.setAttribute("fill", fill);
   node.setAttribute("font-size", size);
   node.setAttribute("font-weight", weight);
+  node.setAttribute("font-family", SVG_TEXT_FONT);
   if (rotate) {
     node.setAttribute("transform", `rotate(${rotate} ${x} ${y})`);
   }
@@ -2164,6 +2194,7 @@ function appendSvgLinkPill(svg, x, y, width, height, href, label, fontSize = 11)
   labelNode.setAttribute("fill", "#edf4ff");
   labelNode.setAttribute("font-size", String(fontSize));
   labelNode.setAttribute("font-weight", "600");
+  labelNode.setAttribute("font-family", SVG_TEXT_FONT);
   labelNode.textContent = label;
   link.appendChild(labelNode);
 
