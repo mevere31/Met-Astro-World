@@ -102,7 +102,7 @@ const TRANSIT_GROUPS = [
   }
 ];
 
-/** Inclusive year ranges between milestone years (section 5 bin shading). */
+
 const TRANSIT_BIN_RANGES = {
   jupiterSaturn: [
     [1723, 1741],
