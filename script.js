@@ -140,36 +140,25 @@ const TRANSIT_BIN_RANGES = {
   ]
 };
 
-function formatTransitBinRangeLabel(startYear, endYear) {
-  const s = Math.round(startYear);
-  const e = Math.round(endYear);
-  const sameCentury = s >= 1000 && e >= 1000 && Math.floor(s / 100) === Math.floor(e / 100);
-  return sameCentury ? `${s}–${String(e).slice(-2)}` : `${s}–${e}`;
-}
-
-function appendTransitBinBoundaryTicks(svg, xScale, objectLane, domainMin, domainMax) {
-  const edges = new Set();
-  TRANSIT_BIN_RANGES.jupiterSaturn.forEach(([s, e]) => {
-    edges.add(s);
-    edges.add(e + 1);
-  });
-  [...edges]
-    .filter((y) => y >= domainMin && y <= domainMax)
-    .sort((a, b) => a - b)
-    .forEach((year) => {
-      const px = xScale(year);
-      appendLine(svg, px, objectLane + 4, px, objectLane + 14, "rgba(255,255,255,0.32)", 1, 0.88);
-    });
-}
-
-function appendTransitBinAxisRow(svg, xScale, bins, domainMin, domainMax, labelY, fill, rotateDeg = -50) {
+/** Bin start/end years on the upper transit rows (one mark per distinct year in range). */
+function appendTransitBinEdgeDots(svg, xScale, bins, yDot, color, domainMin, domainMax, ui) {
+  const radius = 4.4;
+  const yearsShown = new Set();
+  const mark = (year) => {
+    if (!Number.isFinite(year) || year < domainMin || year > domainMax) return;
+    if (yearsShown.has(year)) return;
+    yearsShown.add(year);
+    const px = xScale(year);
+    const dot = appendCircle(svg, px, yDot, radius, color, 0.88);
+    dot.setAttribute("stroke", "rgba(255,255,255,0.42)");
+    dot.setAttribute("stroke-width", "1.2");
+    appendText(svg, px, yDot - 14, String(year), "middle", color, 10, 600);
+    dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `Bin edge<br>${year}`));
+    dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
+  };
   bins.forEach(([start, end]) => {
-    const s = Math.max(start, domainMin);
-    const e = Math.min(end, domainMax);
-    if (s > e) return;
-    const cx = (xScale(s) + xScale(e + 1)) / 2;
-    const label = s === start && e === end ? formatTransitBinRangeLabel(start, end) : `${s}–${e}`;
-    appendText(svg, cx, labelY, label, "middle", fill, 8, 500, rotateDeg);
+    mark(start);
+    if (end !== start) mark(end);
   });
 }
 
@@ -1404,10 +1393,15 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   }
 
   if (transitsEnabled) {
+    const d0 = analytics.objectRange.min;
+    const d1 = analytics.objectRange.max;
     TRANSIT_GROUPS.forEach((group, groupIndex) => {
+      const y = transitLane - 54 + groupIndex * 52;
+      const yBin = y - 36;
+      appendTransitBinEdgeDots(svg, x, TRANSIT_BIN_RANGES[group.key], yBin, group.color, d0, d1, ui);
+
       group.years.forEach((year, index) => {
         const px = x(year);
-        const y = transitLane - 54 + groupIndex * 52;
         appendLine(svg, px, y + 10, px, objectLane, group.color, 0.9, 0.12);
         const dot = appendCircle(svg, px, y, 6.2, group.color, 0.95);
         animateCirclePop(dot, 6.2, groupIndex * 140 + Math.min(index, 6) * 50, 240);
@@ -1431,17 +1425,6 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     });
     dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
   });
-
-  if (transitsEnabled) {
-    const d0 = analytics.objectRange.min;
-    const d1 = analytics.objectRange.max;
-    appendTransitBinBoundaryTicks(svg, x, objectLane, d0, d1);
-    const row0 = objectLaneTitleY + 28;
-    appendTransitBinAxisRow(svg, x, TRANSIT_BIN_RANGES.jupiterSaturn, d0, d1, row0, "rgba(182, 140, 255, 0.92)", -50);
-    appendTransitBinAxisRow(svg, x, TRANSIT_BIN_RANGES.saturnAries, d0, d1, row0 + 22, "rgba(127, 214, 255, 0.92)", -50);
-    appendTransitBinAxisRow(svg, x, TRANSIT_BIN_RANGES.uranusAries, d0, d1, row0 + 44, "rgba(255, 210, 127, 0.92)", -50);
-    appendText(svg, margin.left, row0 - 14, "Milestone bin ranges (axis)", "start", "#7a8aa3", 11, 600);
-  }
 
   if (!transitsEnabled) {
     appendSvgLegend(svg, legendX, legendY, [
