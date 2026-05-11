@@ -140,28 +140,6 @@ const TRANSIT_BIN_RANGES = {
   ]
 };
 
-/** Bin start/end years on the upper transit rows (one mark per distinct year in range). */
-function appendTransitBinEdgeDots(svg, xScale, bins, yDot, color, domainMin, domainMax, ui) {
-  const radius = 4.4;
-  const yearsShown = new Set();
-  const mark = (year) => {
-    if (!Number.isFinite(year) || year < domainMin || year > domainMax) return;
-    if (yearsShown.has(year)) return;
-    yearsShown.add(year);
-    const px = xScale(year);
-    const dot = appendCircle(svg, px, yDot, radius, color, 0.88);
-    dot.setAttribute("stroke", "rgba(255,255,255,0.42)");
-    dot.setAttribute("stroke-width", "1.2");
-    appendText(svg, px, yDot - 14, String(year), "middle", color, 10, 600);
-    dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `Bin edge<br>${year}`));
-    dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
-  };
-  bins.forEach(([start, end]) => {
-    mark(start);
-    if (end !== start) mark(end);
-  });
-}
-
 const DEFAULT_TRANSIT_WINDOW_YEARS = 5;
 
 const MET_OBJECT_CACHE = new Map();
@@ -1393,13 +1371,8 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   }
 
   if (transitsEnabled) {
-    const d0 = analytics.objectRange.min;
-    const d1 = analytics.objectRange.max;
     TRANSIT_GROUPS.forEach((group, groupIndex) => {
       const y = transitLane - 54 + groupIndex * 52;
-      const yBin = y - 36;
-      appendTransitBinEdgeDots(svg, x, TRANSIT_BIN_RANGES[group.key], yBin, group.color, d0, d1, ui);
-
       group.years.forEach((year, index) => {
         const px = x(year);
         appendLine(svg, px, y + 10, px, objectLane, group.color, 0.9, 0.12);
@@ -1438,9 +1411,9 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   const cards = [
     {
       x: 70,
-      y: 160,
+      y: 518,
       w: 220,
-      h: 420,
+      h: 248,
       color: "#b68cff",
       label: "Jupiter-Saturn ±5",
       value: formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5),
@@ -1448,9 +1421,9 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     },
     {
       x: 320,
-      y: 130,
+      y: 518,
       w: 220,
-      h: 450,
+      h: 248,
       color: "#7fd6ff",
       label: "Saturn in Aries ±5",
       value: formatPercent(analytics.transitMetrics.saturnAries.plusMinus5),
@@ -1458,18 +1431,18 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     },
     {
       x: 570,
-      y: 100,
+      y: 518,
       w: 220,
-      h: 480,
+      h: 248,
       color: "#ffd27f",
       label: "Uranus in Aries ±3",
       value: formatPercent(analytics.transitMetrics.uranusAries.plusMinus3),
       detail: "Uranus in Aries is a generation transit characterized by rapid, disruptive, and revolutionary change focused on individual freedom, personal identity and technological innovation. Uranus enters Aries approximately every 84 years."
     }
   ];
-        
-  cards.forEach((card, index) => {
-        appendRect(svg, card.x, card.y, card.w, card.h, `${card.color}22`, `${card.color}66`, 24);
+
+  cards.forEach((card) => {
+    appendRect(svg, card.x, card.y, card.w, card.h, `${card.color}22`, `${card.color}66`, 24);
     const innerPad = 26;
     const innerW = card.w - innerPad * 2;
     const textMaxW = Math.max(40, innerW - 10);
@@ -1499,8 +1472,8 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     }
 
     spark.forEach((point, index) => {
-      const barHeight = (point.count / max) * 110;
-      const y = card.y + card.h - 36 - barHeight;
+      const barHeight = (point.count / max) * 58;
+      const y = card.y + card.h - 28 - barHeight;
       const bx = card.x + innerPad + index * (barW + gap);
       const rect = appendRect(svg, bx, y, barW, barHeight, `${card.color}aa`, "none", 4);
       animateRectGrow(rect, y, barHeight, index * 14, 240);
