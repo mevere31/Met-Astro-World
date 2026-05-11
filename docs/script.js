@@ -922,7 +922,7 @@ function renderIntroCollage(svg, analytics) {
 function renderIntro(svg, analytics, ui, settings = {}) {
   updateHeader(ui, {
     kicker: "Overview",
-    title: "Timeline of object creation years",
+    title: "Timeline of object Creation Years",
     description: "Each dot is one record from the filtered dataset, plotted across the full time span of the current selection.",
     footnote: `Filtered view contains ${analytics.totalRows} rows spanning ${analytics.objectRange.span} years.`
   });
@@ -1298,7 +1298,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     svg,
     margin.left,
     objectLaneTitleY,
-    transitsEnabled ? "Object creation years" : "Object creation years (history-only)",
+    transitsEnabled ? "Object Creation Years" : "Object Creation Years (history-only)",
     "start",
     "#EC008C",
     15,
