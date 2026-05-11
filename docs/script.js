@@ -73,6 +73,30 @@ function fitValueFontSize(text, innerWidthPx, maxSize = 46, minSize = 18) {
   return minSize;
 }
 
+const MILESTONE_LABEL_PAD = 4;
+
+/** Places a year label above a transit dot, staggering vertically when labels would overlap horizontally. */
+function tryAppendMilestoneYearLabel(svg, px, dotY, yearStr, color, fontSize, placedRects) {
+  const tw = measureSvgTextWidth(yearStr, fontSize, 600);
+  const half = tw / 2;
+  const left = px - half;
+  const right = px + half;
+  const tierYs = [dotY - 16, dotY - 34, dotY - 52, dotY - 70];
+  for (let i = 0; i < tierYs.length; i += 1) {
+    const labelY = tierYs[i];
+    const collides = placedRects.some(
+      (r) =>
+        Math.abs(r.y - labelY) < 10 &&
+        !(right + MILESTONE_LABEL_PAD < r.left || left - MILESTONE_LABEL_PAD > r.right)
+    );
+    if (!collides) {
+      appendText(svg, px, labelY, yearStr, "middle", color, fontSize, 600);
+      placedRects.push({ left, right, y: labelY });
+      return;
+    }
+  }
+}
+
 const HISTORY_ANCHORS = [
   { year: 1789, label: "French Revolution", color: "#ffd27f" },
   { year: 1800, label: "Industrial Revolution midpoint", color: "#7fd6ff" },
@@ -1373,6 +1397,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   if (transitsEnabled) {
     TRANSIT_GROUPS.forEach((group, groupIndex) => {
       const y = transitLane - 54 + groupIndex * 52;
+      const placedYearLabels = [];
       group.years.forEach((year, index) => {
         const px = x(year);
         appendLine(svg, px, y + 10, px, objectLane, group.color, 0.9, 0.12);
@@ -1384,7 +1409,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
         const labelAllMilestones = group.key === "jupiterSaturn" || group.key === "saturnAries";
         const labelSize = labelAllMilestones ? 9.5 : 11;
         if (labelAllMilestones || index < 5 || index === group.years.length - 1) {
-          appendText(svg, px, y - 16, String(year), "middle", group.color, labelSize, 600);
+          tryAppendMilestoneYearLabel(svg, px, y, String(year), group.color, labelSize, placedYearLabels);
         }
       });
     });
