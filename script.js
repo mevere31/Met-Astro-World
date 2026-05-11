@@ -1149,7 +1149,7 @@ function renderHistory(svg, analytics, ui, settings = {}) {
   appendLine(svg, margin.left, topLane, width - margin.right, topLane, "rgba(127,214,255,0.8)", 2, 1);
   appendLine(svg, margin.left, bottomLane, width - margin.right, bottomLane, "rgba(255,210,127,0.8)", 2, 1);
   appendText(svg, margin.left, topLane - 24, "Object year", "start", "#7fd6ff", 15, 700);
-  appendText(svg, margin.left, bottomLane - 24, "Incident year", "start", "#ffd27f", 15, 700);
+  appendText(svg, margin.left, bottomLane + 36, "Incident year", "start", "#ffd27f", 15, 700);
 
   HISTORY_ANCHORS.forEach((anchor) => {
     const px = x(anchor.year);
