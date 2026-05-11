@@ -1108,14 +1108,14 @@ function renderPatterns(svg, analytics, ui, settings = {}) {
   const path = bins.map((bin, index) => `${index === 0 ? "M" : "L"} ${x(bin.year)} ${y(bin.count)}`).join(" ");
   const fillPath = `${path} L ${x(bins[bins.length - 1].year)} ${height - margin.bottom} L ${x(bins[0].year)} ${height - margin.bottom} Z`;
   appendPath(svg, fillPath, "rgba(127, 214, 255, 0.18)", "none", 0);
-  const densityLine = appendPath(svg, path, "none", "#ffd27f", 4, 0.98);
+  const densityLine = appendPath(svg, path, "none", "##3E7DB3", 4, 0.98);
   animatePathDraw(densityLine, 60, 560);
 
   analytics.topDecades.slice(0, 3).forEach((decade) => {
     const px = x(decade.year);
     const py = y(decade.count);
     appendCircle(svg, px, py, 7.5, "#ffd27f", 1);
-    appendText(svg, px, py - 18, `${decade.label} / ${decade.count}`, "middle", "#60798F", 13, 700);
+    appendText(svg, px, py - 18, `${decade.label} / ${decade.count}`, "middle", "#ffd27f", 13, 700);
   });
 
   appendText(svg, margin.left, margin.top - 26, "Object count", "start", "#95a8c8", 14, 650);
@@ -1130,7 +1130,7 @@ function renderPatterns(svg, analytics, ui, settings = {}) {
     const list = analytics.topEventTypes.slice(0, maxRows);
     const maxCount = Math.max(...list.map((d) => d.count), 1);
 
-    appendText(svg, sidebarX, sidebarY - 12, "Event types (top)", "start", "#95a8c8", 12, 700);
+    appendText(svg, sidebarX, sidebarY - 12, "Top Event types", "start", "#95a8c8", 12, 700);
     list.forEach((entry, idx) => {
       const y0 = sidebarY + idx * (rowH + 10);
       const label = entry.label.length > 18 ? `${entry.label.slice(0, 18)}…` : entry.label;
