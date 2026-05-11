@@ -1118,7 +1118,7 @@ function renderPatterns(svg, analytics, ui, settings = {}) {
   const path = bins.map((bin, index) => `${index === 0 ? "M" : "L"} ${x(bin.year)} ${y(bin.count)}`).join(" ");
   const fillPath = `${path} L ${x(bins[bins.length - 1].year)} ${height - margin.bottom} L ${x(bins[0].year)} ${height - margin.bottom} Z`;
   appendPath(svg, fillPath, "rgba(127, 214, 255, 0.18)", "none", 0);
-  const densityLine = appendPath(svg, path, "none", "#000080", 4, 0.98);
+  const densityLine = appendPath(svg, path, "none", "#ffd27f", 4, 0.98);
   animatePathDraw(densityLine, 60, 560);
 
   analytics.topDecades.slice(0, 3).forEach((decade) => {
@@ -1452,9 +1452,9 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   }
 
   const cards = [
-    ["Jupiter-Saturn ±5", formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5), "A conjunction is when two celestial objects line up in the sky during their orbit.Both Jupiter and Saturn are outer planets and a conjunction between the two symbolizes a period of constructive accomplisment. People are more practical, realistic and we are encouraged to slow down to get things right. This transit occurs roughly every 20 years and is called a Great Conjunction."],
-    ["Saturn in Aries ±5", formatPercent(analytics.transitMetrics.saturnAries.plusMinus5), "Saturn transits and cycles can be considered cycles of achievement and maturity. Saturn transits teach us to take responsibility for ourselves. In the sign of Aries this can look like assessing whether our systems are working regarding how we use our initiative, excercise our independence, express ourselves authentically, and assert ourselves effectively."],
-    ["Uranus in Aries ±3", formatPercent(analytics.transitMetrics.uranusAries.plusMinus3), "Uranus in Aries is a generation transit characterized by rapid, disruptive, and revolutionary change focused on individual freedom, personal identity and technological innovation. Uranus enters Aries approximately every 84 years."]
+    ["Jupiter-Saturn ±5. A conjunction is when two celestial objects line up in the sky during their orbit.Both Jupiter and Saturn are outer planets and a conjunction between the two symbolizes a period of constructive accomplishment. People are more practical, realistic and we are encouraged to slow down to get things right. This transit occurs roughly every 20 years and is called a Great Conjunction.", formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)],
+    ["Saturn in Aries ±5. Saturn transits and cycles can be considered cycles of achievement and maturity. Saturn transits teach us to take responsibility for ourselves. In the sign of Aries this can look like assessing whether our systems are working regarding how we use our initiative, excercise our independence, express ourselves authentically, and assert ourselves effectively.", formatPercent(analytics.transitMetrics.saturnAries.plusMinus5)],
+    ["Uranus in Aries ±3. Uranus in Aries is a generation transit characterized by rapid, disruptive, and revolutionary change focused on individual freedom, personal identity and technological innovation. Uranus enters Aries approximately every 84 years.", formatPercent(analytics.transitMetrics.uranusAries.plusMinus3)]
   ];
 
   cards.forEach((card, index) => {
