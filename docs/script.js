@@ -419,16 +419,19 @@ function renderPage(records) {
               <h2>Three temporal spaces, one narrative frame.</h2>
               <p>
                 This dataset combines three clocks: object creation dates, historical event dates, and astrological transit dates.
-                Seen together, they make cultural memories easier to feel and compare.
+                Seen together, they make cultural memories easier to feel and compare.This project was created with the goal to inspire different ways to interact with Met Data and the The Met Collection API. 
               </p>
               <div class="metric-grid">
-                <div class="metric"><strong>${analytics.centuries["18th"]}</strong><span>Largest century cluster</span></div>
-                <div class="metric"><strong>${formatPercent(analytics.topFiveShare)}</strong><span>Top-five country share</span></div>
-                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within25)}</strong><span>Pairs within ±25 years</span></div>
+                <div class="metric"><strong>${analytics.centuries["18th"]}</strong><span>The 18th century is the largest century cluster. </span></div>
+                <div class="metric"><strong>${formatPercent(analytics.topFiveShare)}</strong><span>Most of the objects in this sample come from five countries. </span></div>
+                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within25)}</strong><span>Object creation dates are near historical incidents.</span></div>
               </div>
               <div class="cta-row">
                 <a class="cta" href="https://www.metmuseum.org/en/hubs/open-access" target="_blank" rel="noreferrer">Met Open Access</a>
                 <a class="cta" href="https://ssd.jpl.nasa.gov/horizons/" target="_blank" rel="noreferrer">NASA JPL Horizons</a>
+                <a class="cta" href="https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service" target="_blank" rel="noreferrer">Wikidata SPARQL Query Service</a>
+                <a class="cta" href="https://github.com/histolines/Histolines_events_archive" target="_blank" rel="noreferrer">Histolines Events Archive</a>
+                <a class="cta" href="https://cafeastrology.com/2025-ephemeris.html" target="_blank" rel="noreferrer">Cafe Astrology Ephemeris</a>
               </div>
             </div>
             <div class="step-viz">
