@@ -1435,7 +1435,7 @@ function renderTakeaways(svg, analytics, ui, settings = {}) {
     const labelLineHeight = 22;
     let textY = card.y + 56;
     appendTextMultiline(svg, card.x + innerPad, textY, labelLines, "start", "#edf4ff", 18, 700, labelLineHeight);
-    textY += labelLines.length * labelLineHeight + 14;
+    textY += labelLines.length * labelLineHeight + 26;
 
     const valueStr = String(card.value);
     const valueSize = fitValueFontSize(valueStr, textMaxW, 46, 18);
