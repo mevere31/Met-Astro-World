@@ -688,7 +688,7 @@ function setupScrollytelling(records) {
     const stepState = buildState(records, settings.country, settings.city, settings.eventType, 5);
     clearSVG(svg);
     try {
-      render(svg, stepState.analytics, settings);
+      render(svg, stepState.analytics, ui, settings);
     } catch (error) {
       console.error(error);
       clearSVG(svg);
