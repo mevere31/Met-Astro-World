@@ -1086,7 +1086,7 @@ function renderPatterns(svg, analytics, ui, settings = {}) {
   const path = bins.map((bin, index) => `${index === 0 ? "M" : "L"} ${x(bin.year)} ${y(bin.count)}`).join(" ");
   const fillPath = `${path} L ${x(bins[bins.length - 1].year)} ${height - margin.bottom} L ${x(bins[0].year)} ${height - margin.bottom} Z`;
   appendPath(svg, fillPath, "rgba(127, 214, 255, 0.18)", "none", 0);
-  const densityLine = appendPath(svg, path, "none", "##3E7DB3", 4, 0.98);
+  const densityLine = appendPath(svg, path, "none", "#8EC9FC", 4, 0.98);
   animatePathDraw(densityLine, 60, 560);
 
   analytics.topDecades.slice(0, 3).forEach((decade) => {
