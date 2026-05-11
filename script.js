@@ -1215,17 +1215,30 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   const width = 860;
   const height = 820;
   const margin = { top: 120, right: 40, bottom: 100, left: 50 };
-  const transitLane = 250;
+  const transitMilestoneTitleY = margin.top + 12;
+  const transitLane = 262;
   const objectLane = 565;
+  const objectLaneTitleY = objectLane + 62;
+  const legendX = width - 228;
+  const legendY = margin.top + 10;
   const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, width - margin.right);
 
   appendAtmosphere(svg, width, height);
   if (transitsEnabled) {
     appendLine(svg, margin.left, transitLane, width - margin.right, transitLane, "rgba(255,255,255,0.32)", 1.5, 1);
-    appendText(svg, margin.left, transitLane - 24, "Transit milestones", "start", "#edf4ff", 15, 700);
+    appendText(svg, margin.left, transitMilestoneTitleY, "Transit milestones", "start", "#edf4ff", 15, 700);
   }
   appendLine(svg, margin.left, objectLane, width - margin.right, objectLane, "rgba(127,214,255,0.7)", 2, 1);
-  appendText(svg, margin.left, objectLane - 24, transitsEnabled ? "Object creation years" : "Object creation years (history-only)", "start", "#7fd6ff", 15, 700);
+  appendText(
+    svg,
+    margin.left,
+    objectLaneTitleY,
+    transitsEnabled ? "Object creation years" : "Object creation years (history-only)",
+    "start",
+    "#7fd6ff",
+    15,
+    700
+  );
 
   if (!transitsEnabled) {
     HISTORY_ANCHORS.forEach((anchor) => {
@@ -1265,6 +1278,10 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   });
 
   if (!transitsEnabled) {
+    appendSvgLegend(svg, legendX, legendY, [
+      { color: "#7fd6ff", label: "Object creation year" },
+      { color: "#f08ad2", label: "World-history anchor" }
+    ]);
     applyPlanetOverlay(svg, settings.planet);
     return;
   }
@@ -1281,6 +1298,13 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     appendText(svg, 84 + index * 240, 690, card[0], "start", "#9cadc6", 13, 600);
     appendText(svg, 84 + index * 240, 722, card[1], "start", "#edf4ff", 28, 700);
   });
+
+  appendSvgLegend(svg, legendX, legendY, [
+    { color: "#b68cff", label: "Jupiter-Saturn" },
+    { color: "#7fd6ff", label: "Saturn in Aries" },
+    { color: "#ffd27f", label: "Uranus in Aries" },
+    { color: "#7fd6ff", label: "Object creation year", opacity: 0.85 }
+  ]);
 
   applyPlanetOverlay(svg, settings.planet);
 }
@@ -2006,6 +2030,14 @@ function appendRect(svg, x, y, width, height, fill, stroke, radius = 18) {
   node.setAttribute("stroke", stroke);
   svg.appendChild(node);
   return node;
+}
+
+function appendSvgLegend(svg, originX, originY, entries, lineHeight = 19) {
+  entries.forEach((entry, index) => {
+    const y = originY + index * lineHeight;
+    appendCircle(svg, originX + 5, y + 2, 5.5, entry.color, entry.opacity ?? 1);
+    appendText(svg, originX + 18, y + 7, entry.label, "start", "#c5d2ea", 11, 600);
+  });
 }
 
 function showTooltip(node, html) {
