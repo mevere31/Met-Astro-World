@@ -1364,9 +1364,22 @@ function renderTakeaways(svg, analytics, ui, settings = {}) {
 
   cards.forEach((card) => {
     appendRect(svg, card.x, card.y, card.w, card.h, `${card.color}22`, `${card.color}66`, 24);
-    appendText(svg, card.x + 24, card.y + 56, card.label, "start", "#edf4ff", 18, 700);
-    appendText(svg, card.x + 24, card.y + 130, card.value, "start", card.color, 46, 800);
-    appendText(svg, card.x + 24, card.y + 168, card.detail, "start", "#9cadc6", 14, 500);
+    const innerPad = 24;
+    const innerW = card.w - innerPad * 2;
+
+    const labelLines = wrapWords(card.label, estimateCharsPerLine(innerW, 18));
+    const labelLineHeight = 22;
+    let textY = card.y + 56;
+    appendTextMultiline(svg, card.x + innerPad, textY, labelLines, "start", "#edf4ff", 18, 700, labelLineHeight);
+    textY += labelLines.length * labelLineHeight + 14;
+
+    const valueStr = String(card.value);
+    const valueSize = fitValueFontSize(valueStr, innerW, 46, 26);
+    appendText(svg, card.x + innerPad, textY, valueStr, "start", card.color, valueSize, 800);
+    textY += valueSize + 14;
+
+    const detailLines = wrapWords(card.detail, estimateCharsPerLine(innerW, 14));
+    appendTextMultiline(svg, card.x + innerPad, textY, detailLines, "start", "#9cadc6", 14, 500, 19);
 
     const spark = analytics.yearBins.slice(card.x < 200 ? 0 : card.x < 400 ? 12 : 24, card.x < 200 ? 18 : card.x < 400 ? 30 : 42);
     const max = Math.max(...spark.map((point) => point.count), 1);
@@ -2006,6 +2019,73 @@ function appendLine(svg, x1, y1, x2, y2, stroke, width, opacity = 1) {
   node.setAttribute("opacity", opacity);
   svg.appendChild(node);
   return node;
+}
+
+function estimateCharsPerLine(innerWidthPx, fontSize, avgCharFactor = 0.52) {
+  return Math.max(6, Math.floor(innerWidthPx / (fontSize * avgCharFactor)));
+}
+
+function wrapWords(text, maxChars) {
+  const words = String(text).trim().split(/\s+/).filter(Boolean);
+  if (!words.length) {
+    return [""];
+  }
+  const lines = [];
+  let line = "";
+  for (const word of words) {
+    if (word.length > maxChars) {
+      if (line) {
+        lines.push(line);
+        line = "";
+      }
+      for (let i = 0; i < word.length; i += maxChars) {
+        lines.push(word.slice(i, i + maxChars));
+      }
+      continue;
+    }
+    const candidate = line ? `${line} ${word}` : word;
+    if (candidate.length <= maxChars) {
+      line = candidate;
+    } else {
+      if (line) lines.push(line);
+      line = word;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function appendTextMultiline(svg, x, y, lines, anchor, fill, size, weight, lineHeight) {
+  const NS = "http://www.w3.org/2000/svg";
+  const textEl = document.createElementNS(NS, "text");
+  textEl.setAttribute("x", String(x));
+  textEl.setAttribute("y", String(y));
+  textEl.setAttribute("text-anchor", anchor);
+  textEl.setAttribute("fill", fill);
+  textEl.setAttribute("font-size", String(size));
+  textEl.setAttribute("font-weight", String(weight));
+  lines.forEach((lineText, index) => {
+    const tspan = document.createElementNS(NS, "tspan");
+    tspan.setAttribute("x", String(x));
+    tspan.setAttribute("dy", index === 0 ? "0" : String(lineHeight));
+    tspan.textContent = lineText;
+    textEl.appendChild(tspan);
+  });
+  svg.appendChild(textEl);
+  return textEl;
+}
+
+function fitValueFontSize(text, innerWidthPx, maxSize = 46, minSize = 24) {
+  const len = Math.max(String(text).length, 1);
+  let size = maxSize;
+  while (size >= minSize) {
+    const approxWidth = len * size * 0.55;
+    if (approxWidth <= innerWidthPx) {
+      return size;
+    }
+    size -= 2;
+  }
+  return minSize;
 }
 
 function appendText(svg, x, y, text, anchor, fill, size, weight, rotate = 0) {
