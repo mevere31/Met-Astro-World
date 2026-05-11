@@ -140,28 +140,6 @@ const TRANSIT_BIN_RANGES = {
   ]
 };
 
-/** Bin start/end years on the upper transit rows (one mark per distinct year in range). */
-function appendTransitBinEdgeDots(svg, xScale, bins, yDot, color, domainMin, domainMax, ui) {
-  const radius = 4.4;
-  const yearsShown = new Set();
-  const mark = (year) => {
-    if (!Number.isFinite(year) || year < domainMin || year > domainMax) return;
-    if (yearsShown.has(year)) return;
-    yearsShown.add(year);
-    const px = xScale(year);
-    const dot = appendCircle(svg, px, yDot, radius, color, 0.88);
-    dot.setAttribute("stroke", "rgba(255,255,255,0.42)");
-    dot.setAttribute("stroke-width", "1.2");
-    appendText(svg, px, yDot - 14, String(year), "middle", color, 10, 600);
-    dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `Bin edge<br>${year}`));
-    dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
-  };
-  bins.forEach(([start, end]) => {
-    mark(start);
-    if (end !== start) mark(end);
-  });
-}
-
 const DEFAULT_TRANSIT_WINDOW_YEARS = 5;
 
 const MET_OBJECT_CACHE = new Map();
@@ -1393,13 +1371,8 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   }
 
   if (transitsEnabled) {
-    const d0 = analytics.objectRange.min;
-    const d1 = analytics.objectRange.max;
     TRANSIT_GROUPS.forEach((group, groupIndex) => {
       const y = transitLane - 54 + groupIndex * 52;
-      const yBin = y - 36;
-      appendTransitBinEdgeDots(svg, x, TRANSIT_BIN_RANGES[group.key], yBin, group.color, d0, d1, ui);
-
       group.years.forEach((year, index) => {
         const px = x(year);
         appendLine(svg, px, y + 10, px, objectLane, group.color, 0.9, 0.12);
@@ -1441,11 +1414,13 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     ["Uranus in Aries ±3", formatPercent(analytics.transitMetrics.uranusAries.plusMinus3)]
   ];
 
+  const metricsCardY = 702;
   cards.forEach((card, index) => {
-    const rect = appendRect(svg, 64 + index * 240, 654, 190, 92, "rgba(255,255,255,0.045)", "rgba(255,255,255,0.08)", 18);
+    const x0 = 64 + index * 240;
+    const rect = appendRect(svg, x0, metricsCardY, 190, 92, "rgba(255,255,255,0.045)", "rgba(255,255,255,0.08)", 18);
     animateFadeIn(rect, 240 + index * 90, 260);
-    appendText(svg, 84 + index * 240, 690, card[0], "start", "#9cadc6", 13, 600);
-    appendText(svg, 84 + index * 240, 722, card[1], "start", "#edf4ff", 28, 700);
+    appendText(svg, x0 + 20, metricsCardY + 36, card[0], "start", "#9cadc6", 13, 600);
+    appendText(svg, x0 + 20, metricsCardY + 68, card[1], "start", "#edf4ff", 28, 700);
   });
 
   appendSvgLegend(svg, legendX, legendY, [
