@@ -102,6 +102,65 @@ const TRANSIT_GROUPS = [
   }
 ];
 
+/** Inclusive year ranges between milestone years (section 5 bin shading). */
+const TRANSIT_BIN_RANGES = {
+  jupiterSaturn: [
+    [1723, 1741],
+    [1742, 1762],
+    [1763, 1781],
+    [1782, 1801],
+    [1802, 1820],
+    [1821, 1841],
+    [1842, 1860],
+    [1861, 1880],
+    [1881, 1900],
+    [1901, 1920],
+    [1921, 1939],
+    [1940, 1960],
+    [1961, 1979],
+    [1980, 2000],
+    [2001, 2020]
+  ],
+  saturnAries: [
+    [1759, 1761],
+    [1789, 1791],
+    [1819, 1821],
+    [1849, 1851],
+    [1878, 1881],
+    [1909, 1912],
+    [1937, 1939],
+    [1967, 1969],
+    [1996, 1999]
+  ],
+  uranusAries: [
+    [1767, 1774],
+    [1851, 1859],
+    [1927, 1927],
+    [2011, 2018]
+  ]
+};
+
+/** Bin start/end years on the upper transit rows (one mark per distinct year in range). */
+function appendTransitBinEdgeDots(svg, xScale, bins, yDot, color, domainMin, domainMax, ui) {
+  const radius = 4.4;
+  const yearsShown = new Set();
+  const mark = (year) => {
+    if (!Number.isFinite(year) || year < domainMin || year > domainMax) return;
+    if (yearsShown.has(year)) return;
+    yearsShown.add(year);
+    const px = xScale(year);
+    const dot = appendCircle(svg, px, yDot, radius, color, 0.88);
+    dot.setAttribute("stroke", "rgba(255,255,255,0.42)");
+    dot.setAttribute("stroke-width", "1.2");
+    appendText(svg, px, yDot - 14, String(year), "middle", color, 10, 600);
+    dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `Bin edge<br>${year}`));
+    dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
+  };
+  bins.forEach(([start, end]) => {
+    mark(start);
+    if (end !== start) mark(end);
+  });
+}
 
 const DEFAULT_TRANSIT_WINDOW_YEARS = 5;
 
