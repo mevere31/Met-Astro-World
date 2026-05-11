@@ -1362,8 +1362,11 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   const transitLane = 262;
   const objectLane = 398;
   const objectLaneTitleY = objectLane + 62;
-  const legendX = width - 228;
-  const legendY = margin.top - 14;
+  const binBandMidY = transitLane + (objectLane - transitLane) / 2;
+  const objectDotBaseY = transitsEnabled ? binBandMidY : objectLane;
+  const connectorEndY = transitsEnabled ? objectDotBaseY + 28 : objectLane;
+  const legendX = width - 248;
+  const legendY = margin.top - 32;
   const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, width - margin.right);
 
   appendAtmosphere(svg, width, height);
@@ -1400,7 +1403,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
       const placedYearLabels = [];
       group.years.forEach((year, index) => {
         const px = x(year);
-        appendLine(svg, px, y + 10, px, objectLane, group.color, 0.9, 0.12);
+        appendLine(svg, px, y + 10, px, connectorEndY, group.color, 0.9, 0.12);
         const dot = appendCircle(svg, px, y, 6.2, group.color, 0.95);
         animateCirclePop(dot, 6.2, groupIndex * 140 + Math.min(index, 6) * 50, 240);
         dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `${group.label}<br>${year}`));
@@ -1417,7 +1420,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
 
   analytics.objectYears.forEach((year, index) => {
     const jitter = ((index % 15) - 7) * 6;
-    const dot = appendCircle(svg, x(year), objectLane + jitter, 3.8, "#EC008C", 0.7);
+    const dot = appendCircle(svg, x(year), objectDotBaseY + jitter, 3.8, "#EC008C", 0.7);
     animateCirclePop(dot, 3.8, Math.min(index, 70) * 4 + 180, 200);
     dot.addEventListener("mouseenter", () => {
       showTooltip(ui.tooltip, `Object year ${year}`);
