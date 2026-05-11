@@ -1352,7 +1352,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   }
 
   const cards = [
-    ["Jupiter-Saturn ±5", formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)],
+    ["Jupiter-Saturn ±5", formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5), "A conjunction is when two celestial objects line up in the sky during their orbit.Both Jupiter and Saturn are outer planets and a conjunction between the two symbolizes a period of constructive accomplisment. People are more practical, realistic and we are encouraged to slow down to get things right. This transit occurs roughly every 20 years and is called a Great Conjunction."],
     ["Saturn in Aries ±5", formatPercent(analytics.transitMetrics.saturnAries.plusMinus5)],
     ["Uranus in Aries ±3", formatPercent(analytics.transitMetrics.uranusAries.plusMinus3)]
   ];
