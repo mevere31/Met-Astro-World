@@ -1285,7 +1285,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
       { color: "#b68cff", label: "Jupiter-Saturn" },
       { color: "#7fd6ff", label: "Saturn in Aries" },
       { color: "#ffd27f", label: "Uranus in Aries" },
-      { color: "#7fd6ff", label: "Object year" }
+      { color: "#EC008C", label: "Object year" }
     ]
     : [
       { color: "#7fd6ff", label: "Object year" },
@@ -1377,16 +1377,75 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   }
 
   const cards = [
-    ["Jupiter-Saturn ±5. A conjunction is when two celestial objects line up in the sky during their orbit.Both Jupiter and Saturn are outer planets and a conjunction between the two symbolizes a period of constructive accomplishment. People are more practical, realistic and we are encouraged to slow down to get things right. This transit occurs roughly every 20 years and is called a Great Conjunction.", formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)],
-    ["Saturn in Aries ±5. Saturn transits and cycles can be considered cycles of achievement and maturity. Saturn transits teach us to take responsibility for ourselves. In the sign of Aries this can look like assessing whether our systems are working regarding how we use our initiative, excercise our independence, express ourselves authentically, and assert ourselves effectively.", formatPercent(analytics.transitMetrics.saturnAries.plusMinus5)],
-    ["Uranus in Aries ±3. Uranus in Aries is a generation transit characterized by rapid, disruptive, and revolutionary change focused on individual freedom, personal identity and technological innovation. Uranus enters Aries approximately every 84 years.", formatPercent(analytics.transitMetrics.uranusAries.plusMinus3)]
+    {
+      x: 70,
+      y: 160,
+      w: 220,
+      h: 420,
+      color: "#b68cff",
+      label: "Jupiter-Saturn ±5",
+      value: formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5),
+      detail: "A conjunction is when two celestial objects line up in the sky during their orbit.Both Jupiter and Saturn are outer planets and a conjunction between the two symbolizes a period of constructive accomplishment. People are more practical, realistic and we are encouraged to slow down to get things right. This transit occurs roughly every 20 years and is called a Great Conjunction."
+    },
+    {
+      x: 320,
+      y: 130,
+      w: 220,
+      h: 450,
+      color: "#7fd6ff",
+      label: "Saturn in Aries ±5",
+      value: formatPercent(analytics.transitMetrics.saturnAries.plusMinus5),
+      detail: "Saturn transits and cycles can be considered cycles of achievement and maturity. Saturn transits teach us to take responsibility for ourselves. In the sign of Aries this can look like assessing whether our systems are working regarding how we use our initiative, excercise our independence, express ourselves authentically, and assert ourselves effectively."
+    },
+    {
+      x: 570,
+      y: 100,
+      w: 220,
+      h: 480,
+      color: "#ffd27f",
+      label: "Uranus in Aries ±3",
+      value: formatPercent(analytics.transitMetrics.uranusAries.plusMinus3),
+      detail: "Uranus in Aries is a generation transit characterized by rapid, disruptive, and revolutionary change focused on individual freedom, personal identity and technological innovation. Uranus enters Aries approximately every 84 years."
+    }
   ];
-
+        
   cards.forEach((card, index) => {
-    const rect = appendRect(svg, 64 + index * 240, 654, 190, 92, "rgba(255,255,255,0.045)", "rgba(255,255,255,0.08)", 18);
-    animateFadeIn(rect, 240 + index * 90, 260);
-    appendText(svg, 84 + index * 240, 690, card[0], "start", "#9cadc6", 13, 600);
-    appendText(svg, 84 + index * 240, 722, card[1], "start", "#edf4ff", 28, 700);
+        appendRect(svg, card.x, card.y, card.w, card.h, `${card.color}22`, `${card.color}66`, 24);
+    const innerPad = 26;
+    const innerW = card.w - innerPad * 2;
+    const textMaxW = Math.max(40, innerW - 10);
+
+    const labelLines = wrapWordsToWidth(card.label, textMaxW, 18, 700);
+    const labelLineHeight = 22;
+    let textY = card.y + 56;
+    appendTextMultiline(svg, card.x + innerPad, textY, labelLines, "start", "#edf4ff", 18, 700, labelLineHeight);
+    textY += labelLines.length * labelLineHeight + 26;
+
+    const valueStr = String(card.value);
+    const valueSize = fitValueFontSize(valueStr, textMaxW, 46, 18);
+    appendText(svg, card.x + innerPad, textY, valueStr, "start", card.color, valueSize, 800);
+    textY += valueSize + 14;
+
+    const detailLines = wrapWordsToWidth(card.detail, textMaxW, 14, 500);
+    appendTextMultiline(svg, card.x + innerPad, textY, detailLines, "start", "#9cadc6", 14, 500, 19);
+
+    const spark = analytics.yearBins.slice(card.x < 200 ? 0 : card.x < 400 ? 12 : 24, card.x < 200 ? 18 : card.x < 400 ? 30 : 42);
+    const max = Math.max(...spark.map((point) => point.count), 1);
+    const n = spark.length;
+    let barW = 7;
+    let gap = n <= 1 ? 0 : (innerW - n * barW) / (n - 1);
+    if (n > 1 && gap < 2) {
+      barW = Math.max(3, Math.floor((innerW - (n - 1) * 2) / n));
+      gap = (innerW - n * barW) / (n - 1);
+    }
+
+    spark.forEach((point, index) => {
+      const barHeight = (point.count / max) * 110;
+      const y = card.y + card.h - 36 - barHeight;
+      const bx = card.x + innerPad + index * (barW + gap);
+      const rect = appendRect(svg, bx, y, barW, barHeight, `${card.color}aa`, "none", 4);
+      animateRectGrow(rect, y, barHeight, index * 14, 240);
+    });
   });
 
   appendSvgLegend(svg, legendX, legendY, [
