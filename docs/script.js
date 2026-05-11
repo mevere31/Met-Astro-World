@@ -86,19 +86,19 @@ const TRANSIT_GROUPS = [
     key: "jupiterSaturn",
     label: "Jupiter-Saturn cycle",
     color: "#b68cff",
-    years: [1723, 1742, 1763, 1782, 1802, 1821, 1842, 1861, 1881, 1901, 1921, 1940, 1961, 1980, 2001]
+    years: [1723, 1741, 1742, 1762, 1763, 1781, 1782, 1801, 1802, 1820, 1821, 1841, 1842, 1860, 1861, 1880, 1881, 1900, 1901, 1920, 1921, 1939, 1940, 1960, 1961, 1979, 1980, 2000, 2001]
   },
   {
     key: "saturnAries",
     label: "Saturn in Aries",
     color: "#7fd6ff",
-    years: [1759,1789, 1819, 1849, 1878, 1909, 1937, 1967, 1996]
+    years: [1759, 1761, 1789, 1791, 1819, 1821, 1849, 1851, 1878, 1881, 1909, 1912, 1937, 1939, 1967, 1969, 1996, 1999]
   },
   {
     key: "uranusAries",
     label: "Uranus in Aries",
     color: "#ffd27f",
-    years: [1767, 1851, 1927, 2011]
+    years: [1767, 1774, 1851, 1859, 1927, 2011, 2018]
   }
 ];
 
@@ -1459,39 +1459,6 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     const valueSize = fitValueFontSize(valueStr, textMaxW, 46, 18);
     appendText(svg, card.x + innerPad, textY, valueStr, "start", card.color, valueSize, 800);
     textY += valueSize + 12;
-
-    const sparkBand = 66;
-    const sparkTop = card.y + card.h - sparkBand;
-    const detailFontSize = 12;
-    const detailLineHeight = 14;
-    const detailLinesAll = wrapWordsToWidth(card.detail, textMaxW, detailFontSize, 500);
-    const maxDetailLines = Math.max(1, Math.floor((sparkTop - 8 - textY) / detailLineHeight));
-    let detailLines = detailLinesAll.slice(0, maxDetailLines);
-    if (detailLinesAll.length > maxDetailLines && detailLines.length > 0) {
-      const li = detailLines.length - 1;
-      const last = detailLines[li];
-      detailLines[li] = last.endsWith("…") ? last : `${last.replace(/\s*$/, "")}…`;
-    }
-    appendTextMultiline(svg, card.x + innerPad, textY, detailLines, "start", "#9cadc6", detailFontSize, 500, detailLineHeight);
-
-    const spark = analytics.yearBins.slice(card.x < 200 ? 0 : card.x < 400 ? 12 : 24, card.x < 200 ? 18 : card.x < 400 ? 30 : 42);
-    const max = Math.max(...spark.map((point) => point.count), 1);
-    const n = spark.length;
-    let barW = 7;
-    let gap = n <= 1 ? 0 : (innerW - n * barW) / (n - 1);
-    if (n > 1 && gap < 2) {
-      barW = Math.max(3, Math.floor((innerW - (n - 1) * 2) / n));
-      gap = (innerW - n * barW) / (n - 1);
-    }
-
-    const sparkBarMax = 40;
-    spark.forEach((point, index) => {
-      const barHeight = (point.count / max) * sparkBarMax;
-      const y = card.y + card.h - 18 - barHeight;
-      const bx = card.x + innerPad + index * (barW + gap);
-      const rect = appendRect(svg, bx, y, barW, barHeight, `${card.color}aa`, "none", 4);
-      animateRectGrow(rect, y, barHeight, index * 14, 240);
-    });
   });
 
   appendSvgLegend(svg, legendX, legendY, [
