@@ -542,6 +542,7 @@ function renderPage(records) {
               <p>
                 This dataset combines three clocks: object creation dates, historical event dates, and astrological transit dates.
                 Seen together, they make cultural memories easier to feel and compare.This project was created with the goal to inspire different ways to interact with Met Data and the The Met Collection API. 
+                Through the creation of this project, a pattern of "Highlights" objects being predominately from European or Western countries emerged. This begs the question, is there an inherent bias with the Met Collection to highlight or feature objects from Western/European countries?
               </p>
               <div class="metric-grid">
                 <div class="metric"><strong>${analytics.centuries["18th"]}</strong><span>The 18th century is the largest century cluster. </span></div>
