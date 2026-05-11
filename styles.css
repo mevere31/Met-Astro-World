@@ -468,7 +468,7 @@ a {
 
 .step-viz__svg {
   width: 100%;
-  aspect-ratio: 860 / 420; /* wider/shorter blocks */
+  aspect-ratio: 860 / 820; /* matches SVG viewBox so charts render at full intended scale */
   height: auto;
 }
 .step-controls .toggle-group {
