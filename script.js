@@ -102,6 +102,44 @@ const TRANSIT_GROUPS = [
   }
 ];
 
+/** Inclusive year ranges between milestone years (section 5 bin shading). */
+const TRANSIT_BIN_RANGES = {
+  jupiterSaturn: [
+    [1723, 1741],
+    [1742, 1762],
+    [1763, 1781],
+    [1782, 1801],
+    [1802, 1820],
+    [1821, 1841],
+    [1842, 1860],
+    [1861, 1880],
+    [1881, 1900],
+    [1901, 1920],
+    [1921, 1939],
+    [1940, 1960],
+    [1961, 1979],
+    [1980, 2000],
+    [2001, 2020]
+  ],
+  saturnAries: [
+    [1759, 1761],
+    [1789, 1791],
+    [1819, 1821],
+    [1849, 1851],
+    [1878, 1881],
+    [1909, 1912],
+    [1937, 1939],
+    [1967, 1969],
+    [1996, 1999]
+  ],
+  uranusAries: [
+    [1767, 1774],
+    [1851, 1859],
+    [1927, 1927],
+    [2011, 2018]
+  ]
+};
+
 const DEFAULT_TRANSIT_WINDOW_YEARS = 5;
 
 const MET_OBJECT_CACHE = new Map();
@@ -1251,6 +1289,21 @@ function renderHistory(svg, analytics, ui, settings = {}) {
   applyPlanetOverlay(svg, settings.planet);
 }
 
+function appendTransitBinBands(svg, xScale, transitLane, objectLane, yearBins, fill) {
+  const pad = 4;
+  const top = transitLane + pad;
+  const h = objectLane - transitLane - pad * 2;
+  if (h <= 1 || !yearBins?.length) {
+    return;
+  }
+  yearBins.forEach(([start, end]) => {
+    const x0 = xScale(start);
+    const x1 = xScale(end + 1);
+    const w = Math.max(1, x1 - x0);
+    appendRect(svg, x0, top, w, h, fill, "none", 0);
+  });
+}
+
 function renderTransits(svg, analytics, ui, settings = {}) {
   const transitsEnabled = settings.transitMode !== "history-only";
   updateHeader(ui, {
@@ -1283,7 +1336,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   const margin = { top: 120, right: 40, bottom: 100, left: 50 };
   const transitMilestoneTitleY = margin.top + 12;
   const transitLane = 262;
-  const objectLane = 565;
+  const objectLane = 398;
   const objectLaneTitleY = objectLane + 62;
   const legendX = width - 228;
   const legendY = margin.top + 10;
@@ -1291,6 +1344,9 @@ function renderTransits(svg, analytics, ui, settings = {}) {
 
   appendAtmosphere(svg, width, height);
   if (transitsEnabled) {
+    appendTransitBinBands(svg, x, transitLane, objectLane, TRANSIT_BIN_RANGES.jupiterSaturn, "rgba(182, 140, 255, 0.11)");
+    appendTransitBinBands(svg, x, transitLane, objectLane, TRANSIT_BIN_RANGES.saturnAries, "rgba(127, 214, 255, 0.14)");
+    appendTransitBinBands(svg, x, transitLane, objectLane, TRANSIT_BIN_RANGES.uranusAries, "rgba(255, 210, 127, 0.14)");
     appendLine(svg, margin.left, transitLane, width - margin.right, transitLane, "rgba(255,255,255,0.32)", 1.5, 1);
     appendText(svg, margin.left, transitMilestoneTitleY, "Transit milestones", "start", "#edf4ff", 15, 700);
   }
@@ -1301,7 +1357,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     objectLaneTitleY,
     transitsEnabled ? "Object creation years" : "Object creation years (history-only)",
     "start",
-    "#7fd6ff",
+    "#edf4ff",
     15,
     700
   );
