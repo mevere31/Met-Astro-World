@@ -1376,8 +1376,23 @@ function renderTakeaways(svg, analytics, ui, settings = {}) {
     });
   });
 
-  appendText(svg, 430, 700, "Prototype next steps", "middle", "#edf4ff", 26, 700);
-  appendText(svg, 430, 736, "Add media, object-image cards, deeper filtering, and more nuanced transitions.", "middle", "#9cadc6", 16, 500);
+  appendText(svg, 430, 694, "Project Inspirations", "middle", "#edf4ff", 26, 700);
+
+  const vizWidth = 860;
+  const pillY = 728;
+  const pillH = 40;
+  const sidePad = 42;
+  const pillGap = 16;
+  const pillW = (vizWidth - 2 * sidePad - 2 * pillGap) / 3;
+  const inspirationLinks = [
+    ["https://van-gogh-collection.stefanpullen.com/", "Van Gogh Collection"],
+    ["https://vangogh.stefanpullen.com/", "Van Gogh — Pullen"],
+    ["https://informationisbeautiful.net/visualizations/horoscoped/", "Horoscoped"]
+  ];
+  inspirationLinks.forEach(([href, label], index) => {
+    const px = sidePad + index * (pillW + pillGap);
+    appendSvgLinkPill(svg, px, pillY, pillW, pillH, href, label);
+  });
 }
 
 function computeAnalytics(records) {
@@ -2038,6 +2053,39 @@ function appendSvgLegend(svg, originX, originY, entries, lineHeight = 19) {
     appendCircle(svg, originX + 5, y + 2, 5.5, entry.color, entry.opacity ?? 1);
     appendText(svg, originX + 18, y + 7, entry.label, "start", "#c5d2ea", 11, 600);
   });
+}
+
+function appendSvgLinkPill(svg, x, y, width, height, href, label, fontSize = 11) {
+  const NS = "http://www.w3.org/2000/svg";
+  const link = document.createElementNS(NS, "a");
+  link.setAttribute("href", href);
+  link.setAttributeNS("http://www.w3.org/1999/xlink", "href", href);
+  link.setAttribute("target", "_blank");
+  link.setAttribute("rel", "noreferrer");
+
+  const rect = document.createElementNS(NS, "rect");
+  rect.setAttribute("x", String(x));
+  rect.setAttribute("y", String(y));
+  rect.setAttribute("width", String(width));
+  rect.setAttribute("height", String(height));
+  rect.setAttribute("rx", String(height / 2));
+  rect.setAttribute("fill", "rgba(255,255,255,0.045)");
+  rect.setAttribute("stroke", "rgba(255,255,255,0.12)");
+  rect.setAttribute("stroke-width", "1");
+  link.appendChild(rect);
+
+  const labelNode = document.createElementNS(NS, "text");
+  labelNode.setAttribute("x", String(x + width / 2));
+  labelNode.setAttribute("y", String(y + height / 2 + fontSize * 0.35));
+  labelNode.setAttribute("text-anchor", "middle");
+  labelNode.setAttribute("fill", "#edf4ff");
+  labelNode.setAttribute("font-size", String(fontSize));
+  labelNode.setAttribute("font-weight", "600");
+  labelNode.textContent = label;
+  link.appendChild(labelNode);
+
+  svg.appendChild(link);
+  return link;
 }
 
 function showTooltip(node, html) {
