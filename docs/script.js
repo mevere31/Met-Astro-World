@@ -1339,7 +1339,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   const objectLane = 398;
   const objectLaneTitleY = objectLane + 62;
   const legendX = width - 228;
-  const legendY = margin.top + 10;
+  const legendY = margin.top - 14;
   const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, width - margin.right);
 
   appendAtmosphere(svg, width, height);
@@ -1381,8 +1381,10 @@ function renderTransits(svg, analytics, ui, settings = {}) {
         dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `${group.label}<br>${year}`));
         dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
 
-        if (index < 5 || index === group.years.length - 1) {
-          appendText(svg, px, y - 16, String(year), "middle", group.color, 11, 600);
+        const labelAllMilestones = group.key === "jupiterSaturn" || group.key === "saturnAries";
+        const labelSize = labelAllMilestones ? 9.5 : 11;
+        if (labelAllMilestones || index < 5 || index === group.years.length - 1) {
+          appendText(svg, px, y - 16, String(year), "middle", group.color, labelSize, 600);
         }
       });
     });
@@ -1411,9 +1413,9 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   const cards = [
     {
       x: 70,
-      y: 518,
+      y: 478,
       w: 220,
-      h: 248,
+      h: 328,
       color: "#b68cff",
       label: "Jupiter-Saturn ±5",
       value: formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5),
@@ -1421,9 +1423,9 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     },
     {
       x: 320,
-      y: 518,
+      y: 478,
       w: 220,
-      h: 248,
+      h: 328,
       color: "#7fd6ff",
       label: "Saturn in Aries ±5",
       value: formatPercent(analytics.transitMetrics.saturnAries.plusMinus5),
@@ -1431,9 +1433,9 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     },
     {
       x: 570,
-      y: 518,
+      y: 478,
       w: 220,
-      h: 248,
+      h: 328,
       color: "#ffd27f",
       label: "Uranus in Aries ±3",
       value: formatPercent(analytics.transitMetrics.uranusAries.plusMinus3),
@@ -1456,10 +1458,21 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     const valueStr = String(card.value);
     const valueSize = fitValueFontSize(valueStr, textMaxW, 46, 18);
     appendText(svg, card.x + innerPad, textY, valueStr, "start", card.color, valueSize, 800);
-    textY += valueSize + 14;
+    textY += valueSize + 12;
 
-    const detailLines = wrapWordsToWidth(card.detail, textMaxW, 14, 500);
-    appendTextMultiline(svg, card.x + innerPad, textY, detailLines, "start", "#9cadc6", 14, 500, 19);
+    const sparkBand = 66;
+    const sparkTop = card.y + card.h - sparkBand;
+    const detailFontSize = 12;
+    const detailLineHeight = 14;
+    const detailLinesAll = wrapWordsToWidth(card.detail, textMaxW, detailFontSize, 500);
+    const maxDetailLines = Math.max(1, Math.floor((sparkTop - 8 - textY) / detailLineHeight));
+    let detailLines = detailLinesAll.slice(0, maxDetailLines);
+    if (detailLinesAll.length > maxDetailLines && detailLines.length > 0) {
+      const li = detailLines.length - 1;
+      const last = detailLines[li];
+      detailLines[li] = last.endsWith("…") ? last : `${last.replace(/\s*$/, "")}…`;
+    }
+    appendTextMultiline(svg, card.x + innerPad, textY, detailLines, "start", "#9cadc6", detailFontSize, 500, detailLineHeight);
 
     const spark = analytics.yearBins.slice(card.x < 200 ? 0 : card.x < 400 ? 12 : 24, card.x < 200 ? 18 : card.x < 400 ? 30 : 42);
     const max = Math.max(...spark.map((point) => point.count), 1);
@@ -1471,9 +1484,10 @@ function renderTransits(svg, analytics, ui, settings = {}) {
       gap = (innerW - n * barW) / (n - 1);
     }
 
+    const sparkBarMax = 40;
     spark.forEach((point, index) => {
-      const barHeight = (point.count / max) * 58;
-      const y = card.y + card.h - 28 - barHeight;
+      const barHeight = (point.count / max) * sparkBarMax;
+      const y = card.y + card.h - 18 - barHeight;
       const bx = card.x + innerPad + index * (barW + gap);
       const rect = appendRect(svg, bx, y, barW, barHeight, `${card.color}aa`, "none", 4);
       animateRectGrow(rect, y, barHeight, index * 14, 240);

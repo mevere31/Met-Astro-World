@@ -1339,7 +1339,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   const objectLane = 398;
   const objectLaneTitleY = objectLane + 62;
   const legendX = width - 228;
-  const legendY = margin.top + 10;
+  const legendY = margin.top - 14;
   const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, width - margin.right);
 
   appendAtmosphere(svg, width, height);
@@ -1381,8 +1381,10 @@ function renderTransits(svg, analytics, ui, settings = {}) {
         dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `${group.label}<br>${year}`));
         dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
 
-        if (index < 5 || index === group.years.length - 1) {
-          appendText(svg, px, y - 16, String(year), "middle", group.color, 11, 600);
+        const labelAllMilestones = group.key === "jupiterSaturn" || group.key === "saturnAries";
+        const labelSize = labelAllMilestones ? 9.5 : 11;
+        if (labelAllMilestones || index < 5 || index === group.years.length - 1) {
+          appendText(svg, px, y - 16, String(year), "middle", group.color, labelSize, 600);
         }
       });
     });
