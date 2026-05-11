@@ -1383,7 +1383,7 @@ function renderTakeaways(svg, analytics, ui, settings = {}) {
   });
 
   setLegend(ui.legend, [
-    { color: "#7fd6ff", label: "Time" },
+    { color: "#EC008C", label: "Time" },
     { color: "#ffb56b", label: "Place" },
     { color: "#79e2b0", label: "History alignment" }
   ]);
@@ -1397,7 +1397,7 @@ function renderTakeaways(svg, analytics, ui, settings = {}) {
       y: 160,
       w: 220,
       h: 420,
-      color: "#7fd6ff",
+      color: "#EC008C",
       label: "Temporal concentration",
       value: `${analytics.centuries["18th"]}`,
       detail: "Objects in the 18th century cluster"
