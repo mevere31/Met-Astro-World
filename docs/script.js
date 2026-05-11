@@ -310,7 +310,8 @@ function renderPage(records) {
               <h2>The objects are globally distributed, but strongly concentrated.</h2>
               <p>
                 The top five countries account for <strong>${formatPercent(analytics.topFiveShare)}</strong> of all records.
-                Roughly 2 out of every 5 objects in this file were created in Paris.
+                Roughly 2 out of every 5 objects in this file were created in Paris. It is important to note that most objects designated as "Highlights" hail from European countries. 
+                Within the sample and broader collection, data in the Met Collection API for objects from non-Western/European countries is riddled with missing values and images. Those objects are also underrepresented in the "isHighlight" designation. 
               </p>
               <ul class="insight-list">
                 ${analytics.topCountries.slice(0, 5).map((country, index) => `
@@ -423,15 +424,10 @@ function renderPage(records) {
               </div>
               <h2>This is a symbolic lens, not a causal claim.</h2>
               <p>
-                The project asks whether object creation clusters overlap with broad collective-cycle transit windows. The following transits
-                feature movements by planets considered generation or era markers in astrology. Jupiter, Saturn, and Uranus mark generational changes and societal restructures in astrological history. Uranus represents technology, innovation, discovery, and all that is progressive. 
+                The project asks whether object creation clusters overlap with broad collective-cycle transit windows. Transits represent theongoing, phycial movements of planets in the sky. Astrologers use these movements to predict patterns in everyday life. Transits act as "cosmic timing devices." indicating when specific lessons, opportunities or challenges are likely to occur.
+                The following transits feature movements by planets considered generation or era markers in astrology. They represent major, long-lasting life changes, opportunities for growth or signficant challenges. Jupiter, Saturn, and Uranus mark generational changes and societal restructures in astrological terms. Uranus represents technology, innovation, discovery, and all that is progressive. 
                 Saturn is associated with restriction and limitation, it ushers in a generation's growth into adulthood and maturity. Jupiter is expansive and teaches reaching for broader purpose, reach, and possiblity.
               </p>
-               <div class="metric-grid">
-                <div class="metric"><strong>${formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)}</strong><span>Jupiter-Saturn Conjuction ±5 years: </span></div>
-                <div class="metric"><strong>${formatPercent(analytics.transitMetrics.saturnAries.plusMinus5)}</strong><span>Saturn in Aries Transit ±5 years: </span></div>
-                <div class="metric"><strong>${formatPercent(analytics.transitMetrics.uranusAries.plusMinus3)}</strong><span>Uranus in Aries transit ±3 years: </span></div>
-              </div>
                <p>
                Two of these transits happen in the sign of Aries. When a planet is in Aries it carries a "cardinal fire" energy focused on initiative, boldness, and leadership.
               </p>
