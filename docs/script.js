@@ -938,13 +938,30 @@ function renderPatterns(svg, analytics, ui, settings = {}) {
 
   const width = 860;
   const height = 820;
-  const margin = { top: 90, right: 44, bottom: 90, left: 56 };
+  const margin = { top: 90, bottom: 90, left: 66 };
+  const legendPanelW = 200;
+  const legendOuterPad = 26;
+  const legendGap = 24;
+  const legendX = width - legendOuterPad - legendPanelW;
+  const plotRight = legendX - legendGap;
+
   const bins = analytics.yearBins;
-  const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, width - margin.right);
-  const y = scaleLinear(0, Math.max(...bins.map((bin) => bin.count)) || 1, height - margin.bottom, margin.top);
+  const maxBinCount = Math.max(...bins.map((bin) => bin.count), 0);
+  const peakDecadeCount =
+    analytics.topDecades?.length > 0 ? Math.max(...analytics.topDecades.slice(0, 3).map((decade) => decade.count)) : 0;
+  const yDomainMax = Math.max(maxBinCount, peakDecadeCount, 1);
+  const yTicks = buildCountAxisTicks(yDomainMax, 5);
+
+  const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, plotRight);
+  const y = scaleLinear(0, yDomainMax, height - margin.bottom, margin.top);
 
   appendAtmosphere(svg, width, height);
-  appendRect(svg, margin.left, margin.top, width - margin.left - margin.right, height - margin.top - margin.bottom, "rgba(255,255,255,0.015)", "rgba(255,255,255,0.06)", 26);
+  appendRect(svg, margin.left, margin.top, plotRight - margin.left, height - margin.top - margin.bottom, "rgba(255,255,255,0.015)", "rgba(255,255,255,0.06)", 26);
+
+  yTicks.forEach((tickValue) => {
+    const yy = y(tickValue);
+    appendLine(svg, margin.left, yy, plotRight, yy, "rgba(255,255,255,0.06)", 1, 1);
+  });
 
   for (let year = 1720; year <= 2020; year += 40) {
     const px = x(year);
@@ -952,8 +969,15 @@ function renderPatterns(svg, analytics, ui, settings = {}) {
     appendText(svg, px, height - margin.bottom + 28, String(year), "middle", "#90a0b7", 13, 500);
   }
 
-  appendLine(svg, margin.left, height - margin.bottom, width - margin.right, height - margin.bottom, "rgba(255,255,255,0.4)", 1.2, 1);
+  appendLine(svg, margin.left, height - margin.bottom, plotRight, height - margin.bottom, "rgba(255,255,255,0.4)", 1.2, 1);
   appendLine(svg, margin.left, margin.top, margin.left, height - margin.bottom, "rgba(255,255,255,0.22)", 1.2, 1);
+
+  const yAxisLabelX = margin.left - 10;
+  yTicks.forEach((tickValue) => {
+    const yy = y(tickValue);
+    appendLine(svg, margin.left - 6, yy, margin.left, yy, "rgba(255,255,255,0.28)", 1, 1);
+    appendText(svg, yAxisLabelX, yy + 4, String(tickValue), "end", "#90a0b7", 12, 500);
+  });
 
   const path = bins.map((bin, index) => `${index === 0 ? "M" : "L"} ${x(bin.year)} ${y(bin.count)}`).join(" ");
   const fillPath = `${path} L ${x(bins[bins.length - 1].year)} ${height - margin.bottom} L ${x(bins[0].year)} ${height - margin.bottom} Z`;
@@ -970,11 +994,11 @@ function renderPatterns(svg, analytics, ui, settings = {}) {
 
   appendText(svg, margin.left, margin.top - 26, "Object count", "start", "#95a8c8", 14, 650);
 
-  // Optional sidebar: event-type frequency.
+  // Optional sidebar: event-type frequency (fixed strip along the SVG right edge).
   if (analytics.topEventTypes?.length) {
-    const sidebarX = width - margin.right - 220;
+    const sidebarX = legendX;
     const sidebarY = margin.top + 18;
-    const sidebarW = 200;
+    const sidebarW = legendPanelW;
     const rowH = 18;
     const maxRows = 10;
     const list = analytics.topEventTypes.slice(0, maxRows);
@@ -1842,6 +1866,26 @@ function mapToSortedArray(map, total) {
 function shareNearYears(baseYears, referenceYears, threshold) {
   const matches = baseYears.filter((year) => referenceYears.some((reference) => Math.abs(reference - year) <= threshold));
   return matches.length / baseYears.length;
+}
+
+/** Integer tick stops from 0 through maxValue for count axes (e.g. density chart). */
+function buildCountAxisTicks(maxValue, targetSteps = 5) {
+  if (!Number.isFinite(maxValue) || maxValue <= 0) {
+    return [0];
+  }
+  let step = Math.ceil(maxValue / targetSteps);
+  const magnitude = 10 ** Math.floor(Math.log10(Math.max(step, 1)));
+  const normalized = step / magnitude;
+  const niceFactor = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+  step = niceFactor * magnitude;
+  const ticks = [];
+  for (let value = 0; value <= maxValue; value += step) {
+    ticks.push(value);
+  }
+  if (ticks[ticks.length - 1] !== maxValue) {
+    ticks.push(maxValue);
+  }
+  return ticks;
 }
 
 function scaleLinear(domainMin, domainMax, rangeMin, rangeMax) {
