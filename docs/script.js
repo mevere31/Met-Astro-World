@@ -7,6 +7,96 @@ const MOTION = {
   quickMs: 260
 };
 
+const SVG_TEXT_FONT = 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+
+let svgMeasureCtx = null;
+
+function measureSvgTextWidth(text, fontSizePx, fontWeight) {
+  if (!svgMeasureCtx) {
+    svgMeasureCtx = document.createElement("canvas").getContext("2d");
+  }
+  const w = typeof fontWeight === "number" ? String(fontWeight) : fontWeight;
+  svgMeasureCtx.font = `${w} ${fontSizePx}px ${SVG_TEXT_FONT}`;
+  return svgMeasureCtx.measureText(text).width;
+}
+
+function wrapWordsToWidth(text, maxWidthPx, fontSize, fontWeight) {
+  const words = String(text).trim().split(/\s+/).filter(Boolean);
+  if (!words.length) {
+    return [""];
+  }
+  const lines = [];
+  let line = "";
+  const widthOf = (str) => measureSvgTextWidth(str, fontSize, fontWeight);
+
+  for (const word of words) {
+    if (widthOf(word) > maxWidthPx) {
+      if (line) {
+        lines.push(line);
+        line = "";
+      }
+      let chunk = "";
+      for (let i = 0; i < word.length; i += 1) {
+        const letter = word[i];
+        const trial = chunk + letter;
+        if (widthOf(trial) <= maxWidthPx) {
+          chunk = trial;
+        } else {
+          if (chunk) lines.push(chunk);
+          chunk = letter;
+        }
+      }
+      if (chunk) line = chunk;
+      continue;
+    }
+    const candidate = line ? `${line} ${word}` : word;
+    if (widthOf(candidate) <= maxWidthPx) {
+      line = candidate;
+    } else {
+      if (line) lines.push(line);
+      line = word;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function fitValueFontSize(text, innerWidthPx, maxSize = 46, minSize = 18) {
+  const str = String(text);
+  let size = maxSize;
+  while (size >= minSize) {
+    if (measureSvgTextWidth(str, size, 800) <= innerWidthPx) {
+      return size;
+    }
+    size -= 1;
+  }
+  return minSize;
+}
+
+const MILESTONE_LABEL_PAD = 4;
+
+/** Places a year label above a transit dot, staggering vertically when labels would overlap horizontally. */
+function tryAppendMilestoneYearLabel(svg, px, dotY, yearStr, color, fontSize, placedRects) {
+  const tw = measureSvgTextWidth(yearStr, fontSize, 600);
+  const half = tw / 2;
+  const left = px - half;
+  const right = px + half;
+  const tierYs = [dotY - 16, dotY - 34, dotY - 52, dotY - 70];
+  for (let i = 0; i < tierYs.length; i += 1) {
+    const labelY = tierYs[i];
+    const collides = placedRects.some(
+      (r) =>
+        Math.abs(r.y - labelY) < 10 &&
+        !(right + MILESTONE_LABEL_PAD < r.left || left - MILESTONE_LABEL_PAD > r.right)
+    );
+    if (!collides) {
+      appendText(svg, px, labelY, yearStr, "middle", color, fontSize, 600);
+      placedRects.push({ left, right, y: labelY });
+      return;
+    }
+  }
+}
+
 const HISTORY_ANCHORS = [
   { year: 1789, label: "French Revolution", color: "#ffd27f" },
   { year: 1800, label: "Industrial Revolution midpoint", color: "#7fd6ff" },
@@ -20,21 +110,59 @@ const TRANSIT_GROUPS = [
     key: "jupiterSaturn",
     label: "Jupiter-Saturn cycle",
     color: "#b68cff",
-    years: [1723, 1743, 1763, 1782, 1802, 1821, 1842, 1861, 1881, 1901, 1921, 1940, 1961, 1980, 2000, 2020]
+    years: [1723, 1741, 1742, 1762, 1763, 1781, 1782, 1801, 1802, 1820, 1821, 1841, 1842, 1860, 1861, 1880, 1881, 1900, 1901, 1920, 1921, 1939, 1940, 1960, 1961, 1979, 1980, 2000, 2001]
   },
   {
     key: "saturnAries",
     label: "Saturn in Aries",
     color: "#7fd6ff",
-    years: [1758, 1787, 1817, 1846, 1876, 1905, 1935, 1964, 1996]
+    years: [1759, 1761, 1789, 1791, 1819, 1821, 1849, 1851, 1878, 1881, 1909, 1912, 1937, 1939, 1967, 1969, 1996, 1999]
   },
   {
     key: "uranusAries",
     label: "Uranus in Aries",
     color: "#ffd27f",
-    years: [1767, 1851, 1927, 2011]
+    years: [1767, 1774, 1851, 1859, 1927, 2011, 2018]
   }
 ];
+
+
+const TRANSIT_BIN_RANGES = {
+  jupiterSaturn: [
+    [1723, 1741],
+    [1742, 1762],
+    [1763, 1781],
+    [1782, 1801],
+    [1802, 1820],
+    [1821, 1841],
+    [1842, 1860],
+    [1861, 1880],
+    [1881, 1900],
+    [1901, 1920],
+    [1921, 1939],
+    [1940, 1960],
+    [1961, 1979],
+    [1980, 2000],
+    [2001, 2020]
+  ],
+  saturnAries: [
+    [1759, 1761],
+    [1789, 1791],
+    [1819, 1821],
+    [1849, 1851],
+    [1878, 1881],
+    [1909, 1912],
+    [1937, 1939],
+    [1967, 1969],
+    [1996, 1999]
+  ],
+  uranusAries: [
+    [1767, 1774],
+    [1851, 1859],
+    [1927, 1927],
+    [2011, 2018]
+  ]
+};
 
 const DEFAULT_TRANSIT_WINDOW_YEARS = 5;
 
@@ -244,7 +372,8 @@ function renderPage(records) {
               <h2>The objects are globally distributed, but strongly concentrated.</h2>
               <p>
                 The top five countries account for <strong>${formatPercent(analytics.topFiveShare)}</strong> of all records.
-                Roughly 2 out of every 5 objects in this file were created in Paris.
+                Roughly 2 out of every 5 objects in this file were created in Paris. It is important to note that most objects designated as "Highlights" hail from European countries. 
+                Within the sample and broader collection, data in the Met Collection API for objects from non-Western/European countries is riddled with missing values and images. Those objects are also underrepresented in the "isHighlight" designation. 
               </p>
               <ul class="insight-list">
                 ${analytics.topCountries.slice(0, 5).map((country, index) => `
@@ -357,15 +486,10 @@ function renderPage(records) {
               </div>
               <h2>This is a symbolic lens, not a causal claim.</h2>
               <p>
-                The project asks whether object creation clusters overlap with broad collective-cycle transit windows. The following transits
-                feature movements by planets considered generation or era markers in astrology. Jupiter, Saturn, and Uranus mark generational changes and societal restructures in astrological history. Uranus represents technology, innovation, discovery, and all that is progressive. 
+                The project asks whether object creation clusters overlap with broad collective-cycle transit windows. Transits represent theongoing, phycial movements of planets in the sky. Astrologers use these movements to predict patterns in everyday life. Transits act as "cosmic timing devices." indicating when specific lessons, opportunities or challenges are likely to occur.
+                The following transits feature movements by planets considered generation or era markers in astrology. They represent major, long-lasting life changes, opportunities for growth or signficant challenges. Jupiter, Saturn, and Uranus mark generational changes and societal restructures in astrological terms. Uranus represents technology, innovation, discovery, and all that is progressive. 
                 Saturn is associated with restriction and limitation, it ushers in a generation's growth into adulthood and maturity. Jupiter is expansive and teaches reaching for broader purpose, reach, and possiblity.
               </p>
-               <div class="metric-grid">
-                <div class="metric"><strong>${formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)}</strong><span>Jupiter-Saturn Conjuction ±5 years: </span></div>
-                <div class="metric"><strong>${formatPercent(analytics.transitMetrics.saturnAries.plusMinus5)}</strong><span>Saturn in Aries Transit ±5 years: </span></div>
-                <div class="metric"><strong>${formatPercent(analytics.transitMetrics.uranusAries.plusMinus3)}</strong><span>Uranus in Aries transit ±3 years: </span></div>
-              </div>
                <p>
                Two of these transits happen in the sign of Aries. When a planet is in Aries it carries a "cardinal fire" energy focused on initiative, boldness, and leadership.
               </p>
@@ -419,16 +543,20 @@ function renderPage(records) {
               <h2>Three temporal spaces, one narrative frame.</h2>
               <p>
                 This dataset combines three clocks: object creation dates, historical event dates, and astrological transit dates.
-                Seen together, they make cultural memories easier to feel and compare.
+                Seen together, they make cultural memories easier to feel and compare.This project was created with the goal to inspire different ways to interact with Met Data and the The Met Collection API. 
+                Through the creation of this project, a pattern of "Highlights" objects being predominately from European or Western countries emerged. This begs the question, is there an inherent bias with the Met Collection to highlight or feature objects from Western/European countries?
               </p>
               <div class="metric-grid">
-                <div class="metric"><strong>${analytics.centuries["18th"]}</strong><span>Largest century cluster</span></div>
-                <div class="metric"><strong>${formatPercent(analytics.topFiveShare)}</strong><span>Top-five country share</span></div>
-                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within25)}</strong><span>Pairs within ±25 years</span></div>
+                <div class="metric"><strong>${analytics.centuries["18th"]}</strong><span>The 18th century is the largest century cluster. </span></div>
+                <div class="metric"><strong>${formatPercent(analytics.topFiveShare)}</strong><span>Most of the objects in this sample come from five countries. </span></div>
+                <div class="metric"><strong>${formatPercent(analytics.gapMetrics.within25)}</strong><span>Object creation dates are near historical incidents.</span></div>
               </div>
               <div class="cta-row">
                 <a class="cta" href="https://www.metmuseum.org/en/hubs/open-access" target="_blank" rel="noreferrer">Met Open Access</a>
                 <a class="cta" href="https://ssd.jpl.nasa.gov/horizons/" target="_blank" rel="noreferrer">NASA JPL Horizons</a>
+                <a class="cta" href="https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service" target="_blank" rel="noreferrer">Wikidata SPARQL Query Service</a>
+                <a class="cta" href="https://github.com/histolines/Histolines_events_archive" target="_blank" rel="noreferrer">Histolines Events Archive</a>
+                <a class="cta" href="https://cafeastrology.com/2025-ephemeris.html" target="_blank" rel="noreferrer">Cafe Astrology Ephemeris</a>
               </div>
             </div>
             <div class="step-viz">
@@ -562,7 +690,7 @@ function setupScrollytelling(records) {
     const stepState = buildState(records, settings.country, settings.city, settings.eventType, 5);
     clearSVG(svg);
     try {
-      render(svg, stepState.analytics, settings);
+      render(svg, stepState.analytics, ui, settings);
     } catch (error) {
       console.error(error);
       clearSVG(svg);
@@ -857,13 +985,13 @@ function renderIntroCollage(svg, analytics) {
 function renderIntro(svg, analytics, ui, settings = {}) {
   updateHeader(ui, {
     kicker: "Overview",
-    title: "Timeline of object creation years",
+    title: "Timeline of object Creation Years",
     description: "Each dot is one record from the filtered dataset, plotted across the full time span of the current selection.",
     footnote: `Filtered view contains ${analytics.totalRows} rows spanning ${analytics.objectRange.span} years.`
   });
 
   setLegend(ui.legend, [
-    { color: "#7fd6ff", label: "Object row" },
+    { color: "#EC008C", label: "Object row" },
     { color: "#b68cff", label: "Timeline axis" }
   ]);
 
@@ -890,7 +1018,7 @@ function renderIntro(svg, analytics, ui, settings = {}) {
  analytics.objectYears.forEach((year, index) => {
   const amplitude = 14 + (index % 5) * 5;
   const y = axisY + Math.sin(index * 0.65) * amplitude;
-  const circle = appendCircle(svg, x(year), y, 4.1, "#7fd6ff", 0.84);
+  const circle = appendCircle(svg, x(year), y, 4.1, "#EC008C", 0.84);
   animateCirclePop(circle, 4.1, Math.min(index, 44) * 6);
 
   circle.addEventListener("mouseenter", async () => {
@@ -929,7 +1057,7 @@ function renderPatterns(svg, analytics, ui, settings = {}) {
   });
 
   setLegend(ui.legend, [
-    { color: "#7fd6ff", label: "Year density" },
+    { color: "#EC008C", label: "Year density" },
     { color: "#ffd27f", label: "Peak decade annotation" },
     { color: "#79e2b0", label: "Event-type frequency" }
   ]);
@@ -938,13 +1066,30 @@ function renderPatterns(svg, analytics, ui, settings = {}) {
 
   const width = 860;
   const height = 820;
-  const margin = { top: 90, right: 44, bottom: 90, left: 56 };
+  const margin = { top: 90, bottom: 90, left: 66 };
+  const legendPanelW = 200;
+  const legendOuterPad = 26;
+  const legendGap = 24;
+  const legendX = width - legendOuterPad - legendPanelW;
+  const plotRight = legendX - legendGap;
+
   const bins = analytics.yearBins;
-  const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, width - margin.right);
-  const y = scaleLinear(0, Math.max(...bins.map((bin) => bin.count)) || 1, height - margin.bottom, margin.top);
+  const maxBinCount = Math.max(...bins.map((bin) => bin.count), 0);
+  const peakDecadeCount =
+    analytics.topDecades?.length > 0 ? Math.max(...analytics.topDecades.slice(0, 3).map((decade) => decade.count)) : 0;
+  const yDomainMax = Math.max(maxBinCount, peakDecadeCount, 1);
+  const yTicks = buildCountAxisTicks(yDomainMax, 5);
+
+  const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, plotRight);
+  const y = scaleLinear(0, yDomainMax, height - margin.bottom, margin.top);
 
   appendAtmosphere(svg, width, height);
-  appendRect(svg, margin.left, margin.top, width - margin.left - margin.right, height - margin.top - margin.bottom, "rgba(255,255,255,0.015)", "rgba(255,255,255,0.06)", 26);
+  appendRect(svg, margin.left, margin.top, plotRight - margin.left, height - margin.top - margin.bottom, "rgba(255,255,255,0.015)", "rgba(255,255,255,0.06)", 26);
+
+  yTicks.forEach((tickValue) => {
+    const yy = y(tickValue);
+    appendLine(svg, margin.left, yy, plotRight, yy, "rgba(255,255,255,0.06)", 1, 1);
+  });
 
   for (let year = 1720; year <= 2020; year += 40) {
     const px = x(year);
@@ -952,13 +1097,20 @@ function renderPatterns(svg, analytics, ui, settings = {}) {
     appendText(svg, px, height - margin.bottom + 28, String(year), "middle", "#90a0b7", 13, 500);
   }
 
-  appendLine(svg, margin.left, height - margin.bottom, width - margin.right, height - margin.bottom, "rgba(255,255,255,0.4)", 1.2, 1);
+  appendLine(svg, margin.left, height - margin.bottom, plotRight, height - margin.bottom, "rgba(255,255,255,0.4)", 1.2, 1);
   appendLine(svg, margin.left, margin.top, margin.left, height - margin.bottom, "rgba(255,255,255,0.22)", 1.2, 1);
+
+  const yAxisLabelX = margin.left - 10;
+  yTicks.forEach((tickValue) => {
+    const yy = y(tickValue);
+    appendLine(svg, margin.left - 6, yy, margin.left, yy, "rgba(255,255,255,0.28)", 1, 1);
+    appendText(svg, yAxisLabelX, yy + 4, String(tickValue), "end", "#90a0b7", 12, 500);
+  });
 
   const path = bins.map((bin, index) => `${index === 0 ? "M" : "L"} ${x(bin.year)} ${y(bin.count)}`).join(" ");
   const fillPath = `${path} L ${x(bins[bins.length - 1].year)} ${height - margin.bottom} L ${x(bins[0].year)} ${height - margin.bottom} Z`;
   appendPath(svg, fillPath, "rgba(127, 214, 255, 0.18)", "none", 0);
-  const densityLine = appendPath(svg, path, "none", "#7fd6ff", 4, 0.98);
+  const densityLine = appendPath(svg, path, "none", "#8EC9FC", 4, 0.98);
   animatePathDraw(densityLine, 60, 560);
 
   analytics.topDecades.slice(0, 3).forEach((decade) => {
@@ -970,17 +1122,17 @@ function renderPatterns(svg, analytics, ui, settings = {}) {
 
   appendText(svg, margin.left, margin.top - 26, "Object count", "start", "#95a8c8", 14, 650);
 
-  // Optional sidebar: event-type frequency.
+  // Optional sidebar: event-type frequency (fixed strip along the SVG right edge).
   if (analytics.topEventTypes?.length) {
-    const sidebarX = width - margin.right - 220;
+    const sidebarX = legendX;
     const sidebarY = margin.top + 18;
-    const sidebarW = 200;
+    const sidebarW = legendPanelW;
     const rowH = 18;
     const maxRows = 10;
     const list = analytics.topEventTypes.slice(0, maxRows);
     const maxCount = Math.max(...list.map((d) => d.count), 1);
 
-    appendText(svg, sidebarX, sidebarY - 12, "Event types (top)", "start", "#95a8c8", 12, 700);
+    appendText(svg, sidebarX, sidebarY - 12, "Top Event types", "start", "#95a8c8", 12, 700);
     list.forEach((entry, idx) => {
       const y0 = sidebarY + idx * (rowH + 10);
       const label = entry.label.length > 18 ? `${entry.label.slice(0, 18)}…` : entry.label;
@@ -1107,7 +1259,7 @@ function renderHistory(svg, analytics, ui, settings = {}) {
   });
 
   setLegend(ui.legend, [
-    { color: "#7fd6ff", label: "Object year" },
+    { color: "#EC008C", label: "Object year" },
     { color: "#ffd27f", label: "Incident year" },
     { color: "#f08ad2", label: "World-history anchors" }
   ]);
@@ -1124,8 +1276,8 @@ function renderHistory(svg, analytics, ui, settings = {}) {
   appendAtmosphere(svg, width, height);
   appendLine(svg, margin.left, topLane, width - margin.right, topLane, "rgba(127,214,255,0.8)", 2, 1);
   appendLine(svg, margin.left, bottomLane, width - margin.right, bottomLane, "rgba(255,210,127,0.8)", 2, 1);
-  appendText(svg, margin.left, topLane - 24, "Object year", "start", "#7fd6ff", 15, 700);
-  appendText(svg, margin.left, bottomLane - 24, "Incident year", "start", "#ffd27f", 15, 700);
+  appendText(svg, margin.left, topLane - 24, "Object year", "start", "#EC008C", 15, 700);
+  appendText(svg, margin.left, bottomLane + 36, "Incident year", "start", "#ffd27f", 15, 700);
 
   HISTORY_ANCHORS.forEach((anchor) => {
     const px = x(anchor.year);
@@ -1139,7 +1291,7 @@ function renderHistory(svg, analytics, ui, settings = {}) {
     const path = `M ${objectX} ${topLane} C ${objectX} ${(topLane + bottomLane) / 2}, ${eventX} ${(topLane + bottomLane) / 2}, ${eventX} ${bottomLane}`;
     const stroke = pair.gap <= 1 ? "#79e2b0" : "rgba(255,255,255,0.12)";
     const line = appendPath(svg, path, "none", stroke, 1.2, 0.42);
-    const objectDot = appendCircle(svg, objectX, topLane + ((index % 7) - 3) * 6, 3.5, "#7fd6ff", 0.86);
+    const objectDot = appendCircle(svg, objectX, topLane + ((index % 7) - 3) * 6, 3.5, "#EC008C", 0.86);
     const eventDot = appendCircle(svg, eventX, bottomLane + ((index % 7) - 3) * 6, 3.5, "#ffd27f", 0.86);
     animateFadeIn(line, Math.min(index, 40) * 8, 360);
     animateCirclePop(objectDot, 3.5, Math.min(index, 60) * 5, 240);
@@ -1161,6 +1313,21 @@ function renderHistory(svg, analytics, ui, settings = {}) {
   applyPlanetOverlay(svg, settings.planet);
 }
 
+function appendTransitBinBands(svg, xScale, transitLane, objectLane, yearBins, fill) {
+  const pad = 4;
+  const top = transitLane + pad;
+  const h = objectLane - transitLane - pad * 2;
+  if (h <= 1 || !yearBins?.length) {
+    return;
+  }
+  yearBins.forEach(([start, end]) => {
+    const x0 = xScale(start);
+    const x1 = xScale(end + 1);
+    const w = Math.max(1, x1 - x0);
+    appendRect(svg, x0, top, w, h, fill, "none", 0);
+  });
+}
+
 function renderTransits(svg, analytics, ui, settings = {}) {
   const transitsEnabled = settings.transitMode !== "history-only";
   updateHeader(ui, {
@@ -1179,7 +1346,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
       { color: "#b68cff", label: "Jupiter-Saturn" },
       { color: "#7fd6ff", label: "Saturn in Aries" },
       { color: "#ffd27f", label: "Uranus in Aries" },
-      { color: "#7fd6ff", label: "Object year" }
+      { color: "#EC008C", label: "Object year" }
     ]
     : [
       { color: "#7fd6ff", label: "Object year" },
@@ -1191,17 +1358,36 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   const width = 860;
   const height = 820;
   const margin = { top: 120, right: 40, bottom: 100, left: 50 };
-  const transitLane = 250;
-  const objectLane = 565;
+  const transitMilestoneTitleY = margin.top + 12;
+  const transitLane = 262;
+  const objectLane = 398;
+  const objectLaneTitleY = objectLane + 62;
+  const binBandMidY = transitLane + (objectLane - transitLane) / 2;
+  const objectDotBaseY = transitsEnabled ? binBandMidY : objectLane;
+  const connectorEndY = transitsEnabled ? objectDotBaseY + 28 : objectLane;
+  const legendX = width - 248;
+  const legendY = margin.top - 32;
   const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, width - margin.right);
 
   appendAtmosphere(svg, width, height);
   if (transitsEnabled) {
+    appendTransitBinBands(svg, x, transitLane, objectLane, TRANSIT_BIN_RANGES.jupiterSaturn, "rgba(182, 140, 255, 0.11)");
+    appendTransitBinBands(svg, x, transitLane, objectLane, TRANSIT_BIN_RANGES.saturnAries, "rgba(127, 214, 255, 0.14)");
+    appendTransitBinBands(svg, x, transitLane, objectLane, TRANSIT_BIN_RANGES.uranusAries, "rgba(255, 210, 127, 0.14)");
     appendLine(svg, margin.left, transitLane, width - margin.right, transitLane, "rgba(255,255,255,0.32)", 1.5, 1);
-    appendText(svg, margin.left, transitLane - 24, "Transit milestones", "start", "#edf4ff", 15, 700);
+    appendText(svg, margin.left, transitMilestoneTitleY, "Transit milestones", "start", "#edf4ff", 15, 700);
   }
   appendLine(svg, margin.left, objectLane, width - margin.right, objectLane, "rgba(127,214,255,0.7)", 2, 1);
-  appendText(svg, margin.left, objectLane - 24, transitsEnabled ? "Object creation years" : "Object creation years (history-only)", "start", "#7fd6ff", 15, 700);
+  appendText(
+    svg,
+    margin.left,
+    objectLaneTitleY,
+    transitsEnabled ? "Object creation years" : "Object creation years (history-only)",
+    "start",
+    "#edf4ff",
+    15,
+    700
+  );
 
   if (!transitsEnabled) {
     HISTORY_ANCHORS.forEach((anchor) => {
@@ -1213,17 +1399,20 @@ function renderTransits(svg, analytics, ui, settings = {}) {
 
   if (transitsEnabled) {
     TRANSIT_GROUPS.forEach((group, groupIndex) => {
+      const y = transitLane - 54 + groupIndex * 52;
+      const placedYearLabels = [];
       group.years.forEach((year, index) => {
         const px = x(year);
-        const y = transitLane - 54 + groupIndex * 52;
-        appendLine(svg, px, y + 10, px, objectLane, group.color, 0.9, 0.12);
+        appendLine(svg, px, y + 10, px, connectorEndY, group.color, 0.9, 0.12);
         const dot = appendCircle(svg, px, y, 6.2, group.color, 0.95);
         animateCirclePop(dot, 6.2, groupIndex * 140 + Math.min(index, 6) * 50, 240);
         dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `${group.label}<br>${year}`));
         dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
 
-        if (index < 5 || index === group.years.length - 1) {
-          appendText(svg, px, y - 16, String(year), "middle", group.color, 11, 600);
+        const labelAllMilestones = group.key === "jupiterSaturn" || group.key === "saturnAries";
+        const labelSize = labelAllMilestones ? 9.5 : 11;
+        if (labelAllMilestones || index < 5 || index === group.years.length - 1) {
+          tryAppendMilestoneYearLabel(svg, px, y, String(year), group.color, labelSize, placedYearLabels);
         }
       });
     });
@@ -1231,7 +1420,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
 
   analytics.objectYears.forEach((year, index) => {
     const jitter = ((index % 15) - 7) * 6;
-    const dot = appendCircle(svg, x(year), objectLane + jitter, 3.8, "#7fd6ff", 0.7);
+    const dot = appendCircle(svg, x(year), objectDotBaseY + jitter, 3.8, "#EC008C", 0.7);
     animateCirclePop(dot, 3.8, Math.min(index, 70) * 4 + 180, 200);
     dot.addEventListener("mouseenter", () => {
       showTooltip(ui.tooltip, `Object year ${year}`);
@@ -1241,6 +1430,10 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   });
 
   if (!transitsEnabled) {
+    appendSvgLegend(svg, legendX, legendY, [
+      { color: "#EC008C", label: "Object creation year" },
+      { color: "#f08ad2", label: "World-history anchor" }
+    ]);
     applyPlanetOverlay(svg, settings.planet);
     return;
   }
@@ -1254,8 +1447,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
       color: "#b68cff",
       label: "Jupiter-Saturn ±5",
       value: formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5),
-      detail:
-        "A conjunction is when two celestial objects line up in the sky during their orbit.Both Jupiter and Saturn are outer planets and a conjunction between the two symbolizes a period of constructive accomplishment. People are more practical, realistic and we are encouraged to slow down to get things right. This transit occurs roughly every 20 years and is called a Great Conjunction."
+      detail: "A conjunction is when two celestial objects line up in the sky during their orbit.Both Jupiter and Saturn are outer planets and a conjunction between the two symbolizes a period of constructive accomplishment. People are more practical, realistic and we are encouraged to slow down to get things right. This transit occurs roughly every 20 years and is called a Great Conjunction."
     },
     {
       x: 320,
@@ -1265,8 +1457,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
       color: "#7fd6ff",
       label: "Saturn in Aries ±5",
       value: formatPercent(analytics.transitMetrics.saturnAries.plusMinus5),
-      detail:
-        "Saturn transits and cycles can be considered cycles of achievement and maturity. Saturn transits teach us to take responsibility for ourselves. In the sign of Aries this can look like assessing whether our systems are working regarding how we use our initiative, excercise our independence, express ourselves authentically, and assert ourselves effectively."
+      detail: "Saturn transits and cycles can be considered cycles of achievement and maturity. Saturn transits teach us to take responsibility for ourselves. In the sign of Aries this can look like assessing whether our systems are working regarding how we use our initiative, excercise our independence, express ourselves authentically, and assert ourselves effectively."
     },
     {
       x: 570,
@@ -1276,23 +1467,34 @@ function renderTransits(svg, analytics, ui, settings = {}) {
       color: "#ffd27f",
       label: "Uranus in Aries ±3",
       value: formatPercent(analytics.transitMetrics.uranusAries.plusMinus3),
-      detail:
-        "Uranus in Aries is a generation transit characterized by rapid, disruptive, and revolutionary change focused on individual freedom, personal identity and technological innovation. Uranus enters Aries approximately every 84 years."
+      detail: "Uranus in Aries is a generation transit characterized by rapid, disruptive, and revolutionary change focused on individual freedom, personal identity and technological innovation. Uranus enters Aries approximately every 84 years."
     }
   ];
 
-  cards.forEach((card, index) => {
-    const rect = appendRect(svg, card.x, card.y, card.w, card.h, `${card.color}22`, `${card.color}55`, 22);
-    animateFadeIn(rect, 240 + index * 90, 260);
-    appendText(svg, card.x + 22, card.y + 36, card.label, "start", "#9cadc6", 12, 600);
-    appendText(svg, card.x + 22, card.y + 64, card.value, "start", card.color, 24, 700);
-    appendForeignTextBlock(svg, card.x + 18, card.y + 82, card.w - 36, card.h - 96, card.detail, {
-      fontSize: "10.5px",
-      color: "rgba(197,210,234,0.9)",
-      fontWeight: "500",
-      lineHeight: "1.38"
-    });
+  cards.forEach((card) => {
+    appendRect(svg, card.x, card.y, card.w, card.h, `${card.color}22`, `${card.color}66`, 24);
+    const innerPad = 26;
+    const innerW = card.w - innerPad * 2;
+    const textMaxW = Math.max(40, innerW - 10);
+
+    const labelLines = wrapWordsToWidth(card.label, textMaxW, 18, 700);
+    const labelLineHeight = 22;
+    let textY = card.y + 56;
+    appendTextMultiline(svg, card.x + innerPad, textY, labelLines, "start", "#edf4ff", 18, 700, labelLineHeight);
+    textY += labelLines.length * labelLineHeight + 26;
+
+    const valueStr = String(card.value);
+    const valueSize = fitValueFontSize(valueStr, textMaxW, 46, 18);
+    appendText(svg, card.x + innerPad, textY, valueStr, "start", card.color, valueSize, 800);
+    textY += valueSize + 12;
   });
+
+  appendSvgLegend(svg, legendX, legendY, [
+    { color: "#b68cff", label: "Jupiter-Saturn" },
+    { color: "#7fd6ff", label: "Saturn in Aries" },
+    { color: "#ffd27f", label: "Uranus in Aries" },
+    { color: "#EC008C", label: "Object creation year", opacity: 0.85 }
+  ]);
 
   applyPlanetOverlay(svg, settings.planet);
 }
@@ -1306,7 +1508,7 @@ function renderTakeaways(svg, analytics, ui, settings = {}) {
   });
 
   setLegend(ui.legend, [
-    { color: "#7fd6ff", label: "Time" },
+    { color: "#EC008C", label: "Time" },
     { color: "#ffb56b", label: "Place" },
     { color: "#79e2b0", label: "History alignment" }
   ]);
@@ -1320,7 +1522,7 @@ function renderTakeaways(svg, analytics, ui, settings = {}) {
       y: 160,
       w: 220,
       h: 420,
-      color: "#7fd6ff",
+      color: "#EC008C",
       label: "Temporal concentration",
       value: `${analytics.centuries["18th"]}`,
       detail: "Objects in the 18th century cluster"
@@ -1349,23 +1551,60 @@ function renderTakeaways(svg, analytics, ui, settings = {}) {
 
   cards.forEach((card) => {
     appendRect(svg, card.x, card.y, card.w, card.h, `${card.color}22`, `${card.color}66`, 24);
-    appendText(svg, card.x + 24, card.y + 56, card.label, "start", "#edf4ff", 18, 700);
-    appendText(svg, card.x + 24, card.y + 130, card.value, "start", card.color, 46, 800);
-    appendText(svg, card.x + 24, card.y + 168, card.detail, "start", "#9cadc6", 14, 500);
+    const innerPad = 26;
+    const innerW = card.w - innerPad * 2;
+    const textMaxW = Math.max(40, innerW - 10);
+
+    const labelLines = wrapWordsToWidth(card.label, textMaxW, 18, 700);
+    const labelLineHeight = 22;
+    let textY = card.y + 56;
+    appendTextMultiline(svg, card.x + innerPad, textY, labelLines, "start", "#edf4ff", 18, 700, labelLineHeight);
+    textY += labelLines.length * labelLineHeight + 26;
+
+    const valueStr = String(card.value);
+    const valueSize = fitValueFontSize(valueStr, textMaxW, 46, 18);
+    appendText(svg, card.x + innerPad, textY, valueStr, "start", card.color, valueSize, 800);
+    textY += valueSize + 14;
+
+    const detailLines = wrapWordsToWidth(card.detail, textMaxW, 14, 500);
+    appendTextMultiline(svg, card.x + innerPad, textY, detailLines, "start", "#9cadc6", 14, 500, 19);
 
     const spark = analytics.yearBins.slice(card.x < 200 ? 0 : card.x < 400 ? 12 : 24, card.x < 200 ? 18 : card.x < 400 ? 30 : 42);
     const max = Math.max(...spark.map((point) => point.count), 1);
+    const n = spark.length;
+    let barW = 7;
+    let gap = n <= 1 ? 0 : (innerW - n * barW) / (n - 1);
+    if (n > 1 && gap < 2) {
+      barW = Math.max(3, Math.floor((innerW - (n - 1) * 2) / n));
+      gap = (innerW - n * barW) / (n - 1);
+    }
 
     spark.forEach((point, index) => {
       const barHeight = (point.count / max) * 110;
       const y = card.y + card.h - 36 - barHeight;
-      const rect = appendRect(svg, card.x + 24 + index * 10, y, 7, barHeight, `${card.color}aa`, "none", 4);
+      const bx = card.x + innerPad + index * (barW + gap);
+      const rect = appendRect(svg, bx, y, barW, barHeight, `${card.color}aa`, "none", 4);
       animateRectGrow(rect, y, barHeight, index * 14, 240);
     });
   });
 
-  appendText(svg, 430, 700, "Prototype next steps", "middle", "#edf4ff", 26, 700);
-  appendText(svg, 430, 736, "Add media, object-image cards, deeper filtering, and more nuanced transitions.", "middle", "#9cadc6", 16, 500);
+  appendText(svg, 430, 694, "Project Inspirations", "middle", "#edf4ff", 26, 700);
+
+  const vizWidth = 860;
+  const pillY = 728;
+  const pillH = 40;
+  const sidePad = 42;
+  const pillGap = 16;
+  const pillW = (vizWidth - 2 * sidePad - 2 * pillGap) / 3;
+  const inspirationLinks = [
+    ["https://van-gogh-collection.stefanpullen.com/", "Van Gogh Collection"],
+    ["https://vangogh.stefanpullen.com/", "Van Gogh — Pullen"],
+    ["https://informationisbeautiful.net/visualizations/horoscoped/", "Horoscoped"]
+  ];
+  inspirationLinks.forEach(([href, label], index) => {
+    const px = sidePad + index * (pillW + pillGap);
+    appendSvgLinkPill(svg, px, pillY, pillW, pillH, href, label);
+  });
 }
 
 function computeAnalytics(records) {
@@ -1883,6 +2122,26 @@ function shareNearYears(baseYears, referenceYears, threshold) {
   return matches.length / baseYears.length;
 }
 
+/** Integer tick stops from 0 through maxValue for count axes (e.g. density chart). */
+function buildCountAxisTicks(maxValue, targetSteps = 5) {
+  if (!Number.isFinite(maxValue) || maxValue <= 0) {
+    return [0];
+  }
+  let step = Math.ceil(maxValue / targetSteps);
+  const magnitude = 10 ** Math.floor(Math.log10(Math.max(step, 1)));
+  const normalized = step / magnitude;
+  const niceFactor = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+  step = niceFactor * magnitude;
+  const ticks = [];
+  for (let value = 0; value <= maxValue; value += step) {
+    ticks.push(value);
+  }
+  if (ticks[ticks.length - 1] !== maxValue) {
+    ticks.push(maxValue);
+  }
+  return ticks;
+}
+
 function scaleLinear(domainMin, domainMax, rangeMin, rangeMax) {
   const domainSpan = domainMax - domainMin || 1;
   const rangeSpan = rangeMax - rangeMin;
@@ -1961,6 +2220,27 @@ function appendLine(svg, x1, y1, x2, y2, stroke, width, opacity = 1) {
   return node;
 }
 
+function appendTextMultiline(svg, x, y, lines, anchor, fill, size, weight, lineHeight) {
+  const NS = "http://www.w3.org/2000/svg";
+  const textEl = document.createElementNS(NS, "text");
+  textEl.setAttribute("x", String(x));
+  textEl.setAttribute("y", String(y));
+  textEl.setAttribute("text-anchor", anchor);
+  textEl.setAttribute("fill", fill);
+  textEl.setAttribute("font-size", String(size));
+  textEl.setAttribute("font-weight", String(weight));
+  textEl.setAttribute("font-family", SVG_TEXT_FONT);
+  lines.forEach((lineText, index) => {
+    const tspan = document.createElementNS(NS, "tspan");
+    tspan.setAttribute("x", String(x));
+    tspan.setAttribute("dy", index === 0 ? "0" : String(lineHeight));
+    tspan.textContent = lineText;
+    textEl.appendChild(tspan);
+  });
+  svg.appendChild(textEl);
+  return textEl;
+}
+
 function appendText(svg, x, y, text, anchor, fill, size, weight, rotate = 0) {
   const node = document.createElementNS("http://www.w3.org/2000/svg", "text");
   node.setAttribute("x", x);
@@ -1969,6 +2249,7 @@ function appendText(svg, x, y, text, anchor, fill, size, weight, rotate = 0) {
   node.setAttribute("fill", fill);
   node.setAttribute("font-size", size);
   node.setAttribute("font-weight", weight);
+  node.setAttribute("font-family", SVG_TEXT_FONT);
   if (rotate) {
     node.setAttribute("transform", `rotate(${rotate} ${x} ${y})`);
   }
@@ -2022,6 +2303,48 @@ function appendRect(svg, x, y, width, height, fill, stroke, radius = 18) {
   node.setAttribute("stroke", stroke);
   svg.appendChild(node);
   return node;
+}
+
+function appendSvgLegend(svg, originX, originY, entries, lineHeight = 19) {
+  entries.forEach((entry, index) => {
+    const y = originY + index * lineHeight;
+    appendCircle(svg, originX + 5, y + 2, 5.5, entry.color, entry.opacity ?? 1);
+    appendText(svg, originX + 18, y + 7, entry.label, "start", "#c5d2ea", 11, 600);
+  });
+}
+
+function appendSvgLinkPill(svg, x, y, width, height, href, label, fontSize = 11) {
+  const NS = "http://www.w3.org/2000/svg";
+  const link = document.createElementNS(NS, "a");
+  link.setAttribute("href", href);
+  link.setAttributeNS("http://www.w3.org/1999/xlink", "href", href);
+  link.setAttribute("target", "_blank");
+  link.setAttribute("rel", "noreferrer");
+
+  const rect = document.createElementNS(NS, "rect");
+  rect.setAttribute("x", String(x));
+  rect.setAttribute("y", String(y));
+  rect.setAttribute("width", String(width));
+  rect.setAttribute("height", String(height));
+  rect.setAttribute("rx", String(height / 2));
+  rect.setAttribute("fill", "rgba(255,255,255,0.045)");
+  rect.setAttribute("stroke", "rgba(255,255,255,0.12)");
+  rect.setAttribute("stroke-width", "1");
+  link.appendChild(rect);
+
+  const labelNode = document.createElementNS(NS, "text");
+  labelNode.setAttribute("x", String(x + width / 2));
+  labelNode.setAttribute("y", String(y + height / 2 + fontSize * 0.35));
+  labelNode.setAttribute("text-anchor", "middle");
+  labelNode.setAttribute("fill", "#edf4ff");
+  labelNode.setAttribute("font-size", String(fontSize));
+  labelNode.setAttribute("font-weight", "600");
+  labelNode.setAttribute("font-family", SVG_TEXT_FONT);
+  labelNode.textContent = label;
+  link.appendChild(labelNode);
+
+  svg.appendChild(link);
+  return link;
 }
 
 function showTooltip(node, html) {
