@@ -38,16 +38,6 @@ const TRANSIT_GROUPS = [
 
 const DEFAULT_TRANSIT_WINDOW_YEARS = 5;
 
-/** Verbatim excerpts from the transits story copy (same wording as the section narrative). */
-const TRANSIT_SUMMARY_CARD_DETAILS = {
-  jupiterSaturn:
-    "Jupiter is expansive and teaches reaching for broader purpose, reach, and possiblity. Saturn is associated with restriction and limitation, it ushers in a generation's growth into adulthood and maturity.",
-  saturnAries:
-    "Saturn is associated with restriction and limitation, it ushers in a generation's growth into adulthood and maturity. Two of these transits happen in the sign of Aries. When a planet is in Aries it carries a \"cardinal fire\" energy focused on initiative, boldness, and leadership.",
-  uranusAries:
-    "Uranus represents technology, innovation, discovery, and all that is progressive. Two of these transits happen in the sign of Aries. When a planet is in Aries it carries a \"cardinal fire\" energy focused on initiative, boldness, and leadership."
-};
-
 const MET_OBJECT_CACHE = new Map();
 const MET_STEPS_FALLBACK_IMAGE =
   "https://upload.wikimedia.org/wikipedia/commons/7/70/Metropolitan_Museum_of_Art_entrance_NYC.JPG";
@@ -1257,38 +1247,48 @@ function renderTransits(svg, analytics, ui, settings = {}) {
 
   const cards = [
     {
+      x: 70,
+      y: 478,
+      w: 220,
+      h: 328,
+      color: "#b68cff",
       label: "Jupiter-Saturn ±5",
       value: formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5),
-      color: "#b68cff",
-      detail: TRANSIT_SUMMARY_CARD_DETAILS.jupiterSaturn
+      detail:
+        "A conjunction is when two celestial objects line up in the sky during their orbit.Both Jupiter and Saturn are outer planets and a conjunction between the two symbolizes a period of constructive accomplishment. People are more practical, realistic and we are encouraged to slow down to get things right. This transit occurs roughly every 20 years and is called a Great Conjunction."
     },
     {
+      x: 320,
+      y: 478,
+      w: 220,
+      h: 328,
+      color: "#7fd6ff",
       label: "Saturn in Aries ±5",
       value: formatPercent(analytics.transitMetrics.saturnAries.plusMinus5),
-      color: "#7fd6ff",
-      detail: TRANSIT_SUMMARY_CARD_DETAILS.saturnAries
+      detail:
+        "Saturn transits and cycles can be considered cycles of achievement and maturity. Saturn transits teach us to take responsibility for ourselves. In the sign of Aries this can look like assessing whether our systems are working regarding how we use our initiative, excercise our independence, express ourselves authentically, and assert ourselves effectively."
     },
     {
+      x: 570,
+      y: 478,
+      w: 220,
+      h: 328,
+      color: "#ffd27f",
       label: "Uranus in Aries ±3",
       value: formatPercent(analytics.transitMetrics.uranusAries.plusMinus3),
-      color: "#ffd27f",
-      detail: TRANSIT_SUMMARY_CARD_DETAILS.uranusAries
+      detail:
+        "Uranus in Aries is a generation transit characterized by rapid, disruptive, and revolutionary change focused on individual freedom, personal identity and technological innovation. Uranus enters Aries approximately every 84 years."
     }
   ];
 
   cards.forEach((card, index) => {
-    const cardX = 64 + index * 240;
-    const cardY = 598;
-    const cardW = 190;
-    const cardH = 200;
-
-    const rect = appendRect(svg, cardX, cardY, cardW, cardH, "rgba(255,255,255,0.045)", "rgba(255,255,255,0.08)", 18);
+    const rect = appendRect(svg, card.x, card.y, card.w, card.h, `${card.color}22`, `${card.color}55`, 22);
     animateFadeIn(rect, 240 + index * 90, 260);
-    appendText(svg, cardX + 20, cardY + 30, card.label, "start", "#9cadc6", 12, 600);
-    appendText(svg, cardX + 20, cardY + 58, card.value, "start", card.color, 24, 700);
-    appendForeignTextBlock(svg, cardX + 14, cardY + 74, cardW - 28, cardH - 82, card.detail, {
+    appendText(svg, card.x + 22, card.y + 36, card.label, "start", "#9cadc6", 12, 600);
+    appendText(svg, card.x + 22, card.y + 64, card.value, "start", card.color, 24, 700);
+    appendForeignTextBlock(svg, card.x + 18, card.y + 82, card.w - 36, card.h - 96, card.detail, {
       fontSize: "10.5px",
-      color: "rgba(197,210,234,0.88)",
+      color: "rgba(197,210,234,0.9)",
       fontWeight: "500",
       lineHeight: "1.38"
     });
