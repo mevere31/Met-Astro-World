@@ -1286,11 +1286,10 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     animateFadeIn(rect, 240 + index * 90, 260);
     appendText(svg, card.x + 22, card.y + 36, card.label, "start", "#9cadc6", 12, 600);
     appendText(svg, card.x + 22, card.y + 64, card.value, "start", card.color, 24, 700);
-    appendForeignTextBlock(svg, card.x + 18, card.y + 82, card.w - 36, card.h - 96, card.detail, {
-      fontSize: "10.5px",
-      color: "rgba(197,210,234,0.9)",
-      fontWeight: "500",
-      lineHeight: "1.38"
+    appendWrappedSvgText(svg, card.x + 18, card.y + 82, card.w - 36, card.detail, {
+      fill: "rgba(197,210,234,0.92)",
+      fontSize: "10.5",
+      fontWeight: "500"
     });
   });
 
@@ -1977,25 +1976,100 @@ function appendText(svg, x, y, text, anchor, fill, size, weight, rotate = 0) {
   return node;
 }
 
-function appendForeignTextBlock(svg, x, y, width, height, text, options = {}) {
-  const { fontSize = "11px", color = "rgba(197,210,234,0.82)", fontWeight = "500", lineHeight = "1.4" } = options;
-  const fo = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
-  fo.setAttribute("x", String(x));
-  fo.setAttribute("y", String(y));
-  fo.setAttribute("width", String(width));
-  fo.setAttribute("height", String(height));
-  const div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
-  div.style.margin = "0";
-  div.style.padding = "0";
-  div.style.fontSize = fontSize;
-  div.style.color = color;
-  div.style.fontWeight = fontWeight;
-  div.style.lineHeight = lineHeight;
-  div.style.fontFamily = "var(--font-body)";
-  div.textContent = text;
-  fo.appendChild(div);
-  svg.appendChild(fo);
-  return fo;
+/** Word-wrapped SVG text (avoids foreignObject, which often fails inside scaled inline SVG). */
+function wrapTextByCharBudget(text, maxChars) {
+  const words = String(text).trim().split(/\s+/);
+  const lines = [];
+  let line = "";
+  words.forEach((word) => {
+    const test = line ? `${line} ${word}` : word;
+    if (test.length > maxChars && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  });
+  if (line) lines.push(line);
+  return lines;
+}
+
+function appendWrappedSvgText(svg, x, y, maxWidthUser, text, options = {}) {
+  const {
+    fill = "rgba(197,210,234,0.9)",
+    fontSize = "10.5",
+    fontWeight = "500",
+    fontFamily = 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    lineDyEm = "1.38"
+  } = options;
+
+  const vbW = svg.viewBox?.baseVal?.width || 860;
+  const svgPx = svg.getBoundingClientRect().width;
+  const scale = svgPx > 8 ? svgPx / vbW : 1;
+  const maxWidthPx = maxWidthUser * scale;
+  const sizePx = Number.parseFloat(String(fontSize), 10) || 10.5;
+  const fontSpec = `${fontWeight} ${sizePx}px ${fontFamily}`;
+
+  let lines = [];
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (ctx && maxWidthPx > 12) {
+    ctx.font = fontSpec;
+    const words = String(text).trim().split(/\s+/);
+    let line = "";
+    words.forEach((word) => {
+      if (ctx.measureText(word).width > maxWidthPx) {
+        if (line) {
+          lines.push(line);
+          line = "";
+        }
+        let chunk = "";
+        for (let i = 0; i < word.length; i += 1) {
+          const next = chunk + word[i];
+          if (ctx.measureText(next).width > maxWidthPx && chunk) {
+            lines.push(chunk);
+            chunk = word[i];
+          } else {
+            chunk = next;
+          }
+        }
+        if (chunk) line = chunk;
+        return;
+      }
+      const test = line ? `${line} ${word}` : word;
+      if (ctx.measureText(test).width > maxWidthPx && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = test;
+      }
+    });
+    if (line) lines.push(line);
+  }
+  if (!lines.length) {
+    const approxChars = Math.max(28, Math.floor(maxWidthUser / (sizePx * 0.52)));
+    lines = wrapTextByCharBudget(text, approxChars);
+  }
+
+  const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  textEl.setAttribute("x", String(x));
+  textEl.setAttribute("y", String(y));
+  textEl.setAttribute("fill", fill);
+  textEl.setAttribute("font-size", String(fontSize));
+  textEl.setAttribute("font-weight", fontWeight);
+  textEl.setAttribute("font-family", fontFamily);
+
+  lines.forEach((lineStr, i) => {
+    const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+    if (i > 0) {
+      tspan.setAttribute("x", String(x));
+      tspan.setAttribute("dy", `${lineDyEm}em`);
+    }
+    tspan.textContent = lineStr;
+    textEl.appendChild(tspan);
+  });
+  svg.appendChild(textEl);
+  return textEl;
 }
 
 function appendPath(svg, d, fill, stroke, width, opacity = 1) {
