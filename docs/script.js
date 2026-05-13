@@ -1245,17 +1245,46 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     return;
   }
 
+  const objectYearCount = analytics.objectYears.length;
   const cards = [
-    ["Jupiter-Saturn ±5", formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)],
-    ["Saturn in Aries ±5", formatPercent(analytics.transitMetrics.saturnAries.plusMinus5)],
-    ["Uranus in Aries ±3", formatPercent(analytics.transitMetrics.uranusAries.plusMinus3)]
+    {
+      label: "Jupiter-Saturn ±5",
+      value: formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5),
+      color: "#b68cff",
+      windowYears: 5,
+      referenceYears: TRANSIT_GROUPS.find((g) => g.key === "jupiterSaturn").years
+    },
+    {
+      label: "Saturn in Aries ±5",
+      value: formatPercent(analytics.transitMetrics.saturnAries.plusMinus5),
+      color: "#7fd6ff",
+      windowYears: 5,
+      referenceYears: TRANSIT_GROUPS.find((g) => g.key === "saturnAries").years
+    },
+    {
+      label: "Uranus in Aries ±3",
+      value: formatPercent(analytics.transitMetrics.uranusAries.plusMinus3),
+      color: "#ffd27f",
+      windowYears: 3,
+      referenceYears: TRANSIT_GROUPS.find((g) => g.key === "uranusAries").years
+    }
   ];
 
   cards.forEach((card, index) => {
-    const rect = appendRect(svg, 64 + index * 240, 654, 190, 92, "rgba(255,255,255,0.045)", "rgba(255,255,255,0.08)", 18);
+    const cardX = 64 + index * 240;
+    const cardY = 612;
+    const cardW = 190;
+    const cardH = 168;
+    const nearCount = countNearYears(analytics.objectYears, card.referenceYears, card.windowYears);
+    const detailLine1 = `${nearCount} of ${objectYearCount} object years`;
+    const detailLine2 = `within ±${card.windowYears}y of a milestone`;
+
+    const rect = appendRect(svg, cardX, cardY, cardW, cardH, "rgba(255,255,255,0.045)", "rgba(255,255,255,0.08)", 18);
     animateFadeIn(rect, 240 + index * 90, 260);
-    appendText(svg, 84 + index * 240, 690, card[0], "start", "#9cadc6", 13, 600);
-    appendText(svg, 84 + index * 240, 722, card[1], "start", "#edf4ff", 28, 700);
+    appendText(svg, cardX + 20, cardY + 34, card.label, "start", "#9cadc6", 12, 600);
+    appendText(svg, cardX + 20, cardY + 72, card.value, "start", card.color, 26, 700);
+    appendText(svg, cardX + 20, cardY + 104, detailLine1, "start", "rgba(197,210,234,0.82)", 12, 500);
+    appendText(svg, cardX + 20, cardY + 124, detailLine2, "start", "rgba(197,210,234,0.72)", 11, 500);
   });
 
   applyPlanetOverlay(svg, settings.planet);
@@ -1839,9 +1868,15 @@ function mapToSortedArray(map, total) {
     .sort((a, b) => b.count - a.count);
 }
 
+function countNearYears(baseYears, referenceYears, threshold) {
+  return baseYears.filter((year) => referenceYears.some((reference) => Math.abs(reference - year) <= threshold)).length;
+}
+
 function shareNearYears(baseYears, referenceYears, threshold) {
-  const matches = baseYears.filter((year) => referenceYears.some((reference) => Math.abs(reference - year) <= threshold));
-  return matches.length / baseYears.length;
+  if (!baseYears.length) {
+    return 0;
+  }
+  return countNearYears(baseYears, referenceYears, threshold) / baseYears.length;
 }
 
 function scaleLinear(domainMin, domainMax, rangeMin, rangeMax) {
