@@ -241,7 +241,7 @@ function renderPage(records) {
         These objects were created in years connected to important historical incidents between ${analytics.objectRange.min} and ${analytics.objectRange.max}.
         These objects represent ${analytics.objectRange.span} years of cultural production.
       </p>
-      <a class="masthead__btn" href="#section-01">Skip to Section 01</a>
+      <a class="masthead__btn" href="#section-01">Glossary</a>
     </div>
   </header>
 
