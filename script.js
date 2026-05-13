@@ -1439,9 +1439,39 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   }
 
   const cards = [
-    ["Jupiter-Saturn ±5", formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5)],
-    ["Saturn in Aries ±5", formatPercent(analytics.transitMetrics.saturnAries.plusMinus5)],
-    ["Uranus in Aries ±3", formatPercent(analytics.transitMetrics.uranusAries.plusMinus3)]
+    {
+      x: 70,
+      y: 478,
+      w: 220,
+      h: 328,
+      color: "#b68cff",
+      label: "Jupiter-Saturn ±5",
+      value: formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5),
+      detail:
+        "A conjunction is when two celestial objects line up in the sky during their orbit.Both Jupiter and Saturn are outer planets and a conjunction between the two symbolizes a period of constructive accomplishment. People are more practical, realistic and we are encouraged to slow down to get things right. This transit occurs roughly every 20 years and is called a Great Conjunction."
+    },
+    {
+      x: 320,
+      y: 478,
+      w: 220,
+      h: 328,
+      color: "#7fd6ff",
+      label: "Saturn in Aries ±5",
+      value: formatPercent(analytics.transitMetrics.saturnAries.plusMinus5),
+      detail:
+        "Saturn transits and cycles can be considered cycles of achievement and maturity. Saturn transits teach us to take responsibility for ourselves. In the sign of Aries this can look like assessing whether our systems are working regarding how we use our initiative, excercise our independence, express ourselves authentically, and assert ourselves effectively."
+    },
+    {
+      x: 570,
+      y: 478,
+      w: 220,
+      h: 328,
+      color: "#ffd27f",
+      label: "Uranus in Aries ±3",
+      value: formatPercent(analytics.transitMetrics.uranusAries.plusMinus3),
+      detail:
+        "Uranus in Aries is a generation transit characterized by rapid, disruptive, and revolutionary change focused on individual freedom, personal identity and technological innovation. Uranus enters Aries approximately every 84 years."
+    }
   ];
 
   const metricsCardY = 702;
@@ -2079,6 +2109,9 @@ function mapToSortedArray(map, total) {
 }
 
 function shareNearYears(baseYears, referenceYears, threshold) {
+  if (!baseYears.length) {
+    return 0;
+  }
   const matches = baseYears.filter((year) => referenceYears.some((reference) => Math.abs(reference - year) <= threshold));
   return matches.length / baseYears.length;
 }
@@ -2217,6 +2250,27 @@ function appendText(svg, x, y, text, anchor, fill, size, weight, rotate = 0) {
   node.textContent = text;
   svg.appendChild(node);
   return node;
+}
+
+function appendForeignTextBlock(svg, x, y, width, height, text, options = {}) {
+  const { fontSize = "11px", color = "rgba(197,210,234,0.82)", fontWeight = "500", lineHeight = "1.4" } = options;
+  const fo = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+  fo.setAttribute("x", String(x));
+  fo.setAttribute("y", String(y));
+  fo.setAttribute("width", String(width));
+  fo.setAttribute("height", String(height));
+  const div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  div.style.margin = "0";
+  div.style.padding = "0";
+  div.style.fontSize = fontSize;
+  div.style.color = color;
+  div.style.fontWeight = fontWeight;
+  div.style.lineHeight = lineHeight;
+  div.style.fontFamily = "var(--font-body)";
+  div.textContent = text;
+  fo.appendChild(div);
+  svg.appendChild(fo);
+  return fo;
 }
 
 function appendPath(svg, d, fill, stroke, width, opacity = 1) {

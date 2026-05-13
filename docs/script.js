@@ -2115,6 +2115,9 @@ function mapToSortedArray(map, total) {
 }
 
 function shareNearYears(baseYears, referenceYears, threshold) {
+  if (!baseYears.length) {
+    return 0;
+  }
   const matches = baseYears.filter((year) => referenceYears.some((reference) => Math.abs(reference - year) <= threshold));
   return matches.length / baseYears.length;
 }
@@ -2253,6 +2256,27 @@ function appendText(svg, x, y, text, anchor, fill, size, weight, rotate = 0) {
   node.textContent = text;
   svg.appendChild(node);
   return node;
+}
+
+function appendForeignTextBlock(svg, x, y, width, height, text, options = {}) {
+  const { fontSize = "11px", color = "rgba(197,210,234,0.82)", fontWeight = "500", lineHeight = "1.4" } = options;
+  const fo = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+  fo.setAttribute("x", String(x));
+  fo.setAttribute("y", String(y));
+  fo.setAttribute("width", String(width));
+  fo.setAttribute("height", String(height));
+  const div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  div.style.margin = "0";
+  div.style.padding = "0";
+  div.style.fontSize = fontSize;
+  div.style.color = color;
+  div.style.fontWeight = fontWeight;
+  div.style.lineHeight = lineHeight;
+  div.style.fontFamily = "var(--font-body)";
+  div.textContent = text;
+  fo.appendChild(div);
+  svg.appendChild(fo);
+  return fo;
 }
 
 function appendPath(svg, d, fill, stroke, width, opacity = 1) {
