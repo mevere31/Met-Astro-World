@@ -38,6 +38,16 @@ const TRANSIT_GROUPS = [
 
 const DEFAULT_TRANSIT_WINDOW_YEARS = 5;
 
+/** Verbatim excerpts from the transits story copy (same wording as the section narrative). */
+const TRANSIT_SUMMARY_CARD_DETAILS = {
+  jupiterSaturn:
+    "Jupiter is expansive and teaches reaching for broader purpose, reach, and possiblity. Saturn is associated with restriction and limitation, it ushers in a generation's growth into adulthood and maturity.",
+  saturnAries:
+    "Saturn is associated with restriction and limitation, it ushers in a generation's growth into adulthood and maturity. Two of these transits happen in the sign of Aries. When a planet is in Aries it carries a \"cardinal fire\" energy focused on initiative, boldness, and leadership.",
+  uranusAries:
+    "Uranus represents technology, innovation, discovery, and all that is progressive. Two of these transits happen in the sign of Aries. When a planet is in Aries it carries a \"cardinal fire\" energy focused on initiative, boldness, and leadership."
+};
+
 const MET_OBJECT_CACHE = new Map();
 const MET_STEPS_FALLBACK_IMAGE =
   "https://upload.wikimedia.org/wikipedia/commons/7/70/Metropolitan_Museum_of_Art_entrance_NYC.JPG";
@@ -1245,46 +1255,43 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     return;
   }
 
-  const objectYearCount = analytics.objectYears.length;
   const cards = [
     {
       label: "Jupiter-Saturn ±5",
       value: formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5),
       color: "#b68cff",
-      windowYears: 5,
-      referenceYears: TRANSIT_GROUPS.find((g) => g.key === "jupiterSaturn").years
+      detail: TRANSIT_SUMMARY_CARD_DETAILS.jupiterSaturn
     },
     {
       label: "Saturn in Aries ±5",
       value: formatPercent(analytics.transitMetrics.saturnAries.plusMinus5),
       color: "#7fd6ff",
-      windowYears: 5,
-      referenceYears: TRANSIT_GROUPS.find((g) => g.key === "saturnAries").years
+      detail: TRANSIT_SUMMARY_CARD_DETAILS.saturnAries
     },
     {
       label: "Uranus in Aries ±3",
       value: formatPercent(analytics.transitMetrics.uranusAries.plusMinus3),
       color: "#ffd27f",
-      windowYears: 3,
-      referenceYears: TRANSIT_GROUPS.find((g) => g.key === "uranusAries").years
+      detail: TRANSIT_SUMMARY_CARD_DETAILS.uranusAries
     }
   ];
 
   cards.forEach((card, index) => {
     const cardX = 64 + index * 240;
-    const cardY = 612;
+    const cardY = 598;
     const cardW = 190;
-    const cardH = 168;
-    const nearCount = countNearYears(analytics.objectYears, card.referenceYears, card.windowYears);
-    const detailLine1 = `${nearCount} of ${objectYearCount} object years`;
-    const detailLine2 = `within ±${card.windowYears}y of a milestone`;
+    const cardH = 200;
 
     const rect = appendRect(svg, cardX, cardY, cardW, cardH, "rgba(255,255,255,0.045)", "rgba(255,255,255,0.08)", 18);
     animateFadeIn(rect, 240 + index * 90, 260);
-    appendText(svg, cardX + 20, cardY + 34, card.label, "start", "#9cadc6", 12, 600);
-    appendText(svg, cardX + 20, cardY + 72, card.value, "start", card.color, 26, 700);
-    appendText(svg, cardX + 20, cardY + 104, detailLine1, "start", "rgba(197,210,234,0.82)", 12, 500);
-    appendText(svg, cardX + 20, cardY + 124, detailLine2, "start", "rgba(197,210,234,0.72)", 11, 500);
+    appendText(svg, cardX + 20, cardY + 30, card.label, "start", "#9cadc6", 12, 600);
+    appendText(svg, cardX + 20, cardY + 58, card.value, "start", card.color, 24, 700);
+    appendForeignTextBlock(svg, cardX + 14, cardY + 74, cardW - 28, cardH - 82, card.detail, {
+      fontSize: "10.5px",
+      color: "rgba(197,210,234,0.88)",
+      fontWeight: "500",
+      lineHeight: "1.38"
+    });
   });
 
   applyPlanetOverlay(svg, settings.planet);
@@ -1868,15 +1875,12 @@ function mapToSortedArray(map, total) {
     .sort((a, b) => b.count - a.count);
 }
 
-function countNearYears(baseYears, referenceYears, threshold) {
-  return baseYears.filter((year) => referenceYears.some((reference) => Math.abs(reference - year) <= threshold)).length;
-}
-
 function shareNearYears(baseYears, referenceYears, threshold) {
   if (!baseYears.length) {
     return 0;
   }
-  return countNearYears(baseYears, referenceYears, threshold) / baseYears.length;
+  const matches = baseYears.filter((year) => referenceYears.some((reference) => Math.abs(reference - year) <= threshold));
+  return matches.length / baseYears.length;
 }
 
 function scaleLinear(domainMin, domainMax, rangeMin, rangeMax) {
@@ -1971,6 +1975,27 @@ function appendText(svg, x, y, text, anchor, fill, size, weight, rotate = 0) {
   node.textContent = text;
   svg.appendChild(node);
   return node;
+}
+
+function appendForeignTextBlock(svg, x, y, width, height, text, options = {}) {
+  const { fontSize = "11px", color = "rgba(197,210,234,0.82)", fontWeight = "500", lineHeight = "1.4" } = options;
+  const fo = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+  fo.setAttribute("x", String(x));
+  fo.setAttribute("y", String(y));
+  fo.setAttribute("width", String(width));
+  fo.setAttribute("height", String(height));
+  const div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  div.style.margin = "0";
+  div.style.padding = "0";
+  div.style.fontSize = fontSize;
+  div.style.color = color;
+  div.style.fontWeight = fontWeight;
+  div.style.lineHeight = lineHeight;
+  div.style.fontFamily = "var(--font-body)";
+  div.textContent = text;
+  fo.appendChild(div);
+  svg.appendChild(fo);
+  return fo;
 }
 
 function appendPath(svg, d, fill, stroke, width, opacity = 1) {
