@@ -1144,7 +1144,7 @@ function renderIntro(svg, analytics, ui, settings = {}) {
   });
 
   setLegend(ui.legend, [
-    { color: "#EC008C", label: "Object row" },
+    { color: "#BD6BBF", label: "Object row" },
     { color: "#b68cff", label: "Timeline axis" }
   ]);
 
@@ -1210,7 +1210,7 @@ function renderPatterns(svg, analytics, ui, settings = {}) {
   });
 
   setLegend(ui.legend, [
-    { color: "#EC008C", label: "Year density" },
+    { color: "#BD6BBF", label: "Year density" },
     { color: "#ffd27f", label: "Peak decade annotation" },
     { color: "#79e2b0", label: "Event-type frequency" }
   ]);
@@ -1412,7 +1412,7 @@ function renderHistory(svg, analytics, ui, settings = {}) {
   });
 
   setLegend(ui.legend, [
-    { color: "#EC008C", label: "Object year" },
+    { color: "#BD6BBF", label: "Object year" },
     { color: "#ffd27f", label: "Incident year" },
     { color: "#f08ad2", label: "World-history anchors" }
   ]);
@@ -1499,10 +1499,10 @@ function renderTransits(svg, analytics, ui, settings = {}) {
       { color: "#b68cff", label: "Jupiter-Saturn" },
       { color: "#7fd6ff", label: "Saturn in Aries" },
       { color: "#ffd27f", label: "Uranus in Aries" },
-      { color: "#EC008C", label: "Object year" }
+      { color: "#BD6BBF", label: "Object year" }
     ]
     : [
-      { color: "#7fd6ff", label: "Object year" },
+      { color: "#BD6BBF", label: "Object year" },
       { color: "#f08ad2", label: "World-history anchors" }
     ]);
 
@@ -1584,7 +1584,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
 
   if (!transitsEnabled) {
     appendSvgLegend(svg, legendX, legendY, [
-      { color: "#EC008C", label: "Object creation year" },
+      { color: "#BD6BBF", label: "Object creation year" },
       { color: "#f08ad2", label: "World-history anchor" }
     ]);
     applyPlanetOverlay(svg, settings.planet);
@@ -1646,7 +1646,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     { color: "#b68cff", label: "Jupiter-Saturn" },
     { color: "#7fd6ff", label: "Saturn in Aries" },
     { color: "#ffd27f", label: "Uranus in Aries" },
-    { color: "#EC008C", label: "Object creation year", opacity: 0.85 }
+    { color: "#BD6BBF", label: "Object creation year", opacity: 0.85 }
   ]);
 
   applyPlanetOverlay(svg, settings.planet);
@@ -1661,7 +1661,7 @@ function renderTakeaways(svg, analytics, ui, settings = {}) {
   });
 
   setLegend(ui.legend, [
-    { color: "#EC008C", label: "Time" },
+    { color: "#BD6BBF", label: "Time" },
     { color: "#ffb56b", label: "Place" },
     { color: "#79e2b0", label: "History alignment" }
   ]);
@@ -1675,7 +1675,7 @@ function renderTakeaways(svg, analytics, ui, settings = {}) {
       y: 160,
       w: 220,
       h: 420,
-      color: "#EC008C",
+      color: "#BD6BBF",
       label: "Temporal concentration",
       value: `${analytics.centuries["18th"]}`,
       detail: "Objects in the 18th century cluster"
