@@ -1578,7 +1578,6 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   const transitMilestoneTitleY = margin.top + 12;
   const transitLane = 262;
   const objectLane = 398;
-  const objectLaneTitleY = objectLane + 62;
   const binBandMidY = transitLane + (objectLane - transitLane) / 2;
   const objectDotBaseY = transitsEnabled ? binBandMidY : objectLane;
   const connectorEndY = transitsEnabled ? objectDotBaseY + 28 : objectLane;
@@ -1595,16 +1594,36 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     appendText(svg, margin.left, transitMilestoneTitleY, "Transit milestones", "start", "#edf4ff", 15, 700);
   }
   appendLine(svg, margin.left, objectLane, width - margin.right, objectLane, "rgba(127,214,255,0.7)", 2, 1);
-  appendText(
-    svg,
-    margin.left,
-    objectLaneTitleY,
-    transitsEnabled ? "Object creation years" : "Object creation years (history-only)",
-    "start",
-    "#edf4ff",
-    15,
-    700
-  );
+  if (transitsEnabled) {
+    const d0 = analytics.objectRange.min;
+    const d1 = analytics.objectRange.max;
+    appendTransitBinBoundaryTicks(svg, x, objectLane, d0, d1);
+    const binAxisRows = [
+      { bins: TRANSIT_BIN_RANGES.jupiterSaturn, color: "#b68cff" },
+      { bins: TRANSIT_BIN_RANGES.saturnAries, color: "#7fd6ff" },
+      { bins: TRANSIT_BIN_RANGES.uranusAries, color: "#ffd27f" }
+    ];
+    let binRowY = objectLane + 8;
+    binAxisRows.forEach(({ bins, color }) => {
+      const placedYearLabels = [];
+      appendTransitBinEdgeDots(svg, x, bins, binRowY, color, d0, d1, ui, {
+        labelBelow: true,
+        placedRects: placedYearLabels
+      });
+      binRowY += 18;
+    });
+  } else {
+    appendText(
+      svg,
+      margin.left,
+      objectLane + 62,
+      "Object creation years (history-only)",
+      "start",
+      "#edf4ff",
+      15,
+      700
+    );
+  }
 
   if (!transitsEnabled) {
     HISTORY_ANCHORS.forEach((anchor) => {
@@ -1645,26 +1664,6 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     });
     dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
   });
-
-  if (transitsEnabled) {
-    const d0 = analytics.objectRange.min;
-    const d1 = analytics.objectRange.max;
-    appendTransitBinBoundaryTicks(svg, x, objectLane, d0, d1);
-    const binAxisRows = [
-      { bins: TRANSIT_BIN_RANGES.jupiterSaturn, color: "#b68cff" },
-      { bins: TRANSIT_BIN_RANGES.saturnAries, color: "#7fd6ff" },
-      { bins: TRANSIT_BIN_RANGES.uranusAries, color: "#ffd27f" }
-    ];
-    let binRowY = objectLaneTitleY + 24;
-    binAxisRows.forEach(({ bins, color }) => {
-      const placedYearLabels = [];
-      appendTransitBinEdgeDots(svg, x, bins, binRowY, color, d0, d1, ui, {
-        labelBelow: true,
-        placedRects: placedYearLabels
-      });
-      binRowY += 26;
-    });
-  }
 
   if (!transitsEnabled) {
     appendSvgLegend(svg, legendX, legendY, [
