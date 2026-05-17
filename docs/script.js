@@ -392,7 +392,7 @@ function renderPage(records) {
               <h2>These objects are not evenly spread in time.</h2>
               <p>
                 They are heavily concentrated in the 18th century, with additional dense clusters in the 20th and 19th centuries.
-                About <strong>${formatPercent(analytics.pre1900Share)}</strong> of rows were created between 1700 and 1899.
+                About <strong>${formatPercent(analytics.pre1900Share)}</strong> of objects were created between 1700 and 1899.
               </p>
               <ul class="insight-list">
                 <li>18th century: <strong>${analytics.centuries["18th"]}</strong> (42.25%)</li>
@@ -455,7 +455,7 @@ function renderPage(records) {
               </p>
               <ul class="insight-list">
                 ${analytics.topCountries.slice(0, 5).map((country, index) => `
-                  <li>${index + 1}. <strong>${escapeHTML(country.label)}</strong>: ${country.count} rows</li>
+                  <li>${index + 1}. <strong>${escapeHTML(country.label)}</strong>: ${country.count} objects</li>
                 `).join("")}
               </ul>
             </div>
@@ -1140,7 +1140,7 @@ function renderIntro(svg, analytics, ui, settings = {}) {
     kicker: "Overview",
     title: "Timeline of object Creation Years",
     description: "Each dot is one record from the filtered dataset, plotted across the full time span of the current selection.",
-    footnote: `Filtered view contains ${analytics.totalRows} rows spanning ${analytics.objectRange.span} years.`
+    footnote: `Filtered view contains ${analytics.totalRows} objects spanning ${analytics.objectRange.span} years.`
   });
 
   setLegend(ui.legend, [
@@ -1296,7 +1296,7 @@ function renderPatterns(svg, analytics, ui, settings = {}) {
       animateFadeIn(bar, 180 + idx * 50, 240);
 
       bar.addEventListener("mouseenter", () => {
-        showTooltip(ui.tooltip, `${escapeHTML(entry.label)}<br>${entry.count} rows (${formatPercent(entry.share)})`);
+        showTooltip(ui.tooltip, `${escapeHTML(entry.label)}<br>${entry.count} objects (${formatPercent(entry.share)})`);
         const example = analytics.eventTypeExamples?.get(entry.label) || null;
         updateDetailCard(ui.detailCard, example, analytics.totalRows);
       });
@@ -1326,8 +1326,8 @@ function renderGeography(svg, analytics, ui, settings = {}) {
     updateHeader(ui, {
       kicker: "Geographic concentration",
       title: "Top cities in the sample",
-      description: "City view highlights urban hotspots (including metadata caveats like Unknown city). Bubble size encodes the number of rows tagged to each city.",
-      footnote: `Paris appears in ${analytics.cityMetrics.parisCount} rows; unknown city metadata appears in ${analytics.cityMetrics.unknownCount}.`
+      description: "City view highlights urban hotspots (including metadata caveats like Unknown city). Bubble size encodes the number of objects tagged to each city.",
+      footnote: `Paris appears in ${analytics.cityMetrics.parisCount} objects; unknown city metadata appears in ${analytics.cityMetrics.unknownCount}.`
     });
 
     setLegend(ui.legend, [
@@ -1351,7 +1351,7 @@ function renderGeography(svg, analytics, ui, settings = {}) {
       circle.setAttribute("stroke", "rgba(255,255,255,0.16)");
       circle.setAttribute("stroke-width", "1");
       circle.addEventListener("mouseenter", () => {
-        showTooltip(ui.tooltip, `${escapeHTML(city.label)}<br>${city.count} rows<br>${formatPercent(city.share)} of sample`);
+        showTooltip(ui.tooltip, `${escapeHTML(city.label)}<br>${city.count} objects<br>${formatPercent(city.share)} of sample`);
         updateDetailCard(ui.detailCard, analytics.cityExamples?.get(city.label) || null, analytics.totalRows);
       });
       circle.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
@@ -1369,7 +1369,7 @@ function renderGeography(svg, analytics, ui, settings = {}) {
     kicker: "Geographic concentration",
     title: "Top countries in the sample",
     description: "Country view emphasizes how strongly the sample concentrates in a few places. Bubble size encodes country counts.",
-    footnote: `Paris appears in ${analytics.cityMetrics.parisCount} rows; unknown city metadata appears in ${analytics.cityMetrics.unknownCount}.`
+    footnote: `Paris appears in ${analytics.cityMetrics.parisCount} objects; unknown city metadata appears in ${analytics.cityMetrics.unknownCount}.`
   });
 
   setLegend(ui.legend, [
@@ -1388,7 +1388,7 @@ function renderGeography(svg, analytics, ui, settings = {}) {
     circle.setAttribute("stroke", "rgba(255,255,255,0.16)");
     circle.setAttribute("stroke-width", "1");
     circle.addEventListener("mouseenter", () => {
-      showTooltip(ui.tooltip, `${escapeHTML(country.label)}<br>${country.count} rows<br>${formatPercent(country.share)} of sample`);
+      showTooltip(ui.tooltip, `${escapeHTML(country.label)}<br>${country.count} objects<br>${formatPercent(country.share)} of sample`);
       updateDetailCard(ui.detailCard, analytics.countryExamples.get(country.label) || null, analytics.totalRows);
     });
     circle.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
@@ -1688,7 +1688,7 @@ function renderTakeaways(svg, analytics, ui, settings = {}) {
       color: "#ffb56b",
       label: "Spatial concentration",
       value: formatPercent(analytics.topFiveShare),
-      detail: "Rows from the top five countries"
+      detail: "Objects from the top five countries"
     },
     {
       x: 570,
@@ -2165,7 +2165,7 @@ function updateDetailCard(card, item, totalRows) {
 
   if (!item) {
     card.title.textContent = "Hover a mark for details";
-    card.meta.textContent = `${totalRows} rows are active in the current filtered selection.`;
+    card.meta.textContent = `${totalRows} objects are active in the current filtered selection.`;
     if (card.objectYear) card.objectYear.textContent = "-";
     if (card.eventYear) card.eventYear.textContent = "-";
     if (card.country) card.country.textContent = "-";
