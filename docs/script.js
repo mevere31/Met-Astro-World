@@ -166,6 +166,82 @@ const TRANSIT_BIN_RANGES = {
 
 const DEFAULT_TRANSIT_WINDOW_YEARS = 5;
 
+const GLOSSARY_ENTRIES = [
+  {
+    term: "Transits",
+    definition:
+      "Astrological transits occur when a planet moves through the sky and forms an aspect to another planet. These transits can last from a day to several years, depending on the planet involved. Each transit brings a unique energy, influencing different aspects of your life."
+  },
+  {
+    term: "IsHighlights",
+    definition: "Indicates a popular and important artwork in the Met collection."
+  },
+  {
+    term: "Object Year",
+    definition: "Year the object was created."
+  },
+  {
+    term: "Political",
+    definition: "An important event occurred that affected the political landscape of that country."
+  },
+  {
+    term: "Treaty",
+    definition: "A treaty was signed signifying an important historical event."
+  },
+  {
+    term: "Colonization",
+    definition: "This event was an act of colonization."
+  },
+  {
+    term: "N/A",
+    definition: "No important event occurred."
+  },
+  {
+    term: "War",
+    definition: "An active period of war."
+  },
+  {
+    term: "Sports Event",
+    definition: "An important sports event."
+  },
+  {
+    term: "Diplomatic Agreement",
+    definition:
+      "Two countries came to a diplomatic agreement that signified a historical change."
+  },
+  {
+    term: "Revolt",
+    definition: "Members of the country committed a violent act of rebellion."
+  },
+  {
+    term: "Military",
+    definition: "Movements of military that affected the outcome of a war."
+  },
+  {
+    term: "Educational Reform",
+    definition: "An important event that changed the course of education in a country."
+  },
+  {
+    term: "Revolution",
+    definition: "A complete shift in ruling class."
+  },
+  {
+    term: "Jupiter-Saturn Conjunction Transit",
+    definition:
+      "A conjunction is when two celestial objects line up in the sky during their orbit. Both Jupiter and Saturn are outer planets and a conjunction between the two symbolizes a period of constructive accomplishment. People are more practical, realistic and we are encouraged to slow down to get things right. This transit occurs roughly every 20 years and is called a Great Conjunction."
+  },
+  {
+    term: "Saturn-Aries Transits",
+    definition:
+      "Saturn transits and cycles can be considered cycles of achievement and maturity. Saturn transits teach us to take responsibility for ourselves. In the sign of Aries this can look like assessing whether our systems are working regarding how we use our initiative, exercise our independence, express ourselves authentically, and assert ourselves effectively."
+  },
+  {
+    term: "Uranus-Aries Transits",
+    definition:
+      "Uranus in Aries is a generation transit characterized by rapid, disruptive, and revolutionary change focused on individual freedom, personal identity and technological innovation. Uranus enters Aries approximately every 84 years."
+  }
+];
+
 const MET_OBJECT_CACHE = new Map();
 const MET_STEPS_FALLBACK_IMAGE =
   "https://upload.wikimedia.org/wikipedia/commons/7/70/Metropolitan_Museum_of_Art_entrance_NYC.JPG";
@@ -241,7 +317,9 @@ function renderPage(records) {
         These objects were created in years connected to important historical incidents between ${analytics.objectRange.min} and ${analytics.objectRange.max}.
         These objects represent ${analytics.objectRange.span} years of cultural production.
       </p>
-      <a class="masthead__btn" href="#section-01">Glossary</a>
+      <button type="button" class="masthead__btn" data-glossary-open aria-haspopup="dialog" aria-controls="glossary-modal">
+        Glossary
+      </button>
     </div>
   </header>
 
@@ -593,9 +671,84 @@ function renderPage(records) {
         <div><dt>Event type</dt><dd id="detail-event-type">-</dd></div>
       </dl>
     </aside>
+    ${renderGlossaryModalHTML()}
   `;
 
+  setupGlossary();
   setupScrollytelling(records);
+}
+
+function renderGlossaryModalHTML() {
+  const entries = GLOSSARY_ENTRIES.map(
+    (entry) => `
+      <div class="glossary-entry">
+        <dt>${escapeHTML(entry.term)}</dt>
+        <dd>${escapeHTML(entry.definition)}</dd>
+      </div>`
+  ).join("");
+
+  return `
+    <div class="glossary-modal" id="glossary-modal" hidden aria-hidden="true">
+      <button type="button" class="glossary-modal__backdrop" data-glossary-close tabindex="-1" aria-label="Close glossary"></button>
+      <div
+        class="glossary-modal__panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="glossary-modal-title"
+      >
+        <div class="glossary-modal__header">
+          <div>
+            <span class="eyebrow">Reference</span>
+            <h2 id="glossary-modal-title">Glossary</h2>
+            <p class="glossary-modal__lede">Terms used across object years, historical events, and astrological transits in this narrative.</p>
+          </div>
+          <button type="button" class="glossary-modal__close" data-glossary-close aria-label="Close glossary">
+            Close
+          </button>
+        </div>
+        <dl class="glossary-list">
+          ${entries}
+        </dl>
+      </div>
+    </div>
+  `;
+}
+
+function setupGlossary() {
+  const modal = document.getElementById("glossary-modal");
+  const openBtn = document.querySelector("[data-glossary-open]");
+  const closeTargets = modal ? Array.from(modal.querySelectorAll("[data-glossary-close]")) : [];
+  const closeBtn = modal?.querySelector(".glossary-modal__close");
+  if (!modal || !openBtn || !closeBtn) {
+    return;
+  }
+
+  let lastFocused = null;
+
+  const setOpen = (isOpen) => {
+    modal.hidden = !isOpen;
+    modal.setAttribute("aria-hidden", isOpen ? "false" : "true");
+    document.body.classList.toggle("glossary-modal-open", isOpen);
+    if (isOpen) {
+      lastFocused = document.activeElement;
+      closeBtn.focus();
+    } else if (lastFocused && typeof lastFocused.focus === "function") {
+      lastFocused.focus();
+      lastFocused = null;
+    }
+  };
+
+  openBtn.addEventListener("click", () => setOpen(true));
+  closeTargets.forEach((target) => {
+    target.addEventListener("click", () => setOpen(false));
+  });
+
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !modal.hidden) {
+      event.preventDefault();
+      setOpen(false);
+    }
+  });
 }
 
 function setupScrollytelling(records) {

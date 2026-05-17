@@ -268,6 +268,8 @@ a {
   font-weight: 700;
   width: fit-content;
   max-width: 100%;
+  font-family: inherit;
+  cursor: pointer;
 }
 .masthead__btn:hover {
   border-color: rgba(127, 214, 255, 0.85);
@@ -1141,6 +1143,127 @@ a {
 .tooltip.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+body.glossary-modal-open {
+  overflow: hidden;
+}
+
+.glossary-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 4vw, 32px);
+}
+
+.glossary-modal[hidden] {
+  display: none;
+}
+
+.glossary-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(5, 9, 16, 0.72);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+}
+
+.glossary-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(760px, 100%);
+  max-height: min(86vh, 920px);
+  overflow: auto;
+  padding: clamp(22px, 4vw, 36px);
+  border-radius: 26px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  box-shadow: var(--glow);
+}
+
+.glossary-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.glossary-modal__header h2 {
+  margin: 0 0 10px;
+  font-size: clamp(1.35rem, 3vw, 1.85rem);
+  line-height: 1.2;
+}
+
+.glossary-modal__lede {
+  margin: 0;
+  max-width: 52ch;
+  color: var(--muted-strong);
+  font-size: 0.98rem;
+  line-height: 1.7;
+}
+
+.glossary-modal__close {
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(127, 214, 255, 0.45);
+  background: rgba(127, 214, 255, 0.08);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.glossary-modal__close:hover,
+.glossary-modal__close:focus-visible {
+  border-color: rgba(127, 214, 255, 0.85);
+  background: rgba(127, 214, 255, 0.14);
+  outline: none;
+}
+
+.glossary-modal__close:focus-visible {
+  outline: 2px solid rgba(127, 214, 255, 0.85);
+  outline-offset: 3px;
+}
+
+.glossary-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.glossary-entry {
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border-soft);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.glossary-entry dt {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-family: var(--font-heading);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.glossary-entry dd {
+  margin: 0;
+  color: var(--muted-strong);
+  font-size: 0.96rem;
+  line-height: 1.65;
 }
 
 .page-footer {
