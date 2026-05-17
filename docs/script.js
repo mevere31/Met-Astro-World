@@ -1466,6 +1466,70 @@ function renderHistory(svg, analytics, ui, settings = {}) {
   applyPlanetOverlay(svg, settings.planet);
 }
 
+function appendTransitBinBoundaryTicks(svg, xScale, axisY, domainMin, domainMax) {
+  const edges = new Set();
+  TRANSIT_BIN_RANGES.jupiterSaturn.forEach(([start, end]) => {
+    edges.add(start);
+    edges.add(end + 1);
+  });
+  [...edges]
+    .filter((year) => year >= domainMin && year <= domainMax)
+    .sort((a, b) => a - b)
+    .forEach((year) => {
+      const px = xScale(year);
+      appendLine(svg, px, axisY + 4, px, axisY + 14, "rgba(255,255,255,0.32)", 1, 0.88);
+    });
+}
+
+/** Places a bin-edge year label below a dot, staggering when labels would overlap. */
+function tryAppendBinYearLabelBelow(svg, px, dotY, yearStr, color, fontSize, placedRects) {
+  const tw = measureSvgTextWidth(yearStr, fontSize, 600);
+  const half = tw / 2;
+  const left = px - half;
+  const right = px + half;
+  const tierYs = [dotY + 14, dotY + 30, dotY + 46];
+  for (let i = 0; i < tierYs.length; i += 1) {
+    const labelY = tierYs[i];
+    const collides = placedRects.some(
+      (r) =>
+        Math.abs(r.y - labelY) < 10 &&
+        !(right + MILESTONE_LABEL_PAD < r.left || left - MILESTONE_LABEL_PAD > r.right)
+    );
+    if (!collides) {
+      appendText(svg, px, labelY, yearStr, "middle", color, fontSize, 600);
+      placedRects.push({ left, right, y: labelY });
+      return;
+    }
+  }
+}
+
+/** Bin start/end years on a timeline row (dots + year labels). */
+function appendTransitBinEdgeDots(svg, xScale, bins, yDot, color, domainMin, domainMax, ui, options = {}) {
+  const { labelBelow = false, placedRects = null } = options;
+  const radius = 4.4;
+  const yearsShown = new Set();
+  const mark = (year) => {
+    if (!Number.isFinite(year) || year < domainMin || year > domainMax) return;
+    if (yearsShown.has(year)) return;
+    yearsShown.add(year);
+    const px = xScale(year);
+    const dot = appendCircle(svg, px, yDot, radius, color, 0.88);
+    dot.setAttribute("stroke", "rgba(255,255,255,0.42)");
+    dot.setAttribute("stroke-width", "1.2");
+    if (labelBelow && placedRects) {
+      tryAppendBinYearLabelBelow(svg, px, yDot, String(year), color, 10, placedRects);
+    } else {
+      appendText(svg, px, yDot - 14, String(year), "middle", color, 10, 600);
+    }
+    dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `Bin edge<br>${year}`));
+    dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
+  };
+  bins.forEach(([start, end]) => {
+    mark(start);
+    if (end !== start) mark(end);
+  });
+}
+
 function appendTransitBinBands(svg, xScale, transitLane, objectLane, yearBins, fill) {
   const pad = 4;
   const top = transitLane + pad;
@@ -1487,7 +1551,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     kicker: "Symbolic sky layer",
     title: transitsEnabled ? "Objects and transit milestone windows" : "History-only baseline (no transits)",
     description: transitsEnabled
-      ? "Transit markers sit above the shared x-axis while object creation years stay grounded below."
+      ? "Transit milestones sit above the shaded bin bands; bin edge years and object creation years share the lower axis."
       : "This view hides the transit layer so you can compare the same objects against world-history anchors only.",
     footnote: transitsEnabled
       ? "These year-window checks are exploratory and should later be upgraded with precise ephemeris timestamps."
@@ -1582,6 +1646,26 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
   });
 
+  if (transitsEnabled) {
+    const d0 = analytics.objectRange.min;
+    const d1 = analytics.objectRange.max;
+    appendTransitBinBoundaryTicks(svg, x, objectLane, d0, d1);
+    const binAxisRows = [
+      { bins: TRANSIT_BIN_RANGES.jupiterSaturn, color: "#b68cff" },
+      { bins: TRANSIT_BIN_RANGES.saturnAries, color: "#7fd6ff" },
+      { bins: TRANSIT_BIN_RANGES.uranusAries, color: "#ffd27f" }
+    ];
+    let binRowY = objectLaneTitleY + 24;
+    binAxisRows.forEach(({ bins, color }) => {
+      const placedYearLabels = [];
+      appendTransitBinEdgeDots(svg, x, bins, binRowY, color, d0, d1, ui, {
+        labelBelow: true,
+        placedRects: placedYearLabels
+      });
+      binRowY += 26;
+    });
+  }
+
   if (!transitsEnabled) {
     appendSvgLegend(svg, legendX, legendY, [
       { color: "#BD6BBF", label: "Object creation year" },
@@ -1590,57 +1674,6 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     applyPlanetOverlay(svg, settings.planet);
     return;
   }
-
-  const cards = [
-    {
-      x: 70,
-      y: 478,
-      w: 220,
-      h: 328,
-      color: "#b68cff",
-      label: "Jupiter-Saturn ±5",
-      value: formatPercent(analytics.transitMetrics.jupiterSaturn.plusMinus5),
-      detail: "A conjunction is when two celestial objects line up in the sky during their orbit.Both Jupiter and Saturn are outer planets and a conjunction between the two symbolizes a period of constructive accomplishment. People are more practical, realistic and we are encouraged to slow down to get things right. This transit occurs roughly every 20 years and is called a Great Conjunction."
-    },
-    {
-      x: 320,
-      y: 478,
-      w: 220,
-      h: 328,
-      color: "#7fd6ff",
-      label: "Saturn in Aries ±5",
-      value: formatPercent(analytics.transitMetrics.saturnAries.plusMinus5),
-      detail: "Saturn transits and cycles can be considered cycles of achievement and maturity. Saturn transits teach us to take responsibility for ourselves. In the sign of Aries this can look like assessing whether our systems are working regarding how we use our initiative, excercise our independence, express ourselves authentically, and assert ourselves effectively."
-    },
-    {
-      x: 570,
-      y: 478,
-      w: 220,
-      h: 328,
-      color: "#ffd27f",
-      label: "Uranus in Aries ±3",
-      value: formatPercent(analytics.transitMetrics.uranusAries.plusMinus3),
-      detail: "Uranus in Aries is a generation transit characterized by rapid, disruptive, and revolutionary change focused on individual freedom, personal identity and technological innovation. Uranus enters Aries approximately every 84 years."
-    }
-  ];
-
-  cards.forEach((card) => {
-    appendRect(svg, card.x, card.y, card.w, card.h, `${card.color}22`, `${card.color}66`, 24);
-    const innerPad = 26;
-    const innerW = card.w - innerPad * 2;
-    const textMaxW = Math.max(40, innerW - 10);
-
-    const labelLines = wrapWordsToWidth(card.label, textMaxW, 18, 700);
-    const labelLineHeight = 22;
-    let textY = card.y + 56;
-    appendTextMultiline(svg, card.x + innerPad, textY, labelLines, "start", "#edf4ff", 18, 700, labelLineHeight);
-    textY += labelLines.length * labelLineHeight + 26;
-
-    const valueStr = String(card.value);
-    const valueSize = fitValueFontSize(valueStr, textMaxW, 46, 18);
-    appendText(svg, card.x + innerPad, textY, valueStr, "start", card.color, valueSize, 800);
-    textY += valueSize + 12;
-  });
 
   appendSvgLegend(svg, legendX, legendY, [
     { color: "#b68cff", label: "Jupiter-Saturn" },
