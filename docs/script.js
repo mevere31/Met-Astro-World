@@ -635,6 +635,7 @@ function renderPage(records) {
                 <a class="cta" href="https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service" target="_blank" rel="noreferrer">Wikidata SPARQL Query Service</a>
                 <a class="cta" href="https://github.com/histolines/Histolines_events_archive" target="_blank" rel="noreferrer">Histolines Events Archive</a>
                 <a class="cta" href="https://cafeastrology.com/2025-ephemeris.html" target="_blank" rel="noreferrer">Cafe Astrology Ephemeris</a>
+                <a class="cta" href="https://github.com/mevere31/Met-Astro-World" target="_blank" rel="noreferrer">Met Astro World Github</a>
               </div>
             </div>
             <div class="step-viz">
