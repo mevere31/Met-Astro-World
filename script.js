@@ -991,7 +991,7 @@ function renderIntro(svg, analytics, ui, settings = {}) {
   });
 
   setLegend(ui.legend, [
-    { color: "#7fd6ff", label: "Object row" },
+    { color: "#BD6BBF", label: "Object row" },
     { color: "#b68cff", label: "Timeline axis" }
   ]);
 
@@ -1259,7 +1259,7 @@ function renderHistory(svg, analytics, ui, settings = {}) {
   });
 
   setLegend(ui.legend, [
-    { color: "#7fd6ff", label: "Object year" },
+    { color: "#BD6BBF", label: "Object year" },
     { color: "#ffd27f", label: "Incident year" },
     { color: "#f08ad2", label: "World-history anchors" }
   ]);
@@ -1346,11 +1346,11 @@ function renderTransits(svg, analytics, ui, settings = {}) {
       { color: "#b68cff", label: "Jupiter-Saturn" },
       { color: "#7fd6ff", label: "Saturn in Aries" },
       { color: "#ffd27f", label: "Uranus in Aries" },
-      { color: "#7fd6ff", label: "Object year" }
+      { color: "#BD6BBF", label: "Object year" }
     ]
     : [
       { color: "#7fd6ff", label: "Object year" },
-      { color: "#f08ad2", label: "World-history anchors" }
+      { color: "#BD6BBF", label: "World-history anchors" }
     ]);
 
   clearSVG(svg);
@@ -1431,7 +1431,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
 
   if (!transitsEnabled) {
     appendSvgLegend(svg, legendX, legendY, [
-      { color: "#7fd6ff", label: "Object creation year" },
+      { color: "#BD6BBF", label: "Object creation year" },
       { color: "#f08ad2", label: "World-history anchor" }
     ]);
     applyPlanetOverlay(svg, settings.planet);
@@ -1455,7 +1455,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
       y: 478,
       w: 220,
       h: 328,
-      color: "#7fd6ff",
+      color: "#BD6BBF",
       label: "Saturn in Aries ±5",
       value: formatPercent(analytics.transitMetrics.saturnAries.plusMinus5),
       detail:
@@ -1487,7 +1487,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     { color: "#b68cff", label: "Jupiter-Saturn" },
     { color: "#7fd6ff", label: "Saturn in Aries" },
     { color: "#ffd27f", label: "Uranus in Aries" },
-    { color: "#7fd6ff", label: "Object creation year", opacity: 0.85 }
+    { color: "#BD6BBF", label: "Object creation year", opacity: 0.85 }
   ]);
 
   applyPlanetOverlay(svg, settings.planet);
