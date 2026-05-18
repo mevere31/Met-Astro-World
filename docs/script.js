@@ -1168,7 +1168,7 @@ function renderIntro(svg, analytics, ui, settings = {}) {
  analytics.objectYears.forEach((year, index) => {
   const amplitude = 14 + (index % 5) * 5;
   const y = axisY + Math.sin(index * 0.65) * amplitude;
-  const circle = appendCircle(svg, x(year), y, 4.1, "#EC008C", 0.84);
+  const circle = appendCircle(svg, x(year), y, 4.1, "#BD6BBF", 0.84);
   animateCirclePop(circle, 4.1, Math.min(index, 44) * 6);
 
   circle.addEventListener("mouseenter", async () => {

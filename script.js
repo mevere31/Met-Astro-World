@@ -1167,7 +1167,7 @@ function renderIntro(svg, analytics, ui, settings = {}) {
  analytics.objectYears.forEach((year, index) => {
   const amplitude = 14 + (index % 5) * 5;
   const y = axisY + Math.sin(index * 0.65) * amplitude;
-  const circle = appendCircle(svg, x(year), y, 4.1, "#B68CFF", 0.84);
+  const circle = appendCircle(svg, x(year), y, 4.1, "#BD6BBF", 0.84);
   animateCirclePop(circle, 4.1, Math.min(index, 44) * 6);
 
   circle.addEventListener("mouseenter", async () => {
@@ -1440,7 +1440,7 @@ function renderHistory(svg, analytics, ui, settings = {}) {
     const path = `M ${objectX} ${topLane} C ${objectX} ${(topLane + bottomLane) / 2}, ${eventX} ${(topLane + bottomLane) / 2}, ${eventX} ${bottomLane}`;
     const stroke = pair.gap <= 1 ? "#79e2b0" : "rgba(255,255,255,0.12)";
     const line = appendPath(svg, path, "none", stroke, 1.2, 0.42);
-    const objectDot = appendCircle(svg, objectX, topLane + ((index % 7) - 3) * 6, 3.5, "#7fd6ff", 0.86);
+    const objectDot = appendCircle(svg, objectX, topLane + ((index % 7) - 3) * 6, 3.5, "#BD6BBF", 0.86);
     const eventDot = appendCircle(svg, eventX, bottomLane + ((index % 7) - 3) * 6, 3.5, "#ffd27f", 0.86);
     animateFadeIn(line, Math.min(index, 40) * 8, 360);
     animateCirclePop(objectDot, 3.5, Math.min(index, 60) * 5, 240);
@@ -1665,7 +1665,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
 
   analytics.objectYears.forEach((year, index) => {
     const jitter = ((index % 15) - 7) * 6;
-    const dot = appendCircle(svg, x(year), objectDotBaseY + jitter, 3.8, "#7fd6ff", 0.7);
+    const dot = appendCircle(svg, x(year), objectDotBaseY + jitter, 3.8, "#BD6BBF", 0.7);
     animateCirclePop(dot, 3.8, Math.min(index, 70) * 4 + 180, 200);
     dot.addEventListener("mouseenter", () => {
       showTooltip(ui.tooltip, `Object year ${year}`);
