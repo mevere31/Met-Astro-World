@@ -1478,39 +1478,46 @@ function appendTransitBinBoundaryTicks(svg, xScale, axisY, domainMin, domainMax)
     });
 }
 
-function formatTransitBinRangeLabel(startYear, endYear) {
+function formatTransitBinRangeLabel(startYear, endYear, compact = false) {
   const start = Math.round(startYear);
   const end = Math.round(endYear);
   if (start === end) {
     return String(start);
   }
+  if (
+    compact &&
+    start >= 1000 &&
+    end >= 1000 &&
+    Math.floor(start / 100) === Math.floor(end / 100)
+  ) {
+    return `${start}–${String(end).slice(-2)}`;
+  }
   return `${start} - ${end}`;
 }
 
-/** Places a bin range label below the row, staggering when labels would overlap. */
+/** Places a bin range label on one row below the axis; skips if it would overlap. */
 function tryAppendBinRangeLabelBelow(svg, px, dotY, label, color, fontSize, placedRects) {
   const tw = measureSvgTextWidth(label, fontSize, 600);
   const half = tw / 2;
   const left = px - half;
   const right = px + half;
-  const tierYs = [dotY + 12, dotY + 26];
-  for (let i = 0; i < tierYs.length; i += 1) {
-    const labelY = tierYs[i];
-    const collides = placedRects.some(
-      (r) =>
-        Math.abs(r.y - labelY) < 10 &&
-        !(right + MILESTONE_LABEL_PAD < r.left || left - MILESTONE_LABEL_PAD > r.right)
-    );
-    if (!collides) {
-      appendText(svg, px, labelY, label, "middle", color, fontSize, 600);
-      placedRects.push({ left, right, y: labelY });
-      return;
-    }
+  const labelY = dotY + 12;
+  const collides = placedRects.some(
+    (r) =>
+      Math.abs(r.y - labelY) < 10 &&
+      !(right + MILESTONE_LABEL_PAD < r.left || left - MILESTONE_LABEL_PAD > r.right)
+  );
+  if (!collides) {
+    appendText(svg, px, labelY, label, "middle", color, fontSize, 600);
+    placedRects.push({ left, right, y: labelY });
+    return true;
   }
+  return false;
 }
 
 /** One label per bin range (e.g. 1723 - 1741) centered under the axis row. */
-function appendTransitBinRangeRow(svg, xScale, bins, yDot, color, domainMin, domainMax, ui, placedRects) {
+function appendTransitBinRangeRow(svg, xScale, bins, yDot, color, domainMin, domainMax, ui, placedRects, options = {}) {
+  const { compact = false, fontSize = 9 } = options;
   const radius = 3.4;
   bins.forEach(([start, end]) => {
     const s = Math.max(start, domainMin);
@@ -1520,7 +1527,8 @@ function appendTransitBinRangeRow(svg, xScale, bins, yDot, color, domainMin, dom
     const pxStart = xScale(s);
     const pxEnd = xScale(e);
     const cx = (pxStart + pxEnd) / 2;
-    const label = formatTransitBinRangeLabel(start, end);
+    const fullLabel = formatTransitBinRangeLabel(start, end, false);
+    const label = formatTransitBinRangeLabel(start, end, compact);
 
     [pxStart, pxEnd].forEach((px, index) => {
       if (index === 1 && end === start) return;
@@ -1529,11 +1537,11 @@ function appendTransitBinRangeRow(svg, xScale, bins, yDot, color, domainMin, dom
       dot.setAttribute("stroke-width", "1");
     });
 
-    tryAppendBinRangeLabelBelow(svg, cx, yDot, label, color, 9, placedRects);
+    tryAppendBinRangeLabelBelow(svg, cx, yDot, label, color, fontSize, placedRects);
 
     const hit = appendCircle(svg, cx, yDot, 10, "transparent", 0);
     hit.style.cursor = "pointer";
-    hit.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `${label}`));
+    hit.addEventListener("mouseenter", () => showTooltip(ui.tooltip, fullLabel));
     hit.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
   });
 }
@@ -1607,15 +1615,18 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     const d1 = analytics.objectRange.max;
     appendTransitBinBoundaryTicks(svg, x, objectLane, d0, d1);
     const binAxisRows = [
-      { bins: TRANSIT_BIN_RANGES.jupiterSaturn, color: "#b68cff" },
-      { bins: TRANSIT_BIN_RANGES.saturnAries, color: "#7fd6ff" },
-      { bins: TRANSIT_BIN_RANGES.uranusAries, color: "#ffd27f" }
+      { bins: TRANSIT_BIN_RANGES.jupiterSaturn, color: "#b68cff", compact: true, fontSize: 8 },
+      { bins: TRANSIT_BIN_RANGES.saturnAries, color: "#7fd6ff", compact: false, fontSize: 9 },
+      { bins: TRANSIT_BIN_RANGES.uranusAries, color: "#ffd27f", compact: false, fontSize: 9 }
     ];
     let binRowY = objectLane + 8;
-    binAxisRows.forEach(({ bins, color }) => {
+    binAxisRows.forEach(({ bins, color, compact, fontSize }, rowIndex) => {
       const placedRangeLabels = [];
-      appendTransitBinRangeRow(svg, x, bins, binRowY, color, d0, d1, ui, placedRangeLabels);
-      binRowY += 22;
+      appendTransitBinRangeRow(svg, x, bins, binRowY, color, d0, d1, ui, placedRangeLabels, {
+        compact,
+        fontSize
+      });
+      binRowY += rowIndex === 0 ? 34 : 24;
     });
   } else {
     appendText(
