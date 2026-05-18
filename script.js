@@ -75,25 +75,21 @@ function fitValueFontSize(text, innerWidthPx, maxSize = 46, minSize = 18) {
 
 const MILESTONE_LABEL_PAD = 4;
 
-/** Places a year label above a transit dot, staggering vertically when labels would overlap horizontally. */
+/** Places a year label above a transit dot on one row; skips if it would overlap another label. */
 function tryAppendMilestoneYearLabel(svg, px, dotY, yearStr, color, fontSize, placedRects) {
   const tw = measureSvgTextWidth(yearStr, fontSize, 600);
   const half = tw / 2;
   const left = px - half;
   const right = px + half;
-  const tierYs = [dotY - 16, dotY - 34, dotY - 52, dotY - 70];
-  for (let i = 0; i < tierYs.length; i += 1) {
-    const labelY = tierYs[i];
-    const collides = placedRects.some(
-      (r) =>
-        Math.abs(r.y - labelY) < 10 &&
-        !(right + MILESTONE_LABEL_PAD < r.left || left - MILESTONE_LABEL_PAD > r.right)
-    );
-    if (!collides) {
-      appendText(svg, px, labelY, yearStr, "middle", color, fontSize, 600);
-      placedRects.push({ left, right, y: labelY });
-      return;
-    }
+  const labelY = dotY - 16;
+  const collides = placedRects.some(
+    (r) =>
+      Math.abs(r.y - labelY) < 10 &&
+      !(right + MILESTONE_LABEL_PAD < r.left || left - MILESTONE_LABEL_PAD > r.right)
+  );
+  if (!collides) {
+    appendText(svg, px, labelY, yearStr, "middle", color, fontSize, 600);
+    placedRects.push({ left, right, y: labelY });
   }
 }
 
@@ -1481,13 +1477,22 @@ function appendTransitBinBoundaryTicks(svg, xScale, axisY, domainMin, domainMax)
     });
 }
 
-/** Places a bin-edge year label below a dot, staggering when labels would overlap. */
-function tryAppendBinYearLabelBelow(svg, px, dotY, yearStr, color, fontSize, placedRects) {
-  const tw = measureSvgTextWidth(yearStr, fontSize, 600);
+function formatTransitBinRangeLabel(startYear, endYear) {
+  const start = Math.round(startYear);
+  const end = Math.round(endYear);
+  if (start === end) {
+    return String(start);
+  }
+  return `${start} - ${end}`;
+}
+
+/** Places a bin range label below the row, staggering when labels would overlap. */
+function tryAppendBinRangeLabelBelow(svg, px, dotY, label, color, fontSize, placedRects) {
+  const tw = measureSvgTextWidth(label, fontSize, 600);
   const half = tw / 2;
   const left = px - half;
   const right = px + half;
-  const tierYs = [dotY + 14, dotY + 30, dotY + 46];
+  const tierYs = [dotY + 12, dotY + 26];
   for (let i = 0; i < tierYs.length; i += 1) {
     const labelY = tierYs[i];
     const collides = placedRects.some(
@@ -1496,37 +1501,39 @@ function tryAppendBinYearLabelBelow(svg, px, dotY, yearStr, color, fontSize, pla
         !(right + MILESTONE_LABEL_PAD < r.left || left - MILESTONE_LABEL_PAD > r.right)
     );
     if (!collides) {
-      appendText(svg, px, labelY, yearStr, "middle", color, fontSize, 600);
+      appendText(svg, px, labelY, label, "middle", color, fontSize, 600);
       placedRects.push({ left, right, y: labelY });
       return;
     }
   }
 }
 
-/** Bin start/end years on a timeline row (dots + year labels). */
-function appendTransitBinEdgeDots(svg, xScale, bins, yDot, color, domainMin, domainMax, ui, options = {}) {
-  const { labelBelow = false, placedRects = null } = options;
-  const radius = 4.4;
-  const yearsShown = new Set();
-  const mark = (year) => {
-    if (!Number.isFinite(year) || year < domainMin || year > domainMax) return;
-    if (yearsShown.has(year)) return;
-    yearsShown.add(year);
-    const px = xScale(year);
-    const dot = appendCircle(svg, px, yDot, radius, color, 0.88);
-    dot.setAttribute("stroke", "rgba(255,255,255,0.42)");
-    dot.setAttribute("stroke-width", "1.2");
-    if (labelBelow && placedRects) {
-      tryAppendBinYearLabelBelow(svg, px, yDot, String(year), color, 10, placedRects);
-    } else {
-      appendText(svg, px, yDot - 14, String(year), "middle", color, 10, 600);
-    }
-    dot.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `Bin edge<br>${year}`));
-    dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
-  };
+/** One label per bin range (e.g. 1723 - 1741) centered under the axis row. */
+function appendTransitBinRangeRow(svg, xScale, bins, yDot, color, domainMin, domainMax, ui, placedRects) {
+  const radius = 3.4;
   bins.forEach(([start, end]) => {
-    mark(start);
-    if (end !== start) mark(end);
+    const s = Math.max(start, domainMin);
+    const e = Math.min(end, domainMax);
+    if (s > e) return;
+
+    const pxStart = xScale(s);
+    const pxEnd = xScale(e);
+    const cx = (pxStart + pxEnd) / 2;
+    const label = formatTransitBinRangeLabel(start, end);
+
+    [pxStart, pxEnd].forEach((px, index) => {
+      if (index === 1 && end === start) return;
+      const dot = appendCircle(svg, px, yDot, radius, color, 0.72);
+      dot.setAttribute("stroke", "rgba(255,255,255,0.35)");
+      dot.setAttribute("stroke-width", "1");
+    });
+
+    tryAppendBinRangeLabelBelow(svg, cx, yDot, label, color, 9, placedRects);
+
+    const hit = appendCircle(svg, cx, yDot, 10, "transparent", 0);
+    hit.style.cursor = "pointer";
+    hit.addEventListener("mouseenter", () => showTooltip(ui.tooltip, `${label}`));
+    hit.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
   });
 }
 
@@ -1578,7 +1585,6 @@ function renderTransits(svg, analytics, ui, settings = {}) {
   const transitMilestoneTitleY = margin.top + 12;
   const transitLane = 262;
   const objectLane = 398;
-  const objectLaneTitleY = objectLane + 62;
   const binBandMidY = transitLane + (objectLane - transitLane) / 2;
   const objectDotBaseY = transitsEnabled ? binBandMidY : objectLane;
   const connectorEndY = transitsEnabled ? objectDotBaseY + 28 : objectLane;
@@ -1595,16 +1601,33 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     appendText(svg, margin.left, transitMilestoneTitleY, "Transit milestones", "start", "#edf4ff", 15, 700);
   }
   appendLine(svg, margin.left, objectLane, width - margin.right, objectLane, "rgba(127,214,255,0.7)", 2, 1);
-  appendText(
-    svg,
-    margin.left,
-    objectLaneTitleY,
-    transitsEnabled ? "Object creation years" : "Object creation years (history-only)",
-    "start",
-    "#edf4ff",
-    15,
-    700
-  );
+  if (transitsEnabled) {
+    const d0 = analytics.objectRange.min;
+    const d1 = analytics.objectRange.max;
+    appendTransitBinBoundaryTicks(svg, x, objectLane, d0, d1);
+    const binAxisRows = [
+      { bins: TRANSIT_BIN_RANGES.jupiterSaturn, color: "#b68cff" },
+      { bins: TRANSIT_BIN_RANGES.saturnAries, color: "#7fd6ff" },
+      { bins: TRANSIT_BIN_RANGES.uranusAries, color: "#ffd27f" }
+    ];
+    let binRowY = objectLane + 8;
+    binAxisRows.forEach(({ bins, color }) => {
+      const placedRangeLabels = [];
+      appendTransitBinRangeRow(svg, x, bins, binRowY, color, d0, d1, ui, placedRangeLabels);
+      binRowY += 22;
+    });
+  } else {
+    appendText(
+      svg,
+      margin.left,
+      objectLane + 62,
+      "Object creation years (history-only)",
+      "start",
+      "#edf4ff",
+      15,
+      700
+    );
+  }
 
   if (!transitsEnabled) {
     HISTORY_ANCHORS.forEach((anchor) => {
@@ -1645,26 +1668,6 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     });
     dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
   });
-
-  if (transitsEnabled) {
-    const d0 = analytics.objectRange.min;
-    const d1 = analytics.objectRange.max;
-    appendTransitBinBoundaryTicks(svg, x, objectLane, d0, d1);
-    const binAxisRows = [
-      { bins: TRANSIT_BIN_RANGES.jupiterSaturn, color: "#b68cff" },
-      { bins: TRANSIT_BIN_RANGES.saturnAries, color: "#7fd6ff" },
-      { bins: TRANSIT_BIN_RANGES.uranusAries, color: "#ffd27f" }
-    ];
-    let binRowY = objectLaneTitleY + 24;
-    binAxisRows.forEach(({ bins, color }) => {
-      const placedYearLabels = [];
-      appendTransitBinEdgeDots(svg, x, bins, binRowY, color, d0, d1, ui, {
-        labelBelow: true,
-        placedRects: placedYearLabels
-      });
-      binRowY += 26;
-    });
-  }
 
   if (!transitsEnabled) {
     appendSvgLegend(svg, legendX, legendY, [
