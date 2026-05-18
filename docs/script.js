@@ -74,6 +74,7 @@ function fitValueFontSize(text, innerWidthPx, maxSize = 46, minSize = 18) {
 }
 
 const MILESTONE_LABEL_PAD = 4;
+const OBJECT_YEAR_COLOR = "#BD6BBF";
 
 /** Places a year label above a transit dot on one row; skips if it would overlap another label. */
 function tryAppendMilestoneYearLabel(svg, px, dotY, yearStr, color, fontSize, placedRects) {
@@ -1141,7 +1142,7 @@ function renderIntro(svg, analytics, ui, settings = {}) {
   });
 
   setLegend(ui.legend, [
-    { color: "#BD6BBF", label: "Object row" },
+    { color: OBJECT_YEAR_COLOR, label: "Object row" },
     { color: "#b68cff", label: "Timeline axis" }
   ]);
 
@@ -1168,7 +1169,7 @@ function renderIntro(svg, analytics, ui, settings = {}) {
  analytics.objectYears.forEach((year, index) => {
   const amplitude = 14 + (index % 5) * 5;
   const y = axisY + Math.sin(index * 0.65) * amplitude;
-  const circle = appendCircle(svg, x(year), y, 4.1, "#BD6BBF", 0.84);
+  const circle = appendCircle(svg, x(year), y, 4.1, OBJECT_YEAR_COLOR, 0.84);
   animateCirclePop(circle, 4.1, Math.min(index, 44) * 6);
 
   circle.addEventListener("mouseenter", async () => {
@@ -1409,7 +1410,7 @@ function renderHistory(svg, analytics, ui, settings = {}) {
   });
 
   setLegend(ui.legend, [
-    { color: "#BD6BBF", label: "Object year" },
+    { color: OBJECT_YEAR_COLOR, label: "Object year" },
     { color: "#ffd27f", label: "Incident year" },
     { color: "#f08ad2", label: "World-history anchors" }
   ]);
@@ -1426,7 +1427,7 @@ function renderHistory(svg, analytics, ui, settings = {}) {
   appendAtmosphere(svg, width, height);
   appendLine(svg, margin.left, topLane, width - margin.right, topLane, "rgba(127,214,255,0.8)", 2, 1);
   appendLine(svg, margin.left, bottomLane, width - margin.right, bottomLane, "rgba(255,210,127,0.8)", 2, 1);
-  appendText(svg, margin.left, topLane - 24, "Object year", "start", "#EC008C", 15, 700);
+  appendText(svg, margin.left, topLane - 24, "Object year", "start", OBJECT_YEAR_COLOR, 15, 700);
   appendText(svg, margin.left, bottomLane + 36, "Incident year", "start", "#ffd27f", 15, 700);
 
   HISTORY_ANCHORS.forEach((anchor) => {
@@ -1441,7 +1442,7 @@ function renderHistory(svg, analytics, ui, settings = {}) {
     const path = `M ${objectX} ${topLane} C ${objectX} ${(topLane + bottomLane) / 2}, ${eventX} ${(topLane + bottomLane) / 2}, ${eventX} ${bottomLane}`;
     const stroke = pair.gap <= 1 ? "#79e2b0" : "rgba(255,255,255,0.12)";
     const line = appendPath(svg, path, "none", stroke, 1.2, 0.42);
-    const objectDot = appendCircle(svg, objectX, topLane + ((index % 7) - 3) * 6, 3.5, "#EC008C", 0.86);
+    const objectDot = appendCircle(svg, objectX, topLane + ((index % 7) - 3) * 6, 3.5, OBJECT_YEAR_COLOR, 0.86);
     const eventDot = appendCircle(svg, eventX, bottomLane + ((index % 7) - 3) * 6, 3.5, "#ffd27f", 0.86);
     animateFadeIn(line, Math.min(index, 40) * 8, 360);
     animateCirclePop(objectDot, 3.5, Math.min(index, 60) * 5, 240);
@@ -1576,10 +1577,10 @@ function renderTransits(svg, analytics, ui, settings = {}) {
       { color: "#b68cff", label: "Jupiter-Saturn" },
       { color: "#7fd6ff", label: "Saturn in Aries" },
       { color: "#ffd27f", label: "Uranus in Aries" },
-      { color: "#BD6BBF", label: "Object year" }
+      { color: OBJECT_YEAR_COLOR, label: "Object year" }
     ]
     : [
-      { color: "#BD6BBF", label: "Object year" },
+      { color: OBJECT_YEAR_COLOR, label: "Object year" },
       { color: "#f08ad2", label: "World-history anchors" }
     ]);
 
@@ -1666,7 +1667,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
 
   analytics.objectYears.forEach((year, index) => {
     const jitter = ((index % 15) - 7) * 6;
-    const dot = appendCircle(svg, x(year), objectDotBaseY + jitter, 3.8, "#EC008C", 0.7);
+    const dot = appendCircle(svg, x(year), objectDotBaseY + jitter, 3.8, OBJECT_YEAR_COLOR, 0.7);
     animateCirclePop(dot, 3.8, Math.min(index, 70) * 4 + 180, 200);
     dot.addEventListener("mouseenter", () => {
       showTooltip(ui.tooltip, `Object year ${year}`);
@@ -1677,7 +1678,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
 
   if (!transitsEnabled) {
     appendSvgLegend(svg, legendX, legendY, [
-      { color: "#BD6BBF", label: "Object creation year" },
+      { color: OBJECT_YEAR_COLOR, label: "Object creation year" },
       { color: "#f08ad2", label: "World-history anchor" }
     ]);
     applyPlanetOverlay(svg, settings.planet);
@@ -1688,7 +1689,7 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     { color: "#b68cff", label: "Jupiter-Saturn" },
     { color: "#7fd6ff", label: "Saturn in Aries" },
     { color: "#ffd27f", label: "Uranus in Aries" },
-    { color: "#BD6BBF", label: "Object creation year", opacity: 0.85 }
+    { color: OBJECT_YEAR_COLOR, label: "Object creation year", opacity: 0.85 }
   ]);
 
   applyPlanetOverlay(svg, settings.planet);
