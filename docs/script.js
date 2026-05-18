@@ -1644,10 +1644,10 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     });
   }
 
+  const deferredMilestoneLabels = [];
   if (transitsEnabled) {
     TRANSIT_GROUPS.forEach((group, groupIndex) => {
       const y = transitLane - 54 + groupIndex * 52;
-      const placedYearLabels = [];
       group.years.forEach((year, index) => {
         const px = x(year);
         appendLine(svg, px, y + 10, px, connectorEndY, group.color, 0.9, 0.12);
@@ -1659,7 +1659,14 @@ function renderTransits(svg, analytics, ui, settings = {}) {
         const labelAllMilestones = group.key === "jupiterSaturn" || group.key === "saturnAries";
         const labelSize = labelAllMilestones ? 9.5 : 11;
         if (labelAllMilestones || index < 5 || index === group.years.length - 1) {
-          tryAppendMilestoneYearLabel(svg, px, y, String(year), group.color, labelSize, placedYearLabels);
+          deferredMilestoneLabels.push({
+            groupIndex,
+            px,
+            y,
+            year,
+            color: group.color,
+            labelSize
+          });
         }
       });
     });
@@ -1675,6 +1682,21 @@ function renderTransits(svg, analytics, ui, settings = {}) {
     });
     dot.addEventListener("mouseleave", () => hideTooltip(ui.tooltip));
   });
+
+  if (deferredMilestoneLabels.length) {
+    const placedYearLabelsByRow = TRANSIT_GROUPS.map(() => []);
+    deferredMilestoneLabels.forEach(({ groupIndex, px, y, year, color, labelSize }) => {
+      tryAppendMilestoneYearLabel(
+        svg,
+        px,
+        y,
+        String(year),
+        color,
+        labelSize,
+        placedYearLabelsByRow[groupIndex]
+      );
+    });
+  }
 
   if (!transitsEnabled) {
     appendSvgLegend(svg, legendX, legendY, [
