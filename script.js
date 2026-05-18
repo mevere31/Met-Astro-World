@@ -1156,7 +1156,7 @@ function renderIntro(svg, analytics, ui, settings = {}) {
   const axisY = height / 2;
   const x = scaleLinear(analytics.objectRange.min, analytics.objectRange.max, margin.left, width - margin.right);
 
-  appendText(svg, margin.left, margin.top - 36, `${analytics.objectRange.span} years of object creation`, "start", "#edf4ff", 22, 800);
+  appendText(svg, margin.left, margin.top - 36, `${analytics.objectRange.span} years of object creation`, "start", "#BD6BBF", 22, 800);
   appendText(svg, margin.left, margin.top - 14, `From ${analytics.objectRange.min} to ${analytics.objectRange.max}`, "start", "#95a8c8", 14, 600);
 
   appendAtmosphere(svg, width, height);
@@ -1171,7 +1171,7 @@ function renderIntro(svg, analytics, ui, settings = {}) {
  analytics.objectYears.forEach((year, index) => {
   const amplitude = 14 + (index % 5) * 5;
   const y = axisY + Math.sin(index * 0.65) * amplitude;
-  const circle = appendCircle(svg, x(year), y, 4.1, "#7fd6ff", 0.84);
+  const circle = appendCircle(svg, x(year), y, 4.1, "#B68CFF", 0.84);
   animateCirclePop(circle, 4.1, Math.min(index, 44) * 6);
 
   circle.addEventListener("mouseenter", async () => {
@@ -1429,7 +1429,7 @@ function renderHistory(svg, analytics, ui, settings = {}) {
   appendAtmosphere(svg, width, height);
   appendLine(svg, margin.left, topLane, width - margin.right, topLane, "rgba(127,214,255,0.8)", 2, 1);
   appendLine(svg, margin.left, bottomLane, width - margin.right, bottomLane, "rgba(255,210,127,0.8)", 2, 1);
-  appendText(svg, margin.left, topLane - 24, "Object year", "start", "#7fd6ff", 15, 700);
+  appendText(svg, margin.left, topLane - 24, "Object year", "start", "#BD6BBF", 15, 700);
   appendText(svg, margin.left, bottomLane + 36, "Incident year", "start", "#ffd27f", 15, 700);
 
   HISTORY_ANCHORS.forEach((anchor) => {
