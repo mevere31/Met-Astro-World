@@ -12,8 +12,8 @@ This narrative project follows a sample of 213 objects in the Met Collection des
 ## Data Sources
 
 - **[The Met Museum Open Access](https://metmuseum.github.io/) / Highlights dataset**: objects from the museum's collection
-- **World history dataset**: [World Important Events - Ancient to Modern]((https://www.kaggle.com/datasets/saketk511/world-important-events-ancient-to-modern))
-- **Astrological transit data**: [Swiss Ephemeris (python library for programmers using astrological software)]((https://www.astro.com/swisseph/swephinfo_e.htm)) 
+- **World history dataset**: [World Important Events - Ancient to Modern](https://www.kaggle.com/datasets/saketk511/world-important-events-ancient-to-modern)
+- **Astrological transit data**: [Swiss Ephemeris (python library for programmers using astrological software)](https://www.astro.com/swisseph/swephinfo_e.htm) 
 
 ## Built With
 
